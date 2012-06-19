@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DicomClientConfig>
+
+    
+    <!-- URL for the service. -->
+    <DicomServiceUrl>https://141.214.124.202:8091</DicomServiceUrl>       <!-- rolxdeploy1 -->
+    <!-- <DicomServiceUrl>https://141.214.124.240:8091</DicomServiceUrl> -->  <!-- rolxdev1 -->
+    <!-- <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl>    -->    <!-- irrer desktop -->
+    
+
+    <!-- Location of java keystore file.  If this value is specified by the
+    system property javax.net.ssl.trustStore then the system property will
+    override these entries.  Multiple entries indicate that
+    multiple locations should be tried in the given order. -->
+    <javax.net.ssl.trustStore>dicomsvc.jks</javax.net.ssl.trustStore>
+    <javax.net.ssl.trustStore>src/main/resources/dicomsvc.jks</javax.net.ssl.trustStore>
+    
+   
+	<!-- List of tags whose contents should be anonymized.  Note that for UIDs, the replacement
+	value is ignored, and instead a new unique UID is constructed (with a Univ of Mich Radiation
+	Oncology prefix) -->
+	<AnonymizeDefaultList>
+        <Tag Name='PatientID'                           >11111111</Tag>
+        <Tag Name='PatientName'                         ></Tag>
+        <Tag Name='PatientBirthDate'                    >18000101</Tag>
+        <Tag Name='PatientBirthTime'                    >000000.0</Tag>
+        <Tag Name='PatientSex'                          >O</Tag>
+        <Tag Name='OtherPatientIDs'                     >none</Tag>
+        <Tag Name='OtherPatientNames'                   >none</Tag>
+        <Tag Name='PatientAge'                          >200</Tag>
+        <Tag Name='PatientSize'                         >0.0</Tag>
+        <Tag Name='PatientWeight'                       >0</Tag>
+        <Tag Name='InstanceCreatorUID'                  ></Tag>
+        <Tag Name='SOPInstanceUID'                      ></Tag>
+        <Tag Name='AccessionNumber'                     >none</Tag>
+        <Tag Name='InstitutionName'                     >none</Tag>
+        <Tag Name='InstitutionAddress'                  >none</Tag>
+        <Tag Name='ReferringPhysicianName'              >none</Tag>
+        <Tag Name='ReferringPhysicianAddress'           >none</Tag>
+        <Tag Name='ReferringPhysicianTelephoneNumbers'  >none</Tag>
+        <Tag Name='StationName'                         >none</Tag>
+        <Tag Name='StudyDescription'                    >none</Tag>
+        <Tag Name='SeriesDescription'                   >none</Tag>
+        <Tag Name='InstitutionalDepartmentName'         >none</Tag>
+        <Tag Name='PhysiciansOfRecord'                  >none</Tag>
+        <Tag Name='PerformingPhysicianName'             >none</Tag>
+        <Tag Name='NameOfPhysiciansReadingStudy'        >none</Tag>
+        <Tag Name='OperatorsName'                       >none</Tag>
+        <Tag Name='AdmittingDiagnosesDescription'       >none</Tag>
+        <Tag Name='ReferencedSOPInstanceUID'            ></Tag>
+        <Tag Name='DerivationDescription'               >none</Tag>
+        <Tag Name='MedicalRecordLocator'                >none</Tag>
+        <Tag Name='EthnicGroup'                         >none</Tag>
+        <Tag Name='Occupation'                          >none</Tag>
+        <Tag Name='AdditionalPatientHistory'            >none</Tag>
+        <Tag Name='PatientComments'                     >none</Tag>
+        <Tag Name='DeviceSerialNumber'                  >none</Tag>
+        <Tag Name='ProtocolName'                        >none</Tag>
+        <Tag Name='StudyInstanceUID'                    ></Tag>
+        <Tag Name='SeriesInstanceUID'                   ></Tag>
+        <Tag Name='StudyID'                             >none</Tag>
+        <Tag Name='FrameOfReferenceUID'                 ></Tag>
+        <Tag Name='SynchronizationFrameOfReferenceUID'  ></Tag>
+        <Tag Name='ImageComments'                       >none</Tag>
+        <Tag Name='RequestAttributesSequence'           ></Tag>
+        <Tag Name='UID'                                 ></Tag>
+        <Tag Name='ContentSequence'                     >remove</Tag>
+        <Tag Name='StorageMediaFileSetUID'              ></Tag>
+        <Tag Name='ReferencedFrameOfReferenceUID'       ></Tag>
+        <Tag Name='RelatedFrameOfReferenceUID'          ></Tag>
+	</AnonymizeDefaultList>
+	
+</DicomClientConfig>

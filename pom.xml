@@ -1,0 +1,202 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+        <!-- Use 'mvn package' from the command line to build everything. From Eclipse 
+                you can use: right click on pom.xml click Run As ... click Maven assembly:assembly 
+                Note that the order that the plugins appear in this file is important, because 
+                multiple plugins are associated with the same phase, but the output of one 
+                plugin is used as input for the subsequent plugin. -->
+
+        <modelVersion>4.0.0</modelVersion>
+        <groupId>edu.umro.DICOM</groupId>
+        <artifactId>dicomclient</artifactId>
+        <version>1.0.8</version>
+        <packaging>jar</packaging>
+        <name>${artifactId}</name>
+        <properties>
+                <resource.dir>src/main/resources</resource.dir>
+                <release>1</release>
+        </properties>
+        
+        <dependencies>
+                <dependency>
+                        <groupId>pixelmed</groupId>
+                        <artifactId>pixelmed</artifactId>
+                        <version>20110928</version>
+                </dependency>
+                <dependency>
+                        <groupId>org.restlet.jse</groupId>
+                        <artifactId>org.restlet.ext.net</artifactId>
+                        <version>2.0.10</version>
+                </dependency>
+                <dependency>
+                        <groupId>org.restlet.jse</groupId>
+                        <artifactId>org.restlet</artifactId>
+                        <version>2.0.10</version>
+                </dependency>
+                <dependency>
+                        <groupId>org.restlet.jse</groupId>
+                        <artifactId>org.restlet.ext.httpclient</artifactId>
+                        <version>2.0.0</version>
+                </dependency>
+                <dependency>
+                        <groupId>org.restlet.jse</groupId>
+                        <artifactId>org.restlet.ext.simple</artifactId>
+                        <version>2.0.3</version>
+                </dependency>
+                <dependency>
+                        <groupId>org.restlet.jse</groupId>
+                        <artifactId>org.restlet.ext.ssl</artifactId>
+                        <version>2.0.10</version>
+                </dependency>
+                <dependency>
+                        <groupId>edu.umro</groupId>
+                        <artifactId>util</artifactId>
+                        <version>SNAPSHOT</version>
+                </dependency>
+                	            
+            </dependencies>
+        <dependencyManagement>
+            <dependencies>
+            </dependencies>
+        </dependencyManagement>
+        <modules>
+        </modules>
+        <build>
+            <plugins>
+            
+            <plugin>   <!-- Construct the manifest -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.6</version>
+
+                <executions>
+                    <execution>
+                        <id>generate-manifest-with-timestamp</id>
+                        <phase>test</phase>
+                        <configuration>
+                            <tasks>
+                                <delete file="target/MANIFEST.MF" />
+                                <copy file="src/main/resources/MANIFEST.MF" todir="target" />
+                                <echo>Hello from timestamp</echo>
+                                <tstamp>
+                                    <format property="TIMESTAMP" pattern="yyyy-MMM-dd hh:mm:ss aa" locale="en,US" />
+                                </tstamp>
+                                <replace file="target/MANIFEST.MF">
+                                    <replacefilter token="@@BUILD_DATE@@" value="${TIMESTAMP}"/>
+                                    <replacefilter token="@@BUILDER@@" value="${user.name}"/>
+                                    <replacefilter token="@@VERSION@@" value="${version}"/>
+                                </replace>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            
+                        <plugin>  <!-- source jar -->
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-source-plugin</artifactId>
+                                <executions>
+                                        <execution>
+                                                <id>attach-sources</id>
+                                                <goals>
+                                                        <goal>jar</goal>
+                                                </goals>
+                                        </execution>
+                                </executions>
+                        </plugin>
+
+                        <plugin>  <!-- jar with dependencies -->
+                                <artifactId>maven-assembly-plugin</artifactId>
+                                <version>2.2-beta-5</version>
+                                <configuration>
+                                    <descriptorRefs>
+                                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                                    </descriptorRefs>
+                                    <archive>
+                                        <manifestFile>target/MANIFEST.MF</manifestFile>
+                                    </archive>
+                                </configuration>
+                                <executions>
+                                        <execution>
+                                                <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                                                <!-- <phase>package</phase> -->
+                                                <phase>test</phase>
+                                                <goals>
+                                                        <goal>single</goal>
+                                                </goals>
+                                        </execution>
+                                </executions>
+                        </plugin>
+
+                        <plugin>  <!-- maven compiler -->
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-compiler-plugin</artifactId>
+                                <version>2.3.2</version>
+                                <configuration>
+                                        <source>1.6</source>
+                                        <target>1.6</target>
+                                </configuration>
+                        </plugin>
+
+                        <plugin>  <!-- build install package -->
+                                <artifactId>maven-antrun-plugin</artifactId>
+                                <version>1.6</version>
+                                <!-- Copy the package files into the build repository. -->
+                                <executions>
+                                        <execution>
+                                                <phase>package</phase>
+                                                <configuration>
+                                                        <tasks>
+                                                                <property name="dest.dir"
+                                                                        value="Z:\Projects\Dicom\dicomclient\BuildRepository\${artifactId}-${version}" />
+                                                                <echo>dest.dir is: ${dest.dir}</echo>
+                                                                <echo>version is: ${version}</echo>
+                                                                <echo>artifactId is: ${artifactId}</echo>
+                                                                <echo>dest.dir is: ${dest.dir}</echo>
+
+                                                                <delete dir="${dest.dir}" />
+                                                                <mkdir dir="${dest.dir}" />
+                                                                <copy
+                                                                        file="target/${artifactId}-${version}-jar-with-dependencies.jar"
+                                                                        toDir="${dest.dir}" />
+                                                                <copy file="${resource.dir}/DicomClientConfig.xml" toDir="${dest.dir}" />
+                                                                <copy file="${resource.dir}/dicomsvc.jks" toDir="${dest.dir}" />
+                                                                <copy file="${resource.dir}/DICOMClient.bat" toDir="${dest.dir}" />
+                                                                <replace file="${dest.dir}/DICOMClient.bat" token="@@with-dep-jar@@"
+                                                                        value="${artifactId}-${version}-jar-with-dependencies.jar" />
+                                                        </tasks>
+                                                </configuration>
+                                                <goals>
+                                                        <goal>run</goal>
+                                                </goals>
+                                        </execution>
+                                </executions>
+                        </plugin>
+
+                </plugins>
+        </build>
+        <repositories>
+                <repository>
+                        <id>maven-restlet</id>
+                        <name>Public online Restlet repository</name>
+                        <url>http://maven.restlet.org</url>
+                </repository>
+        </repositories>
+        <distributionManagement>
+                <repository>
+                        <id>releases</id>
+                        <name>Internal Releases</name>
+                        <url>http://141.214.124.203:8081/nexus/content/repositories/releases</url>
+                </repository>
+                <snapshotRepository>
+                        <id>snapshots</id>
+                        <name>Internal Releases</name>
+                        <url>http://141.214.124.203:8081/nexus/content/repositories/snapshots</url>
+                </snapshotRepository>
+        </distributionManagement>
+</project>

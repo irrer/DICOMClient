@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Implementation-Vendor: University of Michigan Radiation Oncology
+Implementation-Title: DICOM Utilities
+Implementation-Version: @@VERSION@@
+WrittenBy: Jim Irrer irrer@umich.edu
+BuildDate: @@BUILD_DATE@@
+Built-By: @@BUILDER@@
+JarDescription: DICOM Utilities
