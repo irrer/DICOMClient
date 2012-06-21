@@ -103,6 +103,46 @@ public class ClientConfig {
 
     
     /**
+     * Get the flag indicating whether or not the upload help should be shown.  If there is a problem,
+     * return true.
+     *  
+     * @return True if all help, false if only anonymize help.
+     */
+    public boolean getShowUploadHelp() {
+        if (config != null) {
+            try {
+                String text = XML.getValue(config, "/DicomClientConfig/ShowUploadHelp/text()");
+                return text.equalsIgnoreCase("true") || text.equalsIgnoreCase("yes");
+            }
+            catch (UMROException e) {
+                
+            }
+        }
+        Log.get().severe("getShowUploadHelp: Unable to read configuration file " + CONFIG_FILE_NAME);
+        return true;
+    }
+
+    
+    /**
+     * Get the template that controls how new patient IDs are generated for anonymization.
+     *  
+     * @return Template that controls how new patient IDs are generated for anonymization.
+     */
+    public String getAnonPatientIdTemplate() {
+        if (config != null) {
+            try {
+                return XML.getValue(config, "/DicomClientConfig/AnonPatientIdTemplate/text()");
+            }
+            catch (UMROException e) {
+                
+            }
+        }
+        Log.get().severe("getAnonPatientIdTemplate: Unable to read configuration file " + CONFIG_FILE_NAME);
+        return null;
+    }
+
+    
+    /**
      * Only let user control certain types of attributes.  It does not make
      * sense to manually control values of UIDs, and sequence attributes do
      * not have values.

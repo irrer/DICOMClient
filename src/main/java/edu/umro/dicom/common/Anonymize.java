@@ -66,24 +66,73 @@ public class Anonymize {
 
     private static HashMap<Guid, String> guidHistory = new HashMap<Guid, String>();
 
+    /** Template to be used to generate anonymous patient IDs.  Use a default ID. */
+    private static String template = "$######";
+
+
+    /**
+     * Set the template.
+     * 
+     * @param template Template to be used.
+     */
+    public static synchronized void setTemplate(String template) {
+        if ((template != null) && (template.length() > 0)) {
+            Anonymize.template = template;
+        }
+    }
+
+
+    private static String genId() {
+        StringBuffer patientId = new StringBuffer();
+        char[] tmpl = template.toCharArray();
+        int t = 0;
+        Random random = new Random();
+        while (t < tmpl.length) {
+            switch (tmpl[t]) {
+            case '*' :
+                int r = random.nextInt(36);
+                if (r < 10) {
+                    patientId.append((char)('0' + r));
+                }
+                else {
+                    patientId.append((char)('A' + (r-10)));
+                }
+                break;
+            case '?' :
+                patientId.append((char)('A' + random.nextInt(26)));
+                break;
+            case '#' :
+                patientId.append((char)('0' + random.nextInt(10)));
+                break;
+            case '%' :
+                t++;
+                if (t <= (tmpl.length-1)) {
+                    patientId.append(tmpl[t]);
+                }
+                break;
+            default :
+                patientId.append(tmpl[t]);
+                break;
+            }
+            t++;
+        }
+        return patientId.toString();
+    }
+
 
     public synchronized static String makeUniquePatientId() {
+        final int MAX_TRIES = 100;
         String patientId = null;
-        while (patientId == null) {
-            Random random = new Random();
-            int r = random.nextInt() % 10000;
-            r = (r < 0) ? (-r) : r;
-            String text = "" + r;
-            while (text.length() < 4) {
-                text = "0" + text;
-            }
-            text = "ANON" + text;
-            if (!patientList.contains(text)) {
-                patientList.add(text);
-                patientId = text;
+        int tries = 0;
+        while ((patientId == null) && (++tries < MAX_TRIES)) {
+            String patId = genId();
+            if (!patientList.contains(patId)) {
+                patientList.add(patId);
+                patientId = patId;
+                return patientId;
             }
         }
-        return patientId;
+        throw new RuntimeException("Unable to generate unique patient ID with template: " + template + "  Last Id generated: " + patientId);
     }
 
 

@@ -35,6 +35,9 @@ public class Alert extends JDialog implements ActionListener {
 
     /** List of buttons */
     private JButton[] buttonList = null;
+    
+    /** Default list of buttons to use if no list is given. */
+    private static String[] DEFAULT_BUTTON_NAME_LIST = { "Close" };
 
     /** The index in the array of buttons of the button that was clicked. */
     int selectedButton = -1;
@@ -113,6 +116,9 @@ public class Alert extends JDialog implements ActionListener {
      */
     public Alert(String msg, String title, String[] buttonNameList, Dimension preferredSize) {
         super(DicomClient.getInstance(), true);
+        
+        buttonNameList = (buttonNameList == null) ? DEFAULT_BUTTON_NAME_LIST : buttonNameList;
+        
         setTitle(title);
 
         JPanel panel = new JPanel();
@@ -130,13 +136,30 @@ public class Alert extends JDialog implements ActionListener {
     }
 
 
+    /**
+     * Show a message window that the user is required to respond to with
+     * the single default button.
+     * 
+     * @param msg Message to show.
+     * 
+     * @param title Window title.
+     */
     public Alert(String msg, String title) {
-        this(msg, title, new String[] { "Close" }, PREFERRED_SIZE);
+        this(msg, title, DEFAULT_BUTTON_NAME_LIST, PREFERRED_SIZE);
     }
 
 
+    /**
+     * Show a message window that the user is required to respond to.
+     * 
+     * @param msg Message to show.
+     * 
+     * @param title Window title.
+     * 
+     * @param buttonName Single button to be shown.  If null, use the default button.
+     */
     public Alert(String msg, String title, String buttonName) {
-        this(msg, title, new String[] { buttonName }, PREFERRED_SIZE);
+        this(msg, title, (buttonName == null) ? DEFAULT_BUTTON_NAME_LIST : new String[] { buttonName }, PREFERRED_SIZE);
     }
 
 
@@ -154,10 +177,11 @@ public class Alert extends JDialog implements ActionListener {
             args = new String[] { "src/main/resources/DICOMClientHelp.html" };
         }
         for (String fileName : args) {
+            System.out.println("\n\n\n");
             String text = Utility.readFile(new File(fileName));
             String[] lineList = text.split("\r*\n");
             for (String line : lineList) {
-                System.out.println("\"" + line + "\\n\" +");
+                System.out.println("\"" + line + "<br>\\n\" +");
             }
             System.out.println("\"\";");
         }

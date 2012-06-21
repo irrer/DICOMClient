@@ -10,7 +10,7 @@
         <modelVersion>4.0.0</modelVersion>
         <groupId>edu.umro.DICOM</groupId>
         <artifactId>dicomclient</artifactId>
-        <version>1.0.8</version>
+        <version>1.0.9</version>
         <packaging>jar</packaging>
         <name>${artifactId}</name>
         <properties>
@@ -109,8 +109,20 @@
                                         </execution>
                                 </executions>
                         </plugin>
+                        
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                        <archive>
+                            <manifestFile>target/MANIFEST.MF</manifestFile>
+                        </archive>
+                </configuration>
+            </plugin>
 
-                        <plugin>  <!-- jar with dependencies -->
+                        <!-- jar with dependencies -->
+                        <plugin>  
                                 <artifactId>maven-assembly-plugin</artifactId>
                                 <version>2.2-beta-5</version>
                                 <configuration>

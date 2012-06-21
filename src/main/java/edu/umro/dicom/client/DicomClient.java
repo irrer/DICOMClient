@@ -67,6 +67,7 @@ import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.TagFromName;
 
+import edu.umro.dicom.common.Anonymize;
 import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
@@ -89,7 +90,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
     private static final long serialVersionUID = 1L;
 
     /** Name that appears in title bar of window. */
-    private static final String WINDOW_NAME = "DICOM Upload";
+    private static final String WINDOW_NAME = "DICOM Utility";
 
     /** String indicating that no PACS were available for uploading to.  If the DICOM service fails
      * to provide a list of PACS, then this is shown and the user is not permitted to upload files.
@@ -835,7 +836,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         }
 
         if (source.equals(helpButton)) {
-            new Help();
+            new Help(ClientConfig.getInstance().getShowUploadHelp());
         }
 
         if (source.equals(uploadAllButton)) {
@@ -1203,6 +1204,8 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             });
 
             ClientConfig.getInstance().setupTrustStore();
+            
+            Anonymize.setTemplate(ClientConfig.getInstance().getAnonPatientIdTemplate());
 
             DicomClient dicomClient = getInstance();
             for (String fileName : args) {
