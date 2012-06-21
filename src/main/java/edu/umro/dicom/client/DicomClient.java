@@ -534,6 +534,8 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         panel.add(anonymizeDestinationBrowseButton);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
+
         return panel;
     }
 
@@ -591,7 +593,8 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         modePanel.add(anonymizeRadioButton);
         modePanel.add(uploadRadioButton);
 
-        modePanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        modePanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
+        modePanel.setVisible(ClientConfig.getInstance().getShowUploadCapability());
         return modePanel;
     }
 
@@ -836,7 +839,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         }
 
         if (source.equals(helpButton)) {
-            new Help(ClientConfig.getInstance().getShowUploadHelp());
+            new Help(ClientConfig.getInstance().getShowUploadCapability());
         }
 
         if (source.equals(uploadAllButton)) {

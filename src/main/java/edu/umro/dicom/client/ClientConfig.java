@@ -103,12 +103,12 @@ public class ClientConfig {
 
     
     /**
-     * Get the flag indicating whether or not the upload help should be shown.  If there is a problem,
+     * Get the flag indicating whether or not the upload capability should be shown.  If there is a problem,
      * return true.
      *  
      * @return True if all help, false if only anonymize help.
      */
-    public boolean getShowUploadHelp() {
+    public boolean getShowUploadCapability() {
         if (config != null) {
             try {
                 String text = XML.getValue(config, "/DicomClientConfig/ShowUploadHelp/text()");
