@@ -889,11 +889,16 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
                     try {
                         String[] valueList = attributeList.get(tag).getStringValues();
 
-                        String line = dicomDictionary.getNameFromTag(tag) + " : ";
+                        String line = dicomDictionary.getNameFromTag(tag) + " :";
                         if (valueList != null) {
+                            {
+                                if (valueList.length > 2) {
+                                    System.out.println("valueList.length: " + valueList.length);
+                                }
+                            }
                             for (String value : valueList) {
                                 // Some DICOM values contain nulls.  Replace each of them with a blank.
-                                line += value.replace('\0', ' ');
+                                line += " " + value.replace('\0', ' ');
                             }
                         }
                         line = addDetails(tag, vr, line);

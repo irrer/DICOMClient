@@ -3,7 +3,6 @@ package edu.umro.dicom.client;
 import java.awt.Dimension;
 
 
-import edu.umro.dicom.common.Util;
 import edu.umro.util.JarInfo;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;

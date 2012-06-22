@@ -1209,6 +1209,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             ClientConfig.getInstance().setupTrustStore();
             
             Anonymize.setTemplate(ClientConfig.getInstance().getAnonPatientIdTemplate());
+            Anonymize.setRootGuid(ClientConfig.getInstance().getRootGuid());
 
             DicomClient dicomClient = getInstance();
             for (String fileName : args) {

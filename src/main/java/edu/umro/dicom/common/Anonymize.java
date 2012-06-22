@@ -63,6 +63,7 @@ public class Anonymize {
 
     private static HashSet<String> patientList = new HashSet<String>();
 
+    private static String rootGuid = UMROGUID.UMRO_ROOT_GUID;
 
     private static HashMap<Guid, String> guidHistory = new HashMap<Guid, String>();
 
@@ -78,6 +79,18 @@ public class Anonymize {
     public static synchronized void setTemplate(String template) {
         if ((template != null) && (template.length() > 0)) {
             Anonymize.template = template;
+        }
+    }
+    
+    
+    /**
+     * Set the root GUID.
+     * 
+     * @param rootGuid The new root GUID.
+     */
+    public static synchronized void setRootGuid(String rootGuid) {
+        if ((rootGuid != null) && (rootGuid.length() > 0)) {
+            Anonymize.rootGuid = rootGuid;
         }
     }
 
@@ -164,6 +177,11 @@ public class Anonymize {
         if (newGuid == null) {
             try {
                 newGuid = UMROGUID.getUID();
+                // This should always be true
+                if (newGuid.startsWith(UMROGUID.UMRO_ROOT_GUID)) {
+                    newGuid = rootGuid  + newGuid.substring(UMROGUID.UMRO_ROOT_GUID.length());
+                }
+                
                 guidHistory.put(new Guid(anonimizedPatientId, oldGuid), newGuid);
             } catch (UnknownHostException e) {
                 Log.get().logrb(Level.SEVERE, Anonymize.class.getCanonicalName(),

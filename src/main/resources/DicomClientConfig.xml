@@ -26,7 +26,7 @@
     
     <!-- When generating UIDs for anonymization, this prefix is used.   If not specified, a default is used.
     Note that a value of 1.3.6.1.4.1.22361. is for University of Michigan Department of Radiation Oncology. -->
-    <UIDPrefix>1.3.6.1.4.1.22361.</UIDPrefix>
+    <RootGuid>9999.1.3.6.1.4.1.22361.</RootGuid>
     
     <!-- If true, upload help is shown.  It makes sense to not show the upload help for sites where the server is not installed. -->
     <ShowUploadHelp>true</ShowUploadHelp>

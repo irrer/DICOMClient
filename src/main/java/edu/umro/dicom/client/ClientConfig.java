@@ -143,6 +143,25 @@ public class ClientConfig {
 
     
     /**
+     * Get the template that controls how new patient IDs are generated for anonymization.
+     *  
+     * @return Template that controls how new patient IDs are generated for anonymization.
+     */
+    public String getRootGuid() {
+        if (config != null) {
+            try {
+                return XML.getValue(config, "/DicomClientConfig/RootGuid/text()");
+            }
+            catch (UMROException e) {
+                
+            }
+        }
+        Log.get().severe("RootGuid: Unable to read configuration file " + CONFIG_FILE_NAME);
+        return null;
+    }
+
+    
+    /**
      * Only let user control certain types of attributes.  It does not make
      * sense to manually control values of UIDs, and sequence attributes do
      * not have values.
