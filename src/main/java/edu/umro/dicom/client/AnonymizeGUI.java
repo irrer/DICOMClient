@@ -29,7 +29,6 @@ import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
-import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
@@ -101,7 +100,7 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
          * 
          */
         public void setTag(AttributeTag tag) {
-            String name = dicomDictionary.getNameFromTag(tag);
+            String name = CustomDictionary.getInstance().getNameFromTag(tag);
             comboBox.setSelectedItem(name);
         }
 
@@ -112,7 +111,7 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
          * @return The type of attribute to be anonymized.
          */
         public AttributeTag getTag() {
-            return dicomDictionary.getTagFromName((String)(comboBox.getSelectedItem()));
+            return CustomDictionary.getInstance().getTagFromName((String)(comboBox.getSelectedItem()));
         }
 
 
@@ -199,9 +198,6 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
      * to be re-created every time it is needed.
      */
     private TreeSet<String> tagListSorted = new TreeSet<String>();
-
-    /** Correlates tags to attributes. */
-    private DicomDictionary dicomDictionary = null;
 
     /** Adds a new anonymize field to the dialog. */
     private JButton addButton = null;
@@ -378,7 +374,7 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
         // sorted list of tag names
         if (tagList.size() != oldSize) {
             for (AttributeTag tag : tagList) {
-                String name = dicomDictionary.getNameFromTag(tag);
+                String name = CustomDictionary.getInstance().getNameFromTag(tag);
                 if ((name != null) && (name.length() > 0) && (!tagListSorted.contains(name))) {
                     tagListSorted.add(name);
                 }
@@ -399,7 +395,6 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
         super(DicomClient.getInstance(), false);
         setTitle(WINDOW_TITLE);
         tagList = new TreeSet<AttributeTag>();
-        dicomDictionary = new DicomDictionary();
 
         JPanel panel = new JPanel();
         getContentPane().add(panel);

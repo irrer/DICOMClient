@@ -1,6 +1,7 @@
 package edu.umro.dicom.client;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.logging.Level;
 
 import org.w3c.dom.Document;
@@ -11,7 +12,6 @@ import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
-import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.ValueRepresentation;
 
@@ -37,9 +37,6 @@ public class ClientConfig {
         CONFIG_FILE_NAME,
         "src\\main\\resources\\" + CONFIG_FILE_NAME
     };
-
-    /** For convenience and optimization by re-use. */
-    private static final DicomDictionary DICOM_DICTIONARY = new DicomDictionary();
 
     /** Instance of this object. */
     private static ClientConfig clientConfig = null;
@@ -101,7 +98,7 @@ public class ClientConfig {
         return null;
     }
 
-    
+
     /**
      * Get the flag indicating whether or not the upload capability should be shown.  If there is a problem,
      * return true.
@@ -115,14 +112,14 @@ public class ClientConfig {
                 return text.equalsIgnoreCase("true") || text.equalsIgnoreCase("yes");
             }
             catch (UMROException e) {
-                
+
             }
         }
         Log.get().severe("getShowUploadHelp: Unable to read configuration file " + CONFIG_FILE_NAME);
         return true;
     }
 
-    
+
     /**
      * Get the template that controls how new patient IDs are generated for anonymization.
      *  
@@ -134,14 +131,14 @@ public class ClientConfig {
                 return XML.getValue(config, "/DicomClientConfig/AnonPatientIdTemplate/text()");
             }
             catch (UMROException e) {
-                
+
             }
         }
         Log.get().severe("getAnonPatientIdTemplate: Unable to read configuration file " + CONFIG_FILE_NAME);
         return null;
     }
 
-    
+
     /**
      * Get the template that controls how new patient IDs are generated for anonymization.
      *  
@@ -153,14 +150,14 @@ public class ClientConfig {
                 return XML.getValue(config, "/DicomClientConfig/RootGuid/text()");
             }
             catch (UMROException e) {
-                
+
             }
         }
         Log.get().severe("RootGuid: Unable to read configuration file " + CONFIG_FILE_NAME);
         return null;
     }
 
-    
+
     /**
      * Only let user control certain types of attributes.  It does not make
      * sense to manually control values of UIDs, and sequence attributes do
@@ -171,9 +168,9 @@ public class ClientConfig {
      * @return
      */
     private boolean canControlAnonymizing(AttributeTag tag) {
-        return (!ValueRepresentation.isSequenceVR(DICOM_DICTIONARY.getValueRepresentationFromTag(tag)));
+        return (!ValueRepresentation.isSequenceVR(CustomDictionary.getInstance().getValueRepresentationFromTag(tag)));
     }
-    
+
 
     /**
      * Get the list of attributes to anonymize and their values.  All UIDs are
@@ -189,7 +186,7 @@ public class ClientConfig {
                 Node node = nodeList.item(ad);
                 String tagText = XML.getValue(node, "@Name");
                 if (tagText != null) {
-                    AttributeTag tag = DICOM_DICTIONARY.getTagFromName(tagText);
+                    AttributeTag tag = CustomDictionary.getInstance().getTagFromName(tagText);
                     String value = XML.getValue(node, "text()");
                     value = (value == null) ? "" : value;
                     Attribute attribute = AttributeFactory.newAttribute(tag);
@@ -234,6 +231,24 @@ public class ClientConfig {
             System.setProperty("javax.net.ssl.trustStoreType", "JKS");
         }
         return file;
+    }
+
+
+    public ArrayList<PrivateTag> getPrivateTagList() {
+        ArrayList<PrivateTag> tagList = new ArrayList<PrivateTag>();
+        try {
+            NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/PrivateTagList/*");
+            for (int n = 0; n < nodeList.getLength(); n++) {
+                tagList.add(new PrivateTag(nodeList.item(n)));
+            }
+        }
+        catch (UMROException e) {
+            Log.get().warning("Problem interpreting custom tags: " + e);
+        }
+        catch (DicomException e) {
+            Log.get().warning("DICOM Problem interpreting custom tags: " + e);
+        }
+        return tagList;
     }
 
 

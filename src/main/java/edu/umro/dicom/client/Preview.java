@@ -16,6 +16,7 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,10 +50,20 @@ import javax.swing.text.Highlighter;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
-import com.pixelmed.dicom.DicomDictionary;
+import com.pixelmed.dicom.AttributeTagAttribute;
 import com.pixelmed.dicom.DicomException;
+import com.pixelmed.dicom.LongTextAttribute;
+import com.pixelmed.dicom.OtherByteAttribute;
+import com.pixelmed.dicom.OtherByteAttributeOnDisk;
+import com.pixelmed.dicom.OtherFloatAttribute;
+import com.pixelmed.dicom.OtherWordAttribute;
+import com.pixelmed.dicom.OtherWordAttributeOnDisk;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
+import com.pixelmed.dicom.ShortTextAttribute;
+import com.pixelmed.dicom.TagFromName;
+import com.pixelmed.dicom.UnknownAttribute;
+import com.pixelmed.dicom.UnlimitedTextAttribute;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
@@ -71,28 +82,31 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
     /** Default id. */
     private static final long serialVersionUID = 1L;
 
+    /** Maximum line length for attributes of uncertain qualities. */
+    private static final int MAX_LINE_LENGTH = 2048;
+    
     /** List of value representations that can be displayed as strings in the text version of the preview. */ 
     private static final byte[][] TEXTUAL_VR = {
+        ValueRepresentation.AE,
         ValueRepresentation.AS,
         ValueRepresentation.CS,
         ValueRepresentation.DA,
         ValueRepresentation.DS,
         ValueRepresentation.DT,
-        ValueRepresentation.FD,
         ValueRepresentation.FL,
+        ValueRepresentation.FD,
         ValueRepresentation.IS,
         ValueRepresentation.LO,
-        ValueRepresentation.LT,
         ValueRepresentation.PN,
         ValueRepresentation.SH,
         ValueRepresentation.SL,
         ValueRepresentation.SS,
-        ValueRepresentation.ST,
         ValueRepresentation.TM,
         ValueRepresentation.UI,
         ValueRepresentation.UL,
         ValueRepresentation.US,
-        ValueRepresentation.UT
+        ValueRepresentation.XS,
+        ValueRepresentation.XO
     };
 
     /** A quickly searchable list of value representations. */
@@ -138,7 +152,7 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
 
     /** The series currently being displayed. */
     private Series series = null;
-    
+
     /** Panel that switches back and forth between image and text viewing modes. */
     private JPanel cardPanel = null;
 
@@ -851,6 +865,88 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
     }
 
 
+    private String getAttributeAsText(Attribute attribute) {
+        AttributeTag tag = attribute.getTag();
+        String line = CustomDictionary.getInstance().getNameFromTag(tag) + " :";
+        boolean ok = false;
+        byte [] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
+        try {
+            if ((vr != null) && vrSet.contains(new String(vr))) {
+                String[] valueList = attribute.getStringValues();
+
+                if ((valueList != null) && (valueList.length > 0)) {
+                    for (String value : valueList) {
+                        line += " " + value;
+                    }
+                }
+                ok = true;
+            }
+            else {
+                final NumberFormat format = null;
+                if (attribute instanceof AttributeTagAttribute) {
+                    String[] valueList = ((AttributeTagAttribute)attribute).getStringValues(format);
+                    for (String v : valueList) {
+                        line += " " + v;
+                    }
+                }
+                if (attribute instanceof LongTextAttribute) {
+                    String[] valueList = ((LongTextAttribute)attribute).getStringValues(format);
+                    for (String v : valueList) {
+                        line += " " + v;
+                    }
+                    ok = true;
+                }
+                if (attribute instanceof OtherByteAttribute) {
+                    // TODO
+                    ok = true;
+                }
+                if (attribute instanceof OtherByteAttributeOnDisk) {
+                    // TODO
+                    ok = true;
+                }
+                if (attribute instanceof OtherFloatAttribute) {
+                    // TODO
+                    ok = true;
+                }
+                if (attribute instanceof OtherWordAttribute) {
+                    // TODO
+                    ok = true;
+                }
+                if (attribute instanceof OtherWordAttributeOnDisk) {
+                    // TODO
+                    ok = true;
+                }
+                if (attribute instanceof ShortTextAttribute) {
+                    // TODO
+                    ok = true;
+                }
+                if (attribute instanceof UnknownAttribute) {
+                    // TODO
+                    ok = true;
+                }
+                if (attribute instanceof UnlimitedTextAttribute) {
+                    // TODO
+                    ok = true;
+                }
+            }
+        }
+        catch (Exception e) {
+            line += " Error interpreting field: " + attribute.toString().replace('\n', ' ');
+            if (line.length() > MAX_LINE_LENGTH) {
+                line = line.substring(0, MAX_LINE_LENGTH) + " ... (truncated)";
+            }
+        }
+        if (!ok) {
+            line += " Unexpected value representation: " + attribute.toString().replace('\n', ' ');
+            if (line.length() > MAX_LINE_LENGTH) {
+                line = line.substring(0, MAX_LINE_LENGTH) + " ... (truncated)";
+            }
+        }
+        line = line.replace('\0', ' ');
+        return addDetails(tag, vr, line);
+    }
+
+
     /**
      * Add the list of attributes to the given text.  This method is called
      * recursively to support DICOM attributes that are defined as a tree.
@@ -864,7 +960,7 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
      * @param indentLevel Indicates the depth of recursion and drives the
      * amount of whitespace prepended to each line.
      */
-    private void addTextAttributes(AttributeList attributeList, StringBuffer text, DicomDictionary dicomDictionary, int indentLevel) {
+    private void addTextAttributes(AttributeList attributeList, StringBuffer text, int indentLevel) {
         String searchText = searchField.getText().toLowerCase();
 
         Iterator<?> i = attributeList.values().iterator();
@@ -872,41 +968,21 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
             Attribute attribute = (Attribute)i.next();
             if (attribute instanceof SequenceAttribute) {
                 AttributeTag tag = attribute.getTag();
-                String line = dicomDictionary.getNameFromTag(tag) + " : ";
-                line = addDetails(tag, dicomDictionary.getValueRepresentationFromTag(tag), line);
+                String line = CustomDictionary.getInstance().getNameFromTag(tag) + " : ";
+                line = addDetails(tag, CustomDictionary.getInstance().getValueRepresentationFromTag(tag), line);
                 addLine(text, line, searchText, indentLevel);
                 numLines++;
                 Iterator<?> si = ((SequenceAttribute)attribute).iterator();
+                int itemNumber = 1;
                 while (si.hasNext()) {
                     SequenceItem item = (SequenceItem)si.next();
-                    addTextAttributes(item.getAttributeList(), text, dicomDictionary, indentLevel+1);
+                    addLine(text, "Item: " + itemNumber + " / " + ((SequenceAttribute)attribute).getNumberOfItems(), searchText, indentLevel+1);
+                    addTextAttributes(item.getAttributeList(), text, indentLevel+2);
+                    itemNumber++;
                 }
             }
             else {
-                AttributeTag tag = attribute.getTag();
-                byte [] vr = dicomDictionary.getValueRepresentationFromTag(tag);
-                if ((vr != null) && vrSet.contains(new String(vr))) {
-                    try {
-                        String[] valueList = attributeList.get(tag).getStringValues();
-
-                        String line = dicomDictionary.getNameFromTag(tag) + " :";
-                        if (valueList != null) {
-                            {
-                                if (valueList.length > 2) {
-                                    System.out.println("valueList.length: " + valueList.length);
-                                }
-                            }
-                            for (String value : valueList) {
-                                // Some DICOM values contain nulls.  Replace each of them with a blank.
-                                line += " " + value.replace('\0', ' ');
-                            }
-                        }
-                        line = addDetails(tag, vr, line);
-                        addLine(text, line, searchText, indentLevel);
-                    }
-                    catch (DicomException e) {
-                    }
-                }
+                addLine(text, getAttributeAsText(attribute), searchText, indentLevel);
             }
         }
     }
@@ -916,7 +992,6 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
      * Display the current DICOM file as text to the user.
      */
     private void showText() {
-        DicomDictionary dicomDictionary = new DicomDictionary();
         StringBuffer text = new StringBuffer();
         matchCountLabel.setText("  0 of 0");
         int oldMatchListSize = matchList.size();
@@ -927,7 +1002,7 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
         int scrollPosition = scrollPaneText.getVerticalScrollBar().getValue();
         int caretPosition = textPreview.getCaretPosition();
 
-        addTextAttributes(attributeList, text, dicomDictionary, 0);
+        addTextAttributes(attributeList, text, 0);
         textPreview.setText(text.toString());
 
         if ((scrollPosition >= scrollPaneText.getVerticalScrollBar().getMinimum()) && (scrollPosition <= scrollPaneText.getVerticalScrollBar().getMaximum())) {
