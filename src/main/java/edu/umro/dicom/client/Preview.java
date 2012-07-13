@@ -16,7 +16,6 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -52,18 +51,11 @@ import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.AttributeTagAttribute;
 import com.pixelmed.dicom.DicomException;
-import com.pixelmed.dicom.LongTextAttribute;
 import com.pixelmed.dicom.OtherByteAttribute;
-import com.pixelmed.dicom.OtherByteAttributeOnDisk;
 import com.pixelmed.dicom.OtherFloatAttribute;
 import com.pixelmed.dicom.OtherWordAttribute;
-import com.pixelmed.dicom.OtherWordAttributeOnDisk;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
-import com.pixelmed.dicom.ShortTextAttribute;
-import com.pixelmed.dicom.TagFromName;
-import com.pixelmed.dicom.UnknownAttribute;
-import com.pixelmed.dicom.UnlimitedTextAttribute;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
@@ -83,8 +75,8 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
     private static final long serialVersionUID = 1L;
 
     /** Maximum line length for attributes of uncertain qualities. */
-    private static final int MAX_LINE_LENGTH = 2048;
-    
+    private static final int MAX_LINE_LENGTH = 2 * 1000;
+
     /** List of value representations that can be displayed as strings in the text version of the preview. */ 
     private static final byte[][] TEXTUAL_VR = {
         ValueRepresentation.AE,
@@ -97,14 +89,17 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
         ValueRepresentation.FD,
         ValueRepresentation.IS,
         ValueRepresentation.LO,
+        ValueRepresentation.LT,
         ValueRepresentation.PN,
         ValueRepresentation.SH,
         ValueRepresentation.SL,
         ValueRepresentation.SS,
+        ValueRepresentation.ST,
         ValueRepresentation.TM,
         ValueRepresentation.UI,
         ValueRepresentation.UL,
         ValueRepresentation.US,
+        ValueRepresentation.UT,
         ValueRepresentation.XS,
         ValueRepresentation.XO
     };
@@ -858,6 +853,9 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
             while (group.length() < 4) {
                 group = "0" + group;
             }
+            if (vr == null) {
+                vr = new byte[] { '?', '?' };
+            }
             String prefix = group + "," + element + " " + (char)vr[0] + (char)vr[1] + "  ";
             line = prefix + line;
         }
@@ -865,85 +863,118 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
     }
 
 
+    /**
+     * Show a byte value as humanly readable as possible.  If it is a displayable
+     * ASCII character, then show that, otherwise show the hex value (as in 0xfe).
+     * 
+     * @param i
+     * 
+     * @return
+     */
+    private static String byteToHuman(int i) {
+        i = i & 255;
+        return ((i >= 32) && (i <= 126)) ? ("" + (char)i) : ("0x" + Integer.toHexString(i&255));
+    }
+
+
     private String getAttributeAsText(Attribute attribute) {
         AttributeTag tag = attribute.getTag();
-        String line = CustomDictionary.getInstance().getNameFromTag(tag) + " :";
+        StringBuffer line = new StringBuffer();
         boolean ok = false;
         byte [] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
-        try {
-            if ((vr != null) && vrSet.contains(new String(vr))) {
-                String[] valueList = attribute.getStringValues();
+        if (vr == null) {
+            vr = attribute.getVR();
+        }
+        if (vr != null) {
+            try {
+                if ((!ok) && (vrSet.contains(new String(vr)))) {
+                    String[] valueList = attribute.getStringValues();
 
-                if ((valueList != null) && (valueList.length > 0)) {
-                    for (String value : valueList) {
-                        line += " " + value;
+                    if ((valueList != null) && (valueList.length > 0)) {
+                        for (String value : valueList) {
+                            line.append(" " + value);
+                            if (line.length() > MAX_LINE_LENGTH) {
+                                break;
+                            }
+                        }
+                    }
+                    ok = true;
+                }
+                else {
+                    if ((!ok) &&  (ValueRepresentation.isAttributeTagVR(vr))) {
+                        AttributeTag[] atList = ((AttributeTagAttribute)attribute).getAttributeTagValues();
+                        for (AttributeTag t : atList) {
+                            line.append("  " + t);
+                            if (CustomDictionary.getInstance().getNameFromTag(t) == null) {
+                                line.append(":<unknown>");
+                            }
+                            else {
+                                line.append(":" + CustomDictionary.getInstance().getNameFromTag(t));
+                            }
+                            if (line.length() > MAX_LINE_LENGTH) {
+                                break;
+                            }
+                        }
+                        ok = true;
+                    }
+
+                    if ((!ok) &&  ((ValueRepresentation.isOtherByteVR(vr)) || (attribute instanceof OtherByteAttribute))) {
+                        byte[] outData = ((OtherByteAttribute)attribute).getByteValues();
+
+                        for (int b = 0; b < outData.length; b++) {
+                            line.append(byteToHuman(outData[b]));
+                            if (line.length() > MAX_LINE_LENGTH) {
+                                break;
+                            }
+                        }
+                        ok = true;
+                    }
+
+                    if ((!ok) && ((ValueRepresentation.isOtherFloatVR(vr) || (attribute instanceof OtherFloatAttribute)))) {
+                        float[] floatValues = ((OtherFloatAttribute)attribute).getFloatValues();
+                        for (float f : floatValues) {
+                            line.append(" " + f);
+                            if (line.length() > MAX_LINE_LENGTH) {
+                                break;
+                            }
+                        }
+                        ok = true;
+                    }
+
+                    if ((!ok) &&  ((attribute instanceof OtherWordAttribute) || (ValueRepresentation.isOtherWordVR(vr)))) {
+                        short[] outData = ((OtherWordAttribute)attribute).getShortValues();
+
+                        for (int b = 0; b < outData.length; b++) {
+                            line.append(" " + byteToHuman((outData[b] & 0xffff) >> 8) + " " + byteToHuman(outData[b] & 0xff));
+                            if (line.length() > MAX_LINE_LENGTH) {
+                                break;
+                            }
+                        }
+                        ok = true;
                     }
                 }
-                ok = true;
             }
-            else {
-                final NumberFormat format = null;
-                if (attribute instanceof AttributeTagAttribute) {
-                    String[] valueList = ((AttributeTagAttribute)attribute).getStringValues(format);
-                    for (String v : valueList) {
-                        line += " " + v;
-                    }
-                }
-                if (attribute instanceof LongTextAttribute) {
-                    String[] valueList = ((LongTextAttribute)attribute).getStringValues(format);
-                    for (String v : valueList) {
-                        line += " " + v;
-                    }
-                    ok = true;
-                }
-                if (attribute instanceof OtherByteAttribute) {
-                    // TODO
-                    ok = true;
-                }
-                if (attribute instanceof OtherByteAttributeOnDisk) {
-                    // TODO
-                    ok = true;
-                }
-                if (attribute instanceof OtherFloatAttribute) {
-                    // TODO
-                    ok = true;
-                }
-                if (attribute instanceof OtherWordAttribute) {
-                    // TODO
-                    ok = true;
-                }
-                if (attribute instanceof OtherWordAttributeOnDisk) {
-                    // TODO
-                    ok = true;
-                }
-                if (attribute instanceof ShortTextAttribute) {
-                    // TODO
-                    ok = true;
-                }
-                if (attribute instanceof UnknownAttribute) {
-                    // TODO
-                    ok = true;
-                }
-                if (attribute instanceof UnlimitedTextAttribute) {
-                    // TODO
-                    ok = true;
-                }
+            catch (Exception e) {
+                line.append(" Error interpreting field: " + attribute.toString().replace('\n', ' '));
             }
         }
-        catch (Exception e) {
-            line += " Error interpreting field: " + attribute.toString().replace('\n', ' ');
-            if (line.length() > MAX_LINE_LENGTH) {
-                line = line.substring(0, MAX_LINE_LENGTH) + " ... (truncated)";
-            }
-        }
+        
         if (!ok) {
-            line += " Unexpected value representation: " + attribute.toString().replace('\n', ' ');
-            if (line.length() > MAX_LINE_LENGTH) {
-                line = line.substring(0, MAX_LINE_LENGTH) + " ... (truncated)";
-            }
+            line = new StringBuffer(" " + attribute.toString().replace('\n', ' '));
         }
-        line = line.replace('\0', ' ');
-        return addDetails(tag, vr, line);
+        
+        if (line.length() > MAX_LINE_LENGTH) {
+            line = new StringBuffer(line.substring(0, MAX_LINE_LENGTH) + " ... (truncated)");
+        }
+        
+        String tagName = CustomDictionary.getInstance().getNameFromTag(tag);
+        if (tagName == null) {
+            tagName = "<unknown>";
+        }
+
+        line = new StringBuffer(line.toString().replace('\0', ' '));
+        
+        return addDetails(tag, vr, tagName + " :" + line.toString());
     }
 
 

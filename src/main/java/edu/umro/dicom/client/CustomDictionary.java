@@ -7,7 +7,14 @@ import java.util.ArrayList;
 
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
+import com.pixelmed.dicom.LongTextAttribute;
+import com.pixelmed.dicom.OtherByteAttribute;
+import com.pixelmed.dicom.OtherFloatAttribute;
+import com.pixelmed.dicom.OtherWordAttribute;
+import com.pixelmed.dicom.TagFromName;
+import com.pixelmed.dicom.AttributeTagAttribute;
 import com.pixelmed.dicom.DicomDictionary;
+import com.pixelmed.dicom.UnlimitedTextAttribute;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.dicom.AttributeTag;
 
@@ -134,7 +141,9 @@ public class CustomDictionary extends DicomDictionary {
     private synchronized void init() {
         // only do this once.
         if (extensions == null) {
-            extensions = new ArrayList<PrivateTag>();
+            //extensions = new ArrayList<PrivateTag>();
+            //generateCustomAttributes();
+            extensions = ClientConfig.getInstance().getPrivateTagList();
 
             ClientConfig.getInstance().getPrivateTagList();
         }
@@ -266,92 +275,11 @@ public class CustomDictionary extends DicomDictionary {
         text.append("</CustomDictionary>\n");
         return text.toString().replaceAll("\n", System.getProperty("line.separator"));
     }
-
-    private static void testVrs() {
-
-        byte[][] vrList = {
-                ValueRepresentation.AE,
-                ValueRepresentation.AS,
-                ValueRepresentation.AT,
-                ValueRepresentation.CS,
-                ValueRepresentation.DA,
-                ValueRepresentation.DS,
-                ValueRepresentation.DT,
-                ValueRepresentation.FL,
-                ValueRepresentation.FD,
-                ValueRepresentation.IS,
-                ValueRepresentation.LO,
-                ValueRepresentation.LT,
-                ValueRepresentation.OB,
-                ValueRepresentation.OF,
-                ValueRepresentation.OW,
-                ValueRepresentation.OX,
-                ValueRepresentation.PN,
-                ValueRepresentation.SH,
-                ValueRepresentation.SL,
-                // ValueRepresentation.SQ,
-                ValueRepresentation.SS,
-                ValueRepresentation.ST,
-                ValueRepresentation.TM,
-                ValueRepresentation.UI,
-                ValueRepresentation.UL,
-                ValueRepresentation.UN,
-                ValueRepresentation.US,
-                ValueRepresentation.UT,
-                ValueRepresentation.XS,
-                ValueRepresentation.XO
-        };
-
-        final String VALUE = "12";
-        for (byte[] vr : vrList) {
-            try {
-                Attribute at = AttributeFactory.newAttribute(new AttributeTag("0x5062,0x0005"), vr);
-                at.setValue(VALUE);
-                at.addValue(VALUE);
-                String[] textList = at.getStringValues();
-                boolean ok = textList.length == 2;
-                if (!ok) {
-                    System.out.println("wrong number of values for " + ValueRepresentation.getAsString(vr) + "    Expected: 2    got: " + textList.length);
-                }
-                for (String text : textList) {
-                    if (!text.trim().equals(VALUE)) {
-                        ok = false;
-                        System.out.println("value wrong for vr: " + ValueRepresentation.getAsString(vr) + "    Expected: " + VALUE + "    got: " + text);
-                        break;
-                    }
-                }
-                if (ok) {
-                    System.out.println("success for vr: " + ValueRepresentation.getAsString(vr));
-                }
-            }
-            catch (Exception e) {
-                System.out.println("Failed for vr: " + ValueRepresentation.getAsString(vr));
-                try {
-                    byte[] data = { 1, 2 };
-                    Attribute bt = AttributeFactory.newAttribute(new AttributeTag("0x5062,0x0005"), vr);
-                    bt.setValues(data);
-                    byte[] dataOut = bt.getByteValues();
-                    for (int d = 0; d < data.length; d++) {
-                        if (data[d] != dataOut[d]) {
-                            System.out.println("Failed binary data match for vr: " + ValueRepresentation.getAsString(vr));
-                            throw new RuntimeException("Failed binary data match for vr: " + ValueRepresentation.getAsString(vr));
-                        }
-                    }
-                    System.out.println("binary success for vr: " + ValueRepresentation.getAsString(vr));
-                }
-                catch (Exception e2) {
-                    System.out.println("binary failed for vr: " + ValueRepresentation.getAsString(vr));
-                }
-
-            }
-        }
-        System.out.println("Done");
-        System.exit(0);
-    }
+    
 
     public static void main(String[] args) {
-        testVrs();
-        new CustomDictionary();
+        CustomDictionary cd = new CustomDictionary();
+        System.out.println("varian tag: " + cd.getNameFromTag(new AttributeTag(0x3249, 0x0010)));
     }
 
 }
