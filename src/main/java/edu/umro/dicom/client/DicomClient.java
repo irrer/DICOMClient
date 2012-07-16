@@ -223,28 +223,28 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
     private JButton anonymizeDestinationBrowseButton = null;
 
     /** Chooses directory for anonymized files. */
-    private JFileChooser directoryChooser = null;
+    private volatile JFileChooser directoryChooser = null;
 
     /** Destination directory for anonymized files. */
-    private File anonymizeDestination = null;
+    private volatile File anonymizeDestination = null;
 
 
     /** The preview dialog box that shows DICOM files as images or text. */
-    private Preview preview = null;
+    private volatile Preview preview = null;
 
     /** The instance of this class.  This class is effectively used as
      * a singleton.
      */
-    private static DicomClient dicomClient = null;
+    private volatile static DicomClient dicomClient = null;
 
     /** The accumulated (error) messages. */
-    private StringBuffer showMessageText = new StringBuffer();
+    private volatile StringBuffer showMessageText = new StringBuffer();
 
     /** AnonymizeGUI settings. */
-    private AnonymizeGUI anonymizeGui = null;
+    private volatile AnonymizeGUI anonymizeGui = null;
 
     /** True if it is ok to make the previewer visible. */
-    private boolean previewEnableable = true;
+    private volatile boolean previewEnableable = true;
 
 
     /**
@@ -932,9 +932,13 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      * @return The instance of the anonymizeGui GUI.
      */
     public AnonymizeGUI getAnonymizeGui() {
+        Profile.profile();
         if (anonymizeGui == null) {
+            Profile.profile();
             anonymizeGui = new AnonymizeGUI();
+            Profile.profile();
         }
+        Profile.profile();
         return anonymizeGui;
     }
 
@@ -1132,7 +1136,9 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      * Constructor to build the GUI.
      */
     private DicomClient() {
+        Profile.profile();
         buildMain();
+        Profile.profile();
     }
 
 
@@ -1179,10 +1185,28 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      * @return
      */
     public static DicomClient getInstance() {
+        Profile.profile();
         if (dicomClient == null) {
+            Profile.profile();
             dicomClient = new DicomClient();
+            Profile.profile();
         }
+        Profile.profile();
         return dicomClient;
+    }
+
+
+    /**
+     * Generate the custom dictionary in the background.  It can take a while.
+     */
+    private static synchronized void initCustomDictionary() {
+        new Thread(
+                new Runnable() {
+                    public void run() {
+                        CustomDictionary.getInstance();
+                    }
+                }
+        ).start();
     }
 
 
@@ -1206,15 +1230,22 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
                 }
             });
 
+            Profile.profile();
             ClientConfig.getInstance().setupTrustStore();
-            
+
+            initCustomDictionary();
+
             Anonymize.setTemplate(ClientConfig.getInstance().getAnonPatientIdTemplate());
             Anonymize.setRootGuid(ClientConfig.getInstance().getRootGuid());
 
             DicomClient dicomClient = getInstance();
+            Profile.profile();
             for (String fileName : args) {
+                Profile.profile();
                 dicomClient.addFile(fileName);
+                Profile.profile();
             }
+            Profile.profile();
         }
         catch (Exception ex) {
             Log.get().severe("Unexpected exception: " + ex);

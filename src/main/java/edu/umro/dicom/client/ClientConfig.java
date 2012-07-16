@@ -39,10 +39,10 @@ public class ClientConfig {
     };
 
     /** Instance of this object. */
-    private static ClientConfig clientConfig = null;
+    private volatile static ClientConfig clientConfig = null;
 
     /** Configuration information from file. */
-    private Document config = null;
+    private volatile Document config = null;
 
 
     /**
@@ -179,6 +179,7 @@ public class ClientConfig {
      * @return
      */
     public AttributeList getAnonymizingReplacementList() {
+        Profile.profile();
         AttributeList attributeList = new AttributeList();
         try {
             NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/AnonymizeDefaultList/*");
@@ -196,6 +197,7 @@ public class ClientConfig {
                     }
                 }
             }
+            Profile.profile();
         }
         catch (UMROException e) {
             Log.get().warning("Unable to parse list of default attributes to anonymize.  User will have to supply them manually.");
@@ -203,6 +205,7 @@ public class ClientConfig {
         catch (DicomException e) {
             Log.get().warning(this.getClass().getName() + ".getAnonymizingReplacementList : Failed to construct DICOM Attribute: " + e);
         }
+        Profile.profile();
         return attributeList;
     }
 
@@ -253,9 +256,13 @@ public class ClientConfig {
 
 
     public static ClientConfig getInstance() {
+        Profile.profile();
         if (clientConfig == null) {
+            Profile.profile();
             clientConfig = new ClientConfig();
+            Profile.profile();
         }
+        Profile.profile();
         return clientConfig;
     }
 }

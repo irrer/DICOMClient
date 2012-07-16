@@ -50,6 +50,7 @@ import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.AttributeTagAttribute;
+import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.OtherByteAttribute;
 import com.pixelmed.dicom.OtherFloatAttribute;
@@ -762,6 +763,7 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
      */
     private void showImage() {
         try {
+            Profile.profile();
             BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
             float contrast = (float)contrastSlider.getValue() / (float)10.0;
             float offset = (float)brightnessSlider.getValue();
@@ -779,16 +781,20 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
                     zoomFactor = 4f / ((-zoomValue) + 4f);
                 }
             }
+            Profile.profile();
             imagePreview.setScaleFactor(zoomFactor);
 
             imagePreview.setImage(transformedImage);
             ImageIcon imageIcon = new ImageIcon(transformedImage);
             cardLayout.show(cardPanel, IMAGE_VIEW);
+            Profile.profile();
             imagePreview.setIcon(imageIcon);
             Log.get().info("Previewed in image mode: " + this.getTitle() + "  contrast: " + contrast + "  brightness: " + offset + "  zoom factor: " + zoomFactor);
             // Force redrawing
             imagePreview.update(imagePreview.getGraphics());
+            Profile.profile();
             this.update(this.getGraphics());
+            Profile.profile();
         }
         catch (DicomException ex) {
             showText();
@@ -877,6 +883,13 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
     }
 
 
+    /**
+     * Convert a single non-sequence attribute to a human readable text format.
+     * 
+     * @param attribute Attribute to format.
+     * 
+     * @return String version of attribute.
+     */
     private String getAttributeAsText(Attribute attribute) {
         AttributeTag tag = attribute.getTag();
         StringBuffer line = new StringBuffer();
@@ -922,7 +935,7 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
                         byte[] outData = ((OtherByteAttribute)attribute).getByteValues();
 
                         for (int b = 0; b < outData.length; b++) {
-                            line.append(byteToHuman(outData[b]));
+                            line.append(" " + byteToHuman(outData[b]));
                             if (line.length() > MAX_LINE_LENGTH) {
                                 break;
                             }
@@ -993,16 +1006,19 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
      */
     private void addTextAttributes(AttributeList attributeList, StringBuffer text, int indentLevel) {
         String searchText = searchField.getText().toLowerCase();
+        Profile.profile();
 
         Iterator<?> i = attributeList.values().iterator();
         while (i.hasNext()) {
             Attribute attribute = (Attribute)i.next();
             if (attribute instanceof SequenceAttribute) {
+                Profile.profile();
                 AttributeTag tag = attribute.getTag();
                 String line = CustomDictionary.getInstance().getNameFromTag(tag) + " : ";
                 line = addDetails(tag, CustomDictionary.getInstance().getValueRepresentationFromTag(tag), line);
                 addLine(text, line, searchText, indentLevel);
                 numLines++;
+                Profile.profile();
                 Iterator<?> si = ((SequenceAttribute)attribute).iterator();
                 int itemNumber = 1;
                 while (si.hasNext()) {
@@ -1011,9 +1027,12 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
                     addTextAttributes(item.getAttributeList(), text, indentLevel+2);
                     itemNumber++;
                 }
+                Profile.profile();
             }
             else {
+                Profile.profile();
                 addLine(text, getAttributeAsText(attribute), searchText, indentLevel);
+                Profile.profile();
             }
         }
     }
@@ -1032,9 +1051,11 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
         numLines = 0;
         int scrollPosition = scrollPaneText.getVerticalScrollBar().getValue();
         int caretPosition = textPreview.getCaretPosition();
+        Profile.profile();
 
         addTextAttributes(attributeList, text, 0);
         textPreview.setText(text.toString());
+        Profile.profile();
 
         if ((scrollPosition >= scrollPaneText.getVerticalScrollBar().getMinimum()) && (scrollPosition <= scrollPaneText.getVerticalScrollBar().getMaximum())) {
             scrollPaneText.getVerticalScrollBar().setValue(scrollPosition);
@@ -1046,12 +1067,14 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
             scrollPaneText.getVerticalScrollBar().setValue(0);
             textPreview.setCaretPosition(0);
         }
+        Profile.profile();
 
         String searchText = searchField.getText().toLowerCase();
         int length = searchText.length();
 
         Highlighter highlighter = textPreview.getHighlighter();
         highlighter.removeAllHighlights();
+        Profile.profile();
 
         // highlight all instances of the search text
         if (matchList.size() > 0) {
@@ -1073,6 +1096,7 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
             }
             setCurrentlySelectedMatch(oldMatchIndex, matchIndex);
         }
+        Profile.profile();
 
         cardLayout.show(cardPanel, TEXT_VIEW);
         Log.get().info("Previewed in text mode: " + this.getTitle());            
@@ -1125,14 +1149,21 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
      * @param fileName Name of DICOM file.
      */
     public void showDicom(String title, String fileName) {
+        Profile.profile();
         Log.get().info("Previewing DICOM file: " + fileName + "   title: " + title);
         fileNameLabel.setText(fileName);
+        Profile.profile();
         setTitle(TITLE_PREFIX + "  " + title);
         attributeList = new AttributeList();
+        Profile.profile();
         try {
+            Profile.profile();
             attributeList.read(fileName);
+            Profile.profile();
             DicomClient.getInstance().getAnonymizeGui().updateTagList(attributeList);
+            Profile.profile();
             showDicom();
+            Profile.profile();
         }
         catch (DicomException ex) {
             DicomClient.getInstance().showMessage("Unable to interpret file " + fileName + " as DICOM: " + ex.getMessage());

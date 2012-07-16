@@ -220,14 +220,14 @@ public class Series extends JPanel implements ActionListener {
         return uploadButtonPanel;
     }
 
-    
+
     private JComponent buildButtonPanel() {
         JPanel panel = new JPanel();
         panel.add(buildPreviewButton());
         panel.add(buildUploadAnonymizeButton());
         return panel;
     }
-    
+
 
     private JComponent buildProgressBar() {
         progressBar = new JProgressBar();
@@ -697,6 +697,7 @@ public class Series extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent ev) {
+        Profile.profile();
         if (ev.getSource() == uploadAnonymizeButton) {
             processSeries();
         }
@@ -706,6 +707,7 @@ public class Series extends JPanel implements ActionListener {
             slice = (slice < 1) ? 1 : slice;
             showPreview(slice);
         }
+        Profile.profile();
     }
 
 
@@ -714,25 +716,39 @@ public class Series extends JPanel implements ActionListener {
         return summaryLabel.getText();
     }
 
+    private volatile boolean inPreview = false;
 
     /**
      * Show the current slice in the previewer.
      */
-    public void showPreview(int value) {
-        Preview preview = DicomClient.getInstance().getPreview();
-        preview.setSeries(this);
+    public synchronized void showPreview(int value) {
+        if (!inPreview) {
+            inPreview = true;
+            try {
+                Profile.profile();
+                Preview preview = DicomClient.getInstance().getPreview();
+                Profile.profile();
+                preview.setSeries(this);
+                Profile.profile();
 
-        String fileName = fileNameList.get(fileNameList.keySet().toArray()[value-1]);
-        StringBuffer title = new StringBuffer();
+                String fileName = fileNameList.get(fileNameList.keySet().toArray()[value-1]);
+                StringBuffer title = new StringBuffer();
 
-        title.append((patientID         == null) ? "" : "  " + patientID);
-        title.append((patientName       == null) ? "" : "  " + patientName);
-        title.append((seriesNumber      == null) ? "" : "  " + seriesNumber);
-        title.append((modality          == null) ? "" : "  " + modality);
-        title.append((seriesDescription == null) ? "" : "  " + seriesDescription);
-        title.append("   " + value + " / " + fileNameList.size());
+                title.append((patientID         == null) ? "" : "  " + patientID);
+                title.append((patientName       == null) ? "" : "  " + patientName);
+                title.append((seriesNumber      == null) ? "" : "  " + seriesNumber);
+                title.append((modality          == null) ? "" : "  " + modality);
+                title.append((seriesDescription == null) ? "" : "  " + seriesDescription);
+                title.append("   " + value + " / " + fileNameList.size());
 
-        preview.showDicom(title.toString(), fileName);
+                Profile.profile();
+                preview.showDicom(title.toString(), fileName);
+                Profile.profile();
+            }
+            finally {
+                inPreview = false;
+            }
+        }
     }
 
 

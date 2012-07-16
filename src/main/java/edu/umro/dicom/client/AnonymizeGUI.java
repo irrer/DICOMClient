@@ -261,24 +261,31 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
      */
     @SuppressWarnings("unchecked")
     private JComponent constructAnonPanel() {
+        Profile.profile();
         anonPanel = new JPanel();
+        Profile.profile();
         AttributeList attributeList = ClientConfig.getInstance().getAnonymizingReplacementList();
+        Profile.profile();
 
         GridLayout gridLayout = new GridLayout(attributeList.size(), 1);
         gridLayout.setVgap(20);
         anonPanel.setLayout(gridLayout);
+        Profile.profile();
 
+        Profile.profile();
         updateTagList(attributeList);
+        Profile.profile();
 
         for (AttributeTag tag : (Set<AttributeTag>)attributeList.keySet()) {
             addAttribute(attributeList, tag);
-
         }
+        Profile.profile();
 
         anonPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         scrollPane = new JScrollPane(anonPanel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
+        Profile.profile();
         return scrollPane;
     }
 
@@ -358,6 +365,7 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
     public void updateTagList(AttributeList attributeList) {
         int oldSize = tagList.size();
 
+        Profile.profile();
         for (Object oAttr : attributeList.values()) {
             Attribute attribute = (Attribute)oAttr;
             tagList.add(attribute.getTag());
@@ -369,6 +377,7 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
                 }
             }
         }
+        Profile.profile();
 
         // If the tag list changed (can only increase), then update the
         // sorted list of tag names
@@ -379,11 +388,14 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
                     tagListSorted.add(name);
                 }
             }
+            Profile.profile();
 
             for (Component aa : anonPanel.getComponents()) {
                 ((AnonymizeAttribute)aa).setChoiceList();
             }
+            Profile.profile();
         }
+        Profile.profile();
     }
 
 
@@ -393,21 +405,31 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
      */
     public AnonymizeGUI() {
         super(DicomClient.getInstance(), false);
+        Profile.profile();
         setTitle(WINDOW_TITLE);
         tagList = new TreeSet<AttributeTag>();
+        Profile.profile();
 
         JPanel panel = new JPanel();
+        Profile.profile();
         getContentPane().add(panel);
+        Profile.profile();
         panel.setLayout(new BorderLayout());
+        Profile.profile();
 
         panel.add(constructAnonPanel(), BorderLayout.CENTER);
+        Profile.profile();
 
         panel.add(constructSouthPanel(), BorderLayout.SOUTH);
+        Profile.profile();
 
         DicomClient.setColor(getContentPane());
+        Profile.profile();
 
         setPreferredSize(PREFERRED_SIZE);
+        Profile.profile();
         pack();
+        Profile.profile();
     }
 
 

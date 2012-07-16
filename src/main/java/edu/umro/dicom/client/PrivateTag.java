@@ -65,7 +65,8 @@ public class PrivateTag {
     public PrivateTag(Node node) throws UMROException, DicomException {
         name = node.getNodeName();
         valueRepresentation = XML.getValue(node, "@vr").getBytes();
-        attributeTag = new AttributeTag(XML.getValue(node, "@group") + "," + XML.getValue(node, "@element"));
+        String tagText = "0x" + XML.getValue(node, "@group") + ",0x" + XML.getValue(node, "@element");
+        attributeTag = new AttributeTag(tagText);
         fullName = XML.getValue(node, "@fullName");
     }
 
