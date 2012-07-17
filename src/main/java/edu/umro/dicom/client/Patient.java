@@ -80,17 +80,15 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
     /** Button that anonymizes all series for this patient. */
     private JButton anonymizePatientButton = null; 
     
-    private JComponent buildAnonymizingPatientId() {
+    private JComponent buildAnonymizingPatientId(String anonymousPatientId) {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
 
         anonymizePanel = new JPanel();
         
-        String anonId = Anonymize.makeUniquePatientId();
-
         anonymizePanel.add(new JLabel("New Patient ID: "));
         anonymizePatientIdTextField = new JTextField(16);
-        anonymizePatientIdTextField.setText(anonId);
+        anonymizePatientIdTextField.setText(anonymousPatientId);
         PlainDocument plainIdDocument = (PlainDocument)anonymizePatientIdTextField.getDocument();
         plainIdDocument.setDocumentFilter(new LimitedDocumentFilter(PATIENT_ID_MAX_LEN));
         anonymizePatientIdTextField.setToolTipText("<html>The ID that to be used as<br>the anonymized patient ID</html>");
@@ -102,7 +100,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         anonymizePatientNameLabel = new JLabel("New Patient Name: ");
         anonymizePanel.add(anonymizePatientNameLabel);
         anonymizePatientNameTextField = new JTextField(16);
-        anonymizePatientNameTextField.setText(anonId);
+        anonymizePatientNameTextField.setText(anonymousPatientId);
         PlainDocument plainNameDocument = (PlainDocument)anonymizePatientNameTextField.getDocument();
         plainNameDocument.setDocumentFilter(new LimitedDocumentFilter(PATIENT_NAME_MAX_LEN));
         anonymizePatientNameTextField.setToolTipText("<html>The ID that to be used as<br>the anonymized patient name</html>");
@@ -139,7 +137,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
      * could be derived from the file name, but it is more efficient to only
      * read and parse the file once.
      */
-    public Patient(String fileName, AttributeList attributeList) {
+    public Patient(String fileName, AttributeList attributeList, String anonymousPatientId) {
         patientId        = Util.getAttributeValue(attributeList, TagFromName.PatientID);
         patientId        = (patientId == null) ? "No patient id" : patientId;
         patientName      = Util.getAttributeValue(attributeList, TagFromName.PatientName); 
@@ -175,7 +173,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        add(buildAnonymizingPatientId());
+        add(buildAnonymizingPatientId(anonymousPatientId));
 
         Study study = new Study(fileName, attributeList);
         add(study);

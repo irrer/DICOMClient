@@ -5,16 +5,7 @@ import java.lang.NumberFormatException;
 import java.util.Date;
 import java.util.ArrayList;
 
-import com.pixelmed.dicom.Attribute;
-import com.pixelmed.dicom.AttributeFactory;
-import com.pixelmed.dicom.LongTextAttribute;
-import com.pixelmed.dicom.OtherByteAttribute;
-import com.pixelmed.dicom.OtherFloatAttribute;
-import com.pixelmed.dicom.OtherWordAttribute;
-import com.pixelmed.dicom.TagFromName;
-import com.pixelmed.dicom.AttributeTagAttribute;
 import com.pixelmed.dicom.DicomDictionary;
-import com.pixelmed.dicom.UnlimitedTextAttribute;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.dicom.AttributeTag;
 
@@ -144,10 +135,7 @@ public class CustomDictionary extends DicomDictionary {
             //extensions = new ArrayList<PrivateTag>();
             //generateCustomAttributes();
             Profile.profile();
-            Profile.profile();
-            System.out.println("Generating extensions --------------------------------------");
             extensions = ClientConfig.getInstance().getPrivateTagList();
-            Profile.profile();
             Profile.profile();
         }
     }
@@ -163,7 +151,6 @@ public class CustomDictionary extends DicomDictionary {
 
     public synchronized static CustomDictionary getInstance() {
         if (instance == null) {
-            System.out.println("CustomDictionary getInstance --------------------------------------");
             instance = new CustomDictionary();
         }
         return instance;

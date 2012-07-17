@@ -1,0 +1,58 @@
+############################################################
+#
+#    Logging Configuration File for java.util.logging
+#
+# You can use a different file by specifying a filename
+# with the java.util.logging.config.file system property.  
+# For example java -Djava.util.logging.config.file=myfile
+############################################################
+
+############################################################
+#       Global properties
+############################################################
+
+# "handlers" specifies a comma separated list of log Handler 
+# classes.  These handlers will be installed during VM startup.
+# Note that these classes must be on the system classpath.
+# By default we only configure a ConsoleHandler, which will only
+# show messages at the INFO and above levels.
+
+# To also add the FileHandler, use the following line instead.
+#handlers=java.util.logging.FileHandler, java.util.logging.ConsoleHandler
+
+# Default global logging level.
+# This specifies which kinds of events are logged across
+# all loggers.  For any given facility this global level
+# can be overridden by a facility specific level
+# Note that the ConsoleHandler also has a separate level
+# setting to limit messages printed to the console.
+#.level=INFO
+.level=FINE
+
+############################################################
+# Handler specific properties.
+# Describes specific configuration info for Handlers.
+############################################################
+
+#handlers=java.util.logging.ConsoleHandler
+#handlers=java.util.logging.ConsoleHandler edu.umro.util.LogFileHandler
+#handlers=edu.umro.util.LogFileHandler org.restlet.engine.log.AccessLogFileHandler java.util.logging.FileHandler
+handlers=edu.umro.util.LogFileHandler
+
+
+# default file output is in user's home directory.
+#java.util.logging.FileHandler.pattern=%h/java%u.log
+#java.util.logging.FileHandler.limit=5000
+#java.util.logging.FileHandler.count=3
+#java.util.logging.FileHandler.level=FINER
+#java.util.logging.FileHandler.append=true
+
+edu.umro.util.LogFileHandler.pattern=./log/dicomsvc-%g-%u.log
+edu.umro.util.LogFileHandler.limit=10000000
+edu.umro.util.LogFileHandler.count=100
+edu.umro.util.LogFileHandler.level=ALL
+edu.umro.util.LogFileHandler.append=false
+
+# The formatter for edu.umro.util.LogFileHandler is overridden at run time, so
+# it does not matter what it is set it to here.
+#edu.umro.util.LogFileHandler.formatter=edu.umro.util.LogFormatter

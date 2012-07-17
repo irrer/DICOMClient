@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
 
+import edu.umro.util.Log;
+
 /**
  * This class makes it easy to drag and drop files from the operating
  * system to a Java program. Any <tt>java.awt.Component</tt> can be
@@ -552,8 +554,11 @@ public class FileDrop
     /** Outputs <tt>message</tt> to <tt>out</tt> if it's not null. */
     private static void log( java.io.PrintStream out, String message )
     {   // Log message if requested
+        Log.get().finest(message);
+        /*
         if( out != null )
             out.println( message );
+         */
     }   // end log
 
     

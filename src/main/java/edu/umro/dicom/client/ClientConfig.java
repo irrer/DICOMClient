@@ -153,8 +153,36 @@ public class ClientConfig {
 
             }
         }
-        Log.get().severe("RootGuid: Unable to read configuration file " + CONFIG_FILE_NAME);
+        Log.get().severe("getRootGuid: Unable to read configuration file " + CONFIG_FILE_NAME);
         return null;
+    }
+
+
+    /**
+     * Get flag indicating whether or not profiling is to be done.  If there is a problem
+     * getting the flag, then assume false.
+     *  
+     * @return Flag indicating whether profiling should be done.
+     */
+    public boolean getProfileFlag() {
+        if (config != null) {
+            try {
+                String text = XML.getValue(config, "/DicomClientConfig/Profile/text()").trim();
+                boolean enabled =
+                    text.equalsIgnoreCase("true") || 
+                    text.equalsIgnoreCase("yes") || 
+                    text.equalsIgnoreCase("y") || 
+                    text.equalsIgnoreCase("1") || 
+                    text.equalsIgnoreCase("t");
+                return enabled;
+            }
+            catch (UMROException e) {
+                Log.get().info("getProfileFlag: Unable to get flag: " + e);
+
+            }
+        }
+        Log.get().info("getProfileFlag: Unable to read configuration file " + CONFIG_FILE_NAME);
+        return false;
     }
 
 
@@ -253,6 +281,9 @@ public class ClientConfig {
         }
         return tagList;
     }
+
+
+
 
 
     public static ClientConfig getInstance() {

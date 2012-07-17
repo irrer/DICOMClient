@@ -470,10 +470,11 @@ public class Series extends JPanel implements ActionListener {
      * 
      * @throws DicomException On invalid PatientID or PatientName
      */
-    private AttributeList getAnonymizingReplacementList() throws DicomException {
+    private synchronized AttributeList getAnonymizingReplacementList() throws DicomException {
         AttributeList replacementAttributeList = DicomClient.getInstance().getAnonymizeGui().getAttributeList();
 
         Attribute patientId = AttributeFactory.newAttribute(TagFromName.PatientID);
+        String patientIdText = getPatient().getAnonymizePatientIdText();
         patientId.addValue(getPatient().getAnonymizePatientIdText());
         replacementAttributeList.put(patientId);
 
@@ -492,7 +493,16 @@ public class Series extends JPanel implements ActionListener {
      * 
      * @return
      */
-    private String getNewFileName(File dir, AttributeList attributeList) {
+    private File getNewFileName(File dir, AttributeList attributeList) {
+
+        if ((DicomClient.getCommandLine()) && (DicomClient.getOutputFile() != null)) {
+            if (DicomClient.getInstance().getFileCount() > 1) {
+                dir = DicomClient.getOutputFile();
+            }
+            else {
+                return DicomClient.getOutputFile();
+            }
+        }
 
         String patientIdText      = Util.getAttributeValue(attributeList, TagFromName.PatientID);
         String modalityText       = Util.getAttributeValue(attributeList, TagFromName.Modality);
@@ -516,8 +526,11 @@ public class Series extends JPanel implements ActionListener {
         while (file.exists()) {
             file = new File(dir, name + "_" + count + DICOM_SUFFIX);
         }
-
-        return file.getName();
+        
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return file;
     }
 
 
@@ -537,10 +550,7 @@ public class Series extends JPanel implements ActionListener {
 
                 // set up to put file in new directory
                 File newDir = DicomClient.getInstance().getDestination();
-                if (!newDir.exists()) {
-                    newDir.mkdirs();
-                }
-                File newFile = new File(newDir, getNewFileName(newDir, attributeList));
+                File newFile = getNewFileName(newDir, attributeList);
                 attributeList.write(newFile, TransferSyntax.ExplicitVRLittleEndian, true, true);
                 count++;
                 Log.get().info("Anonymized to file: " + newFile.getAbsolutePath());

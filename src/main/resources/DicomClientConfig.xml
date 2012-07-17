@@ -31,6 +31,9 @@
     <!-- If true, upload help is shown.  It makes sense to not show the upload help for sites where the server is not installed. -->
     <ShowUploadHelp>true</ShowUploadHelp>
     
+    <!-- If true, enable internal profiling.  Setting this to true is only useful for diagnosing performance problems. -->
+    <Profile>false</Profile>
+    
     <!-- Location of java keystore file.  If this value is specified by the
     system property javax.net.ssl.trustStore then the system property will
     override these entries.  Multiple entries indicate that

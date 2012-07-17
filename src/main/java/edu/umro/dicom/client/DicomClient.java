@@ -70,9 +70,11 @@ import com.pixelmed.dicom.TagFromName;
 import edu.umro.dicom.common.Anonymize;
 import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
+import edu.umro.util.OpSys;
 import edu.umro.util.UMROException;
 import edu.umro.util.Utility;
 import edu.umro.util.XML;
+import edu.umro.util.General;
 
 /**
  * Main class that shows a GUI to let the user upload DICOM files.
@@ -134,6 +136,9 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      * is extracted from the DICOM files given by the user.
      */
     private TreeMap<String, Patient> patientList = new TreeMap<String, Patient>();
+
+    /** Number of regular files to process. */
+    private int fileCount = 0;
 
     /** List of available PACS, retrieved from the DICOM server. */
     private ArrayList<String> pacsList = null;
@@ -211,6 +216,15 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
     /** Indicates a login problem. */
     private JLabel loginStatusLabel = null;
+
+    /** True if the application is in command line mode (no GUI) */
+    private static boolean commandLine = false;
+
+    /** The default patient ID to use. */
+    private static String defaultPatientId = null;
+
+    /** Put anonymized files here. */
+    private static File outputFile = null;
 
     private JPanel modePanel = null;
     private CardLayout modeCardLayout = null;
@@ -381,10 +395,12 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             width = (w > width) ? w : width;
         }
 
-        Dimension dimension = new Dimension(width+8, height+2);
-        pacsLabel.setPreferredSize(dimension);
-        pacsLabel.invalidate();
-        pack();
+        if (!getCommandLine()) {
+            Dimension dimension = new Dimension(width+8, height+2);
+            pacsLabel.setPreferredSize(dimension);
+            pacsLabel.invalidate();
+            pack();
+        }
     }
 
     /**
@@ -533,6 +549,11 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         directoryChooser = new JFileChooser();
         directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
+        if (getOutputFile() != null) {
+            anonymizeDestinationText.setText(getOutputFile().getAbsolutePath());
+            updateDestination();
+        }
+
         panel.add(anonymizeDestinationBrowseButton);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
 
@@ -663,11 +684,8 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         patientScrollPane.setBorder(null);
         Component parent = patientListPanel.getParent();
         while (parent != null) {
-            System.out.println("    parent: " + parent);
             parent = parent.getParent();
         }
-        System.out.println("    scrollPane: " + patientScrollPane);
-        System.out.println("    panel: " + panel);
 
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(patientScrollPane);
@@ -782,8 +800,10 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
         setColor(this);
 
-        pack();
-        setVisible(true);
+        if (!getCommandLine()) {
+            pack();
+            setVisible(true);
+        }
         setMode();
     }
 
@@ -932,13 +952,11 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      * @return The instance of the anonymizeGui GUI.
      */
     public AnonymizeGUI getAnonymizeGui() {
-        Profile.profile();
         if (anonymizeGui == null) {
             Profile.profile();
             anonymizeGui = new AnonymizeGUI();
             Profile.profile();
         }
-        Profile.profile();
         return anonymizeGui;
     }
 
@@ -1009,6 +1027,15 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         setProcessedStatus();
     }
 
+
+    /**
+     * Get number of DICOM files specified by user.
+     * @return
+     */
+    public int getFileCount() {
+        return fileCount;
+    }
+
     /**
      * Add the given file to the list of loaded files.  If the file is not
      * a DICOM file or can not be read, then show a message and ignore it.
@@ -1021,6 +1048,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      */
     private void addDicomFile(File file) {
         try {
+            fileCount++;
             setPreviewEnableable(false);
             String fileName = file.getAbsolutePath();
             if (new File(fileName).isDirectory()) {
@@ -1057,7 +1085,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
             Patient patient = patientList.get(patientId);
             if (patient == null) {
-                patient = new Patient(fileName, attributeList);
+                patient = new Patient(fileName, attributeList, makeNewPatientId());
                 patientList.put(patientId, patient);
                 patientListPanel.add(patient);
                 setColor(patientListPanel);
@@ -1115,7 +1143,11 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             }
         }
         else {
-            addFile(file.getParentFile().getAbsolutePath());
+            if (commandLine) {
+                addDicomFile(new File(fileName));
+            } else {
+                addFile(file.getParentFile().getAbsolutePath());
+            }
         }
 
         // Need to set color for all of the new Swing components added.
@@ -1185,13 +1217,11 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      * @return
      */
     public static DicomClient getInstance() {
-        Profile.profile();
         if (dicomClient == null) {
             Profile.profile();
             dicomClient = new DicomClient();
             Profile.profile();
         }
-        Profile.profile();
         return dicomClient;
     }
 
@@ -1211,17 +1241,93 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
 
     /**
+     * Make a new patient ID for anonymizing.
+     * 
+     * @return A new patient ID.
+     */
+    private static String makeNewPatientId() {
+        String patientId = getDefaultPatientId();
+        if (patientId == null) {
+            return Anonymize.makeUniquePatientId();
+        }
+
+        defaultPatientId = General.increment(patientId);
+        return patientId;
+    }
+
+
+    public static boolean getCommandLine() {
+        return commandLine;
+    }
+
+    public static String getDefaultPatientId() {
+        return defaultPatientId; 
+    }
+
+    public static File getOutputFile() {
+        return outputFile;
+    }
+
+    private static String[] parseArguments(String[] args) {
+        String[] fileList = null;
+        try {
+            for (int a = 0; a < args.length; a++) {
+                if (args[a].equals("-P")) {
+                    a++;
+                    defaultPatientId = args[a];
+                }
+                else {
+                    if (args[a].equals("-o")) {
+                        a++;
+                        outputFile = new File(args[a]);
+                    }
+                    else { 
+                        if (args[a].equals("-c")) {
+
+                            commandLine = true;
+                        }
+
+                        else {
+                            fileList = new String[args.length - a];
+                            int f = 0;
+                            for (; a < args.length; a++) {
+                                fileList[f] = args[a];
+                                f++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            String msg =
+                "Unable to parse command line arguments.  Usage:\n\n" +
+                "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] inFile1 inFile2 ...\n";
+            System.err.println(msg);
+            System.exit(1);
+        }
+        return fileList;
+    }
+
+
+    private static void logPrelude() {
+        Log.get().info("Starting DicomClient at " + new Date());
+        Log.get().info("User: " + OpSys.getUser());
+
+        Log.get().info("Build Date: " + Util.getBuildDate());
+        Log.get().info("Built by: " + Util.getBuiltBy());
+        Log.get().info("Version: " + Util.getImplementationVersion());
+        Log.get().info("Organization: " + Util.getImplementationVendor());
+    }
+
+
+    /**
      * @param args
      */
     public static void main(String[] args) {
         try {
-            // print one line right away to indicate that the program started.
-            System.out.println("Starting DicomClient at " + new Date());
-
-            Log.get().info("Build Date: " + Util.getBuildDate());
-            Log.get().info("Built by: " + Util.getBuiltBy());
-            Log.get().info("Version: " + Util.getImplementationVersion());
-            Log.get().info("Organization: " + Util.getImplementationVendor());
+            logPrelude();
+            args = parseArguments(args);
 
             // This disables the host name verification for certificate authentication.
             HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
@@ -1245,7 +1351,12 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
                 dicomClient.addFile(fileName);
                 Profile.profile();
             }
-            Profile.profile();
+
+            // If in command line mode, then anonymize all files and exit happily
+            if (getCommandLine()) {
+                processAll(dicomClient);
+                System.exit(0);
+            }
         }
         catch (Exception ex) {
             Log.get().severe("Unexpected exception: " + ex);
