@@ -50,7 +50,6 @@ import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.AttributeTagAttribute;
-import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.OtherByteAttribute;
 import com.pixelmed.dicom.OtherFloatAttribute;
@@ -1004,7 +1003,7 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
      * @param indentLevel Indicates the depth of recursion and drives the
      * amount of whitespace prepended to each line.
      */
-    private void addTextAttributes(AttributeList attributeList, StringBuffer text, int indentLevel) {
+    public void addTextAttributes(AttributeList attributeList, StringBuffer text, int indentLevel) {
         String searchText = searchField.getText().toLowerCase();
         Profile.profile();
 
@@ -1110,7 +1109,7 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
     public void setVisible(boolean visible) {
         if (visible) {
             if (DicomClient.getInstance().isPreviewEnableable()) {
-                super.setVisible(visible);
+                super.setVisible(!DicomClient.inCommandLineMode());
             }
         }
         else {

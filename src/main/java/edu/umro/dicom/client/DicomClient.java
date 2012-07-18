@@ -218,7 +218,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
     private JLabel loginStatusLabel = null;
 
     /** True if the application is in command line mode (no GUI) */
-    private static boolean commandLine = false;
+    private static boolean commandLineMode = false;
 
     /** The default patient ID to use. */
     private static String defaultPatientId = null;
@@ -395,7 +395,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             width = (w > width) ? w : width;
         }
 
-        if (!getCommandLine()) {
+        if (!inCommandLineMode()) {
             Dimension dimension = new Dimension(width+8, height+2);
             pacsLabel.setPreferredSize(dimension);
             pacsLabel.invalidate();
@@ -775,11 +775,13 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
     private void buildMain() {
         setTitle(WINDOW_NAME);
 
-        try {
-            UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-        }
-        catch (Exception ex) {
-            // ignore any problems setting look and feel
+        if (OpSys.getOpSysId() == OpSys.OpSysId.WINDOWS) {
+            try {
+                UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+            }
+            catch (Exception ex) {
+                // ignore any problems setting look and feel
+            }
         }
 
         Container container = getContentPane();
@@ -800,7 +802,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
         setColor(this);
 
-        if (!getCommandLine()) {
+        if (!inCommandLineMode()) {
             pack();
             setVisible(true);
         }
@@ -881,7 +883,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         }
 
         if (source.equals(anonymizeOptionsButton)) {
-            getAnonymizeGui().setVisible(true);
+            getAnonymizeGui().setVisible(!inCommandLineMode());
         }
 
         if (source.equals(anonymizeRadioButton) || source.equals(uploadRadioButton)) {
@@ -1143,10 +1145,21 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             }
         }
         else {
-            if (commandLine) {
+            if (commandLineMode) {
                 addDicomFile(new File(fileName));
             } else {
-                addFile(file.getParentFile().getAbsolutePath());
+                File parent = file.getParentFile();
+                if (parent == null) {
+                    String msg = "Could not open directory to read DICOM file " + file.getAbsolutePath();
+                    Log.get().severe(msg);
+                    if (inCommandLineMode()) {
+                        System.err.println(msg);
+                        System.exit(1);
+                    }
+                }
+                else {
+                    addFile(parent.getAbsolutePath());
+                }
             }
         }
 
@@ -1256,8 +1269,8 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
     }
 
 
-    public static boolean getCommandLine() {
-        return commandLine;
+    public static boolean inCommandLineMode() {
+        return commandLineMode;
     }
 
     public static String getDefaultPatientId() {
@@ -1269,7 +1282,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
     }
 
     private static String[] parseArguments(String[] args) {
-        String[] fileList = null;
+        String[] fileList = new String[0];
         try {
             for (int a = 0; a < args.length; a++) {
                 if (args[a].equals("-P")) {
@@ -1283,16 +1296,21 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
                     }
                     else { 
                         if (args[a].equals("-c")) {
-
-                            commandLine = true;
+                            commandLineMode = true;
                         }
 
                         else {
-                            fileList = new String[args.length - a];
-                            int f = 0;
-                            for (; a < args.length; a++) {
-                                fileList[f] = args[a];
-                                f++;
+                            if (args[a].startsWith("-")) {
+                                System.err.println("Invalid argument: " + args[a]);
+                                System.exit(1);
+                            }
+                            else {
+                                fileList = new String[args.length - a];
+                                int f = 0;
+                                for (; a < args.length; a++) {
+                                    fileList[f] = args[a];
+                                    f++;
+                                }
                             }
                         }
                     }
@@ -1353,7 +1371,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             }
 
             // If in command line mode, then anonymize all files and exit happily
-            if (getCommandLine()) {
+            if (inCommandLineMode()) {
                 processAll(dicomClient);
                 System.exit(0);
             }

@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -17,6 +18,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.TreeMap;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JButton;
@@ -46,10 +48,13 @@ import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.TransferSyntax;
+import com.pixelmed.display.ConsumerFormatImageMaker;
 
 import edu.umro.dicom.common.Anonymize;
 import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
+import edu.umro.util.UMROException;
+import edu.umro.util.Utility;
 
 public class Series extends JPanel implements ActionListener {
 
@@ -474,7 +479,6 @@ public class Series extends JPanel implements ActionListener {
         AttributeList replacementAttributeList = DicomClient.getInstance().getAnonymizeGui().getAttributeList();
 
         Attribute patientId = AttributeFactory.newAttribute(TagFromName.PatientID);
-        String patientIdText = getPatient().getAnonymizePatientIdText();
         patientId.addValue(getPatient().getAnonymizePatientIdText());
         replacementAttributeList.put(patientId);
 
@@ -495,7 +499,7 @@ public class Series extends JPanel implements ActionListener {
      */
     private File getNewFileName(File dir, AttributeList attributeList) {
 
-        if ((DicomClient.getCommandLine()) && (DicomClient.getOutputFile() != null)) {
+        if ((DicomClient.inCommandLineMode()) && (DicomClient.getOutputFile() != null)) {
             if (DicomClient.getInstance().getFileCount() > 1) {
                 dir = DicomClient.getOutputFile();
             }
@@ -526,11 +530,70 @@ public class Series extends JPanel implements ActionListener {
         while (file.exists()) {
             file = new File(dir, name + "_" + count + DICOM_SUFFIX);
         }
-        
+
         if (!dir.exists()) {
             dir.mkdirs();
         }
         return file;
+    }
+
+
+    /**
+     * If in command line mode, save the anonymized DICOM as text and, if
+     * possible, as an image.
+     * 
+     * @param attributeList Anonymized DICOM.
+     * 
+     * @param file File where anonymized DICOM is to be written.
+     */
+    private void saveTextAndImageFiles(AttributeList attributeList, File file) {
+        if (DicomClient.inCommandLineMode()) {
+            StringBuffer text = new StringBuffer();
+            DicomClient.getInstance().getPreview().addTextAttributes(attributeList, text, 0);
+            String fileName = file.getName();
+            String textFileName = null;
+            String imageFileName = null;
+            File dir = file.getParentFile();
+            int dotIndex = fileName.lastIndexOf('.');
+            if (dotIndex == -1) {
+                textFileName = fileName + ".TXT";
+                imageFileName = fileName + ".JPG";
+            }
+            else {
+                String baseName = fileName.substring(0, dotIndex);
+                textFileName = baseName + ".TXT";
+                imageFileName = baseName + ".PNG";
+            }
+
+            File textFile = new File(dir, textFileName);
+            try {
+                textFile.delete();
+                textFile.createNewFile();
+                Utility.writeFile(textFile, text.toString().getBytes());
+            }
+            catch (UMROException e) {
+                System.err.println("Unable to write anonymized text file: " + e);
+                System.exit(1);
+            }
+            catch (IOException e) {
+                System.err.println("Unable to create anonymized text file " + textFile.getAbsolutePath() + " : " + e);
+                System.exit(1);
+            }
+
+            try {
+                BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
+                File imageFile = new File(dir, imageFileName);
+                try {
+                    ImageIO.write(image, "png", imageFile);
+                }
+                catch (IOException e) {
+                    Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath());
+                }
+            }
+            catch (DicomException e) {
+                // Ignore exception because this was not an image file.
+            }
+        }
     }
 
 
@@ -551,7 +614,9 @@ public class Series extends JPanel implements ActionListener {
                 // set up to put file in new directory
                 File newDir = DicomClient.getInstance().getDestination();
                 File newFile = getNewFileName(newDir, attributeList);
+                newFile.getParentFile().mkdirs();
                 attributeList.write(newFile, TransferSyntax.ExplicitVRLittleEndian, true, true);
+                saveTextAndImageFiles(attributeList, newFile);
                 count++;
                 Log.get().info("Anonymized to file: " + newFile.getAbsolutePath());
             }
@@ -559,10 +624,20 @@ public class Series extends JPanel implements ActionListener {
             setProcessedStatus();
         }
         catch (DicomException e) {
-            Log.get().severe("Dicom error - unable to anonymize series " + toString() + " : " + e);
+            String msg = "DICOM error - unable to anonymize series " + toString() + " : " + e;
+            Log.get().severe(msg);
+            if (DicomClient.inCommandLineMode()) {
+                System.err.println(msg);
+                System.exit(1);
+            }
         }
         catch (IOException e) {
-            Log.get().severe("File error - unable to anonymize series " + toString() + " : " + e);            
+            String msg = "File error - unable to anonymize series " + toString() + " : " + e;
+            Log.get().severe(msg);
+            if (DicomClient.inCommandLineMode()) {
+                System.err.println(msg);
+                System.exit(1);
+            }
         }
         if (count != fileNameList.size()) {
             DicomClient.getInstance().showMessage("Unable to anonymize series " + toString() + " .  Only " + count + " slices of " + fileNameList.size() + " were completed.");

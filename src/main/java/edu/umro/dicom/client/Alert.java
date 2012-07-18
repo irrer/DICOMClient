@@ -132,7 +132,7 @@ public class Alert extends JDialog implements ActionListener {
         setPreferredSize(preferredSize);
         getContentPane().add(panel);
         pack();
-        setVisible(true);
+        setVisible(!DicomClient.inCommandLineMode());
     }
 
 

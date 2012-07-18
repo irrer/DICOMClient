@@ -29,7 +29,7 @@
     <RootGuid>1.3.6.1.4.1.22361.</RootGuid>
     
     <!-- If true, upload help is shown.  It makes sense to not show the upload help for sites where the server is not installed. -->
-    <ShowUploadHelp>true</ShowUploadHelp>
+    <ShowUploadHelp>false</ShowUploadHelp>
     
     <!-- If true, enable internal profiling.  Setting this to true is only useful for diagnosing performance problems. -->
     <Profile>false</Profile>
