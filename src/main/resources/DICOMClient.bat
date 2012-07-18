@@ -9,4 +9,4 @@ set PATH=%JAVA_HOME%\bin;%PATH%
 @rem set the current directory so that logs will go in the right place
 cd %dirname%
 
-java -Xmx256m -cp %dirname%@@with-dep-jar@@ edu.umro.dicom.client.DicomClient %*
+java -Xmx256m -cp %dirname%@@with-dep-jar@@ -Djava.util.logging.config.file=%dirname%logging.propertiesWindows edu.umro.dicom.client.DicomClient %*

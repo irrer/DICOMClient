@@ -553,7 +553,7 @@ public class Series extends JPanel implements ActionListener {
             String fileName = file.getName();
             String textFileName = null;
             String imageFileName = null;
-            File dir = file.getParentFile();
+            File dir = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
             int dotIndex = fileName.lastIndexOf('.');
             if (dotIndex == -1) {
                 textFileName = fileName + ".TXT";
@@ -614,7 +614,8 @@ public class Series extends JPanel implements ActionListener {
                 // set up to put file in new directory
                 File newDir = DicomClient.getInstance().getDestination();
                 File newFile = getNewFileName(newDir, attributeList);
-                newFile.getParentFile().mkdirs();
+                File parent = (newFile.getParentFile() == null) ? new File(".") : newFile.getParentFile();
+                parent.mkdirs();
                 attributeList.write(newFile, TransferSyntax.ExplicitVRLittleEndian, true, true);
                 saveTextAndImageFiles(attributeList, newFile);
                 count++;

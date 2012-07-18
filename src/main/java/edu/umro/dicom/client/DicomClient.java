@@ -276,7 +276,9 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         showMessageText.append(message);
         messageTextArea.setText(showMessageText.toString());
         text = messageTextArea.getText();
-        System.out.println("----\n" + text + "\n----");
+        if (!inCommandLineMode()) {
+            System.out.println("----\n" + text + "\n----");
+        }
     }
 
 
@@ -1081,7 +1083,13 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
             // There should be at least 3 attributes to be considered valid DICOM
             if (attributeList.size() < 4) {
-                showMessage("Invalid DICOM file.  No Media Storage SOP Class UID value for file " + fileName);
+                String msg = "Not a valid DICOM file: " + fileName;
+                showMessage(msg);
+                if (inCommandLineMode()) {
+                    System.err.println(msg);
+                    System.exit(1);
+                }
+
                 return;
             }
 
@@ -1102,7 +1110,8 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             }
 
             // We have a valid DICOM file, so use its directory in determining where to put files.
-            File anonymizedDirectory = new File(file.isDirectory() ? file : file.getParentFile(), "anonymized");
+            File parent = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
+            File anonymizedDirectory = new File(file.isDirectory() ? file : parent, "anonymized");
             setDefaultDestination(anonymizedDirectory);
         }
         finally {
@@ -1130,11 +1139,21 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         File file = new File(fileName);
 
         if (!file.exists()) {
-            showMessage("File " + fileName + " does not exist.");
+            String msg = "File " + fileName + " does not exist.";
+            showMessage(msg);
+            if (inCommandLineMode()) {
+                System.err.println(msg);
+                System.exit(1);
+            }
             return;
         }
         if (!file.canRead()) {
-            showMessage("Do not have permission to read " + fileName);
+            String msg = "Do not have permission to read " + fileName;
+            showMessage(msg);
+            if (inCommandLineMode()) {
+                System.err.println(msg);
+                System.exit(1);
+            }
             return;
         }
         if (file.isDirectory()) {
@@ -1148,18 +1167,8 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             if (commandLineMode) {
                 addDicomFile(new File(fileName));
             } else {
-                File parent = file.getParentFile();
-                if (parent == null) {
-                    String msg = "Could not open directory to read DICOM file " + file.getAbsolutePath();
-                    Log.get().severe(msg);
-                    if (inCommandLineMode()) {
-                        System.err.println(msg);
-                        System.exit(1);
-                    }
-                }
-                else {
-                    addFile(parent.getAbsolutePath());
-                }
+                File parent = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
+                addFile(parent.getAbsolutePath());
             }
         }
 

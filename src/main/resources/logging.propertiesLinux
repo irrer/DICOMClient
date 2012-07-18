@@ -26,8 +26,7 @@
 # can be overridden by a facility specific level
 # Note that the ConsoleHandler also has a separate level
 # setting to limit messages printed to the console.
-#.level=INFO
-.level=ALL
+.level=INFO
 
 ############################################################
 # Handler specific properties.
@@ -48,7 +47,7 @@ handlers=edu.umro.util.LogFileHandler
 #java.util.logging.FileHandler.append=true
 
 edu.umro.util.LogFileHandler.pattern=/tmp/dicomsvc/dicomsvc-%g-%u.log
-edu.umro.util.LogFileHandler.limit=10000000
+edu.umro.util.LogFileHandler.limit=100000000
 edu.umro.util.LogFileHandler.count=100
 edu.umro.util.LogFileHandler.level=ALL
 edu.umro.util.LogFileHandler.append=true
