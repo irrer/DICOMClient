@@ -164,14 +164,14 @@
                                                 <phase>package</phase>
                                                 <configuration>
                                                         <tasks>
-                                                                <property name="dest.dir"
-                                                                        value="Z:\Projects\Dicom\dicomclient\BuildRepository\${artifactId}-${version}" />
+                                                                <property name="project.dir" value="Z:\Projects\Dicom\dicomclient\BuildRepository\${artifactId}-${version}" />
+                                                                <property name="dest.dir" value="${project.dir}\${artifactId}-${version}" />
                                                                 <echo>dest.dir is: ${dest.dir}</echo>
                                                                 <echo>version is: ${version}</echo>
                                                                 <echo>artifactId is: ${artifactId}</echo>
-                                                                <echo>dest.dir is: ${dest.dir}</echo>
 
-                                                                <delete dir="${dest.dir}" />
+                                                                <delete dir="${project.dir}" />
+                                                                <mkdir dir="${project.dir}" />
                                                                 <mkdir dir="${dest.dir}" />
                                                                 <copy
                                                                         file="target/${artifactId}-${version}-jar-with-dependencies.jar"
@@ -186,6 +186,7 @@
                                                                 <copy file="${resource.dir}/DICOMClient.sh" toDir="${dest.dir}" />
                                                                 <replace file="${dest.dir}/DICOMClient.sh" token="@@with-dep-jar@@"
                                                                         value="${artifactId}-${version}-jar-with-dependencies.jar" />
+                                                                <zip basedir="${dest.dir}" destfile="${project.dir}/${artifactId}-${version}_Install.zip"/>
                                                         </tasks>
                                                 </configuration>
                                                 <goals>

@@ -46,11 +46,11 @@ handlers=edu.umro.util.LogFileHandler
 #java.util.logging.FileHandler.level=FINER
 #java.util.logging.FileHandler.append=true
 
-edu.umro.util.LogFileHandler.pattern=/tmp/dicomsvc/dicomsvc-%g-%u.log
+edu.umro.util.LogFileHandler.pattern=/tmp/dicomsvc-%g-%u.log
 edu.umro.util.LogFileHandler.limit=100000000
 edu.umro.util.LogFileHandler.count=100
 edu.umro.util.LogFileHandler.level=ALL
-edu.umro.util.LogFileHandler.append=true
+edu.umro.util.LogFileHandler.append=false
 
 # The formatter for edu.umro.util.LogFileHandler is overridden at run time, so
 # it does not matter what it is set it to here.

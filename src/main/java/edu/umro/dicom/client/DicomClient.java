@@ -1289,6 +1289,15 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
     public static File getOutputFile() {
         return outputFile;
     }
+    
+    private static void usage(String msg) {
+        String shell = (OpSys.getOpSysId() == OpSys.OpSysId.WINDOWS) ? "DICOMClient.bat" : "DICOMClient.sh";
+        System.err.println(msg);
+        String usage =
+            "Usage: \n\n    " + shell + " [ -c ] [ -P patient_id ] [ -o output_file ] DICOM_input_1 DICOM_input_2 ... ";
+        System.err.println(usage);
+        System.exit(1);
+    }
 
     private static String[] parseArguments(String[] args) {
         String[] fileList = new String[0];
@@ -1310,7 +1319,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
                         else {
                             if (args[a].startsWith("-")) {
-                                System.err.println("Invalid argument: " + args[a]);
+                                usage("Invalid argument: " + args[a]);
                                 System.exit(1);
                             }
                             else {
