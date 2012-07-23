@@ -46,7 +46,7 @@ handlers=edu.umro.util.LogFileHandler
 #java.util.logging.FileHandler.level=FINER
 #java.util.logging.FileHandler.append=true
 
-edu.umro.util.LogFileHandler.pattern=/tmp/dicomsvc-%g-%u.log
+edu.umro.util.LogFileHandler.pattern=/tmp/dicomclient-%g-%u.log
 edu.umro.util.LogFileHandler.limit=100000000
 edu.umro.util.LogFileHandler.count=100
 edu.umro.util.LogFileHandler.level=ALL

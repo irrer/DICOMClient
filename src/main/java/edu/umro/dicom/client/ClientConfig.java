@@ -34,6 +34,7 @@ public class ClientConfig {
 
     /** List of all possible configuration files. */
     private static final String[] CONFIG_FILE_LIST = {
+        System.getProperty("dicomclient.config"),
         CONFIG_FILE_NAME,
         "src\\main\\resources\\" + CONFIG_FILE_NAME
     };
@@ -52,7 +53,7 @@ public class ClientConfig {
     private void parseConfigFile() {
         for (String configFileName : CONFIG_FILE_LIST) {
             try {
-                config = XML.parseToDocument(Utility.readFile(new File(configFileName)));;
+                config = XML.parseToDocument(Utility.readFile(new File(configFileName)));
             }
             catch (Exception e) {
                 Log.get().warning("Unable to parse file " + configFileName + " : " + e);
@@ -254,10 +255,19 @@ public class ClientConfig {
             nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/javax.net.ssl.trustStore/text()");
         }
         catch (UMROException e) {
-            Log.get().warning("Unable to parse list of javax.net.ssl.trustStore.  You will not be able to communicate with the DICOM service.");
+            Log.get().warning("Unable to parse list of javax.net.ssl.trustStore.  You will not be able to communicate with the DICOM service.  Details: " + e);
         }
-        File file = Util.setupTrustStore(nodeList).getKeystoreFile();
-        if (file != null) {
+        File file = null;
+        try {
+            file = Util.setupTrustStore(nodeList).getKeystoreFile();
+        }
+        catch (Exception e) {
+            file = null;
+        }
+        if (file == null) {
+            Log.get().warning("Unable to read trustStore file.  You will not be able to communicate with the DICOM service.");
+        }
+        else {
             System.setProperty("javax.net.ssl.trustStore", file.getAbsolutePath());
             System.setProperty("javax.net.ssl.trustStoreType", "JKS");
         }

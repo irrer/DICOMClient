@@ -115,7 +115,7 @@ public class Alert extends JDialog implements ActionListener {
      * Build the GUI and display it.
      */
     public Alert(String msg, String title, String[] buttonNameList, Dimension preferredSize) {
-        super(DicomClient.getInstance(), true);
+        super(DicomClient.getInstance().getFrame(), true);
         
         buttonNameList = (buttonNameList == null) ? DEFAULT_BUTTON_NAME_LIST : buttonNameList;
         

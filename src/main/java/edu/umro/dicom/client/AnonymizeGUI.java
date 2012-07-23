@@ -2,6 +2,7 @@ package edu.umro.dicom.client;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -45,7 +46,7 @@ import edu.umro.util.Log;
  * @author irrer
  *
  */
-public class AnonymizeGUI extends JDialog implements ActionListener {
+public class AnonymizeGUI implements ActionListener {
 
 
     /**
@@ -199,6 +200,8 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
      */
     private TreeSet<String> tagListSorted = new TreeSet<String>();
 
+    private JDialog dialog = null;
+
     /** Adds a new anonymize field to the dialog. */
     private JButton addButton = null;
 
@@ -211,10 +214,15 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
     /** Scrolls list of attributes. */
     private JScrollPane scrollPane = null;
 
+
+    public JDialog getDialog() {
+        return dialog;
+    }
+
     @Override
     public void actionPerformed(ActionEvent ev) {
         if (ev.getSource().equals(closeButton)) {
-            setVisible(false);
+            dialog.setVisible(false);
         }
         if (ev.getSource().equals(addButton)) {
             GridLayout gridLayout = (GridLayout)anonPanel.getLayout();
@@ -245,7 +253,9 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
         }
         anonPanel.add(aa);
         aa.invalidate();
-        pack();
+        if (!DicomClient.inCommandLineMode()) {
+            dialog.pack();
+        }
         if (scrollPane != null) {
             JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
             scrollBar.setValue(scrollBar.getMaximum());
@@ -399,37 +409,37 @@ public class AnonymizeGUI extends JDialog implements ActionListener {
     }
 
 
+    private Container mainContainer = null;
     /**
      * Build the GUI for anonymization options.
      * 
      */
     public AnonymizeGUI() {
-        super(DicomClient.getInstance(), false);
-        Profile.profile();
-        setTitle(WINDOW_TITLE);
         tagList = new TreeSet<AttributeTag>();
-        Profile.profile();
 
-        JPanel panel = new JPanel();
-        Profile.profile();
-        getContentPane().add(panel);
-        Profile.profile();
-        panel.setLayout(new BorderLayout());
-        Profile.profile();
+        if (DicomClient.inCommandLineMode()) {
+            mainContainer = new Container();
+            mainContainer.add(constructAnonPanel(), BorderLayout.CENTER);
+            mainContainer.add(constructSouthPanel(), BorderLayout.SOUTH);
 
-        panel.add(constructAnonPanel(), BorderLayout.CENTER);
-        Profile.profile();
+        }
+        else {
+            dialog = new JDialog(DicomClient.getInstance().getFrame(), false);
+            dialog.setTitle(WINDOW_TITLE);
 
-        panel.add(constructSouthPanel(), BorderLayout.SOUTH);
-        Profile.profile();
+            JPanel panel = new JPanel();
+            dialog.getContentPane().add(panel);
+            panel.setLayout(new BorderLayout());
 
-        DicomClient.setColor(getContentPane());
-        Profile.profile();
+            panel.add(constructAnonPanel(), BorderLayout.CENTER);
 
-        setPreferredSize(PREFERRED_SIZE);
-        Profile.profile();
-        pack();
-        Profile.profile();
+            panel.add(constructSouthPanel(), BorderLayout.SOUTH);
+
+            DicomClient.setColor(dialog.getContentPane());
+
+            dialog.setPreferredSize(PREFERRED_SIZE);
+            dialog.pack();
+        }
     }
 
 

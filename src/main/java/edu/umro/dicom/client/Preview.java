@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -69,7 +70,7 @@ import edu.umro.util.Log;
  * @author irrer
  *
  */
-public class Preview extends JDialog implements ActionListener, ChangeListener, DocumentListener, KeyListener {
+public class Preview implements ActionListener, ChangeListener, DocumentListener, KeyListener {
 
     /** Default id. */
     private static final long serialVersionUID = 1L;
@@ -144,6 +145,9 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
 
     /** Identifier used in the card layout to identify image viewing mode. */
     private static final String IMAGE_VIEW = "Image";
+
+    private JDialog dialog = null;
+    private Container mainContainer = null;
 
     /** The series currently being displayed. */
     private Series series = null;
@@ -788,11 +792,11 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
             cardLayout.show(cardPanel, IMAGE_VIEW);
             Profile.profile();
             imagePreview.setIcon(imageIcon);
-            Log.get().info("Previewed in image mode: " + this.getTitle() + "  contrast: " + contrast + "  brightness: " + offset + "  zoom factor: " + zoomFactor);
+            Log.get().info("Previewed in image mode: " + dialog.getTitle() + "  contrast: " + contrast + "  brightness: " + offset + "  zoom factor: " + zoomFactor);
             // Force redrawing
             imagePreview.update(imagePreview.getGraphics());
             Profile.profile();
-            this.update(this.getGraphics());
+            dialog.update(dialog.getGraphics());
             Profile.profile();
         }
         catch (DicomException ex) {
@@ -970,22 +974,22 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
                 line.append(" Error interpreting field: " + attribute.toString().replace('\n', ' '));
             }
         }
-        
+
         if (!ok) {
             line = new StringBuffer(" " + attribute.toString().replace('\n', ' '));
         }
-        
+
         if (line.length() > MAX_LINE_LENGTH) {
             line = new StringBuffer(line.substring(0, MAX_LINE_LENGTH) + " ... (truncated)");
         }
-        
+
         String tagName = CustomDictionary.getInstance().getNameFromTag(tag);
         if (tagName == null) {
             tagName = "<unknown>";
         }
 
         line = new StringBuffer(line.toString().replace('\0', ' '));
-        
+
         return addDetails(tag, vr, tagName + " :" + line.toString());
     }
 
@@ -1098,22 +1102,21 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
         Profile.profile();
 
         cardLayout.show(cardPanel, TEXT_VIEW);
-        Log.get().info("Previewed in text mode: " + this.getTitle());            
+        Log.get().info("Previewed in text mode: " + dialog.getTitle());            
     }
 
     /**
      * Only become visible if the previewer is enabled, otherwise (true) leave
      * it the way it is or (false) make is not visible.
      */
-    @Override
     public void setVisible(boolean visible) {
         if (visible) {
             if (DicomClient.getInstance().isPreviewEnableable()) {
-                super.setVisible(!DicomClient.inCommandLineMode());
+                dialog.setVisible(!DicomClient.inCommandLineMode());
             }
         }
         else {
-            super.setVisible(false);
+            dialog.setVisible(false);
         }
     }
 
@@ -1131,10 +1134,10 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
             showText();
         }
         if (needsPacking) {
-            pack();
+            dialog.pack();
             needsPacking = false;
         }
-        if (!isVisible()) {
+        if (!dialog.isVisible()) {
             setVisible(true);
         }
     }
@@ -1148,27 +1151,29 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
      * @param fileName Name of DICOM file.
      */
     public void showDicom(String title, String fileName) {
-        Profile.profile();
-        Log.get().info("Previewing DICOM file: " + fileName + "   title: " + title);
-        fileNameLabel.setText(fileName);
-        Profile.profile();
-        setTitle(TITLE_PREFIX + "  " + title);
-        attributeList = new AttributeList();
-        Profile.profile();
-        try {
+        if (!DicomClient.inCommandLineMode()) {
             Profile.profile();
-            attributeList.read(fileName);
+            Log.get().info("Previewing DICOM file: " + fileName + "   title: " + title);
+            fileNameLabel.setText(fileName);
             Profile.profile();
-            DicomClient.getInstance().getAnonymizeGui().updateTagList(attributeList);
+            dialog.setTitle(TITLE_PREFIX + "  " + title);
+            attributeList = new AttributeList();
             Profile.profile();
-            showDicom();
-            Profile.profile();
-        }
-        catch (DicomException ex) {
-            DicomClient.getInstance().showMessage("Unable to interpret file " + fileName + " as DICOM: " + ex.getMessage());
-        }
-        catch (IOException ex) {
-            DicomClient.getInstance().showMessage("Unable to read file " + fileName + " : " + ex.getMessage());
+            try {
+                Profile.profile();
+                attributeList.read(fileName);
+                Profile.profile();
+                DicomClient.getInstance().getAnonymizeGui().updateTagList(attributeList);
+                Profile.profile();
+                showDicom();
+                Profile.profile();
+            }
+            catch (DicomException ex) {
+                DicomClient.getInstance().showMessage("Unable to interpret file " + fileName + " as DICOM: " + ex.getMessage());
+            }
+            catch (IOException ex) {
+                DicomClient.getInstance().showMessage("Unable to read file " + fileName + " : " + ex.getMessage());
+            }
         }
     }
 
@@ -1177,8 +1182,11 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
      * Build the GUI for previewing DICOM files.
      */
     public Preview() {
-        super(DicomClient.getInstance(), false);
-        setTitle(TITLE_PREFIX);
+        mainContainer = new Container();
+        if (!DicomClient.inCommandLineMode()) {
+            dialog = new JDialog(DicomClient.getInstance().getFrame(), false);
+            dialog.setTitle(TITLE_PREFIX);
+        }
 
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -1189,9 +1197,14 @@ public class Preview extends JDialog implements ActionListener, ChangeListener, 
 
         DicomClient.setColor(panel);
 
-        setPreferredSize(PREFERRED_SIZE);
-        getContentPane().add(panel);
-        pack();
-        setVisible(true);
+        if (DicomClient.inCommandLineMode()) {
+            mainContainer.add(panel);
+        }
+        else {
+            dialog.setPreferredSize(PREFERRED_SIZE);
+            dialog.getContentPane().add(panel);
+            dialog.pack();
+            dialog.setVisible(true);
+        }
     }
 }

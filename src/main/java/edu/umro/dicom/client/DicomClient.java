@@ -86,7 +86,7 @@ import edu.umro.util.General;
  * @author irrer
  *
  */
-public class DicomClient extends JFrame implements ActionListener, FileDrop.Listener, ChangeListener, DocumentListener {
+public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener, DocumentListener {
 
     /** Default ID. */
     private static final long serialVersionUID = 1L;
@@ -225,6 +225,8 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
     /** Put anonymized files here. */
     private static File outputFile = null;
+
+    private JFrame frame = null;
 
     private JPanel modePanel = null;
     private CardLayout modeCardLayout = null;
@@ -388,7 +390,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      * Set the size of the <code>pacsLabel</code>.
      */
     private void setPacsLabelSize() {
-        Graphics graphics = this.getGraphics();
+        Graphics graphics = getMainContainer().getGraphics();
         FontMetrics metrics = graphics.getFontMetrics(FONT_HUGE);
         int height = metrics.getHeight();
         int width = metrics.stringWidth(".");
@@ -401,7 +403,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             Dimension dimension = new Dimension(width+8, height+2);
             pacsLabel.setPreferredSize(dimension);
             pacsLabel.invalidate();
-            pack();
+            frame.pack();
         }
     }
 
@@ -769,46 +771,76 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
             }
         }
     }
+    
+    
+    public Container getMainContainer() {
+        return inCommandLineMode() ? headlessPanel : frame.getContentPane();
+    }
 
+
+    public JFrame getFrame() {
+        return inCommandLineMode() ? null : frame;
+    }
+
+
+    private JPanel headlessPanel = null;
+    private void buildHeadless() {
+        headlessPanel = new JPanel();
+
+        headlessPanel.add(buildMode(), BorderLayout.NORTH);
+        headlessPanel.add(buildCenter(), BorderLayout.CENTER);
+        headlessPanel.add(buildSouth(), BorderLayout.SOUTH);
+
+        if (headlessPanel == null) {
+            System.err.println("Could not build environment without GUI");
+            System.exit(1);
+        }
+    }
 
     /**
      * Top level that builds the GUI.
      */
     private void buildMain() {
-        setTitle(WINDOW_NAME);
-
-        if (OpSys.getOpSysId() == OpSys.OpSysId.WINDOWS) {
-            try {
-                UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-            }
-            catch (Exception ex) {
-                // ignore any problems setting look and feel
-            }
+        if (inCommandLineMode()) {
+            buildHeadless();
         }
+        else {
+            frame = new JFrame();
+            frame.setTitle(WINDOW_NAME);
 
-        Container container = getContentPane();
+            if (OpSys.getOpSysId() == OpSys.OpSysId.WINDOWS) {
+                try {
+                    UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+                }
+                catch (Exception ex) {
+                    // ignore any problems setting look and feel
+                }
+            }
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
+            Container container = frame.getContentPane();
 
-        panel.add(buildMode(), BorderLayout.NORTH);
-        panel.add(buildCenter(), BorderLayout.CENTER);
-        panel.add(buildSouth(), BorderLayout.SOUTH);
+            JPanel panel = new JPanel();
+            panel.setLayout(new BorderLayout());
 
-        container.add(panel);
+            panel.add(buildMode(), BorderLayout.NORTH);
+            panel.add(buildCenter(), BorderLayout.CENTER);
+            panel.add(buildSouth(), BorderLayout.SOUTH);
 
-        new FileDrop(System.out, panel, this);
+            container.add(panel);
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setPreferredSize(PREFERRED_SIZE);
+            new FileDrop(System.out, panel, this);
 
-        setColor(this);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setPreferredSize(PREFERRED_SIZE);
 
-        if (!inCommandLineMode()) {
-            pack();
-            setVisible(true);
+            setColor(frame);
+
+            if (!inCommandLineMode()) {
+                frame.pack();
+                frame.setVisible(true);
+            }
+            setMode();
         }
-        setMode();
     }
 
 
@@ -839,7 +871,9 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
         if (authenticated) {
             loginPacsCardLayout.show(loginPacsPanel, CARD_PACS);
-            setTitle(WINDOW_NAME + "          User: " + loginNameTextField.getText());
+            if (!inCommandLineMode()) {
+                frame.setTitle(WINDOW_NAME + "          User: " + loginNameTextField.getText());
+            }
             populatePacsList();
             setPacsLabelSize();
         }
@@ -867,7 +901,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         }
 
         if (source.equals(uploadAllButton)) {
-            processAll(this);
+            processAll(getMainContainer());
         }
 
         if (source.equals(pacsNorth) || source.equals(pacsSouth)) {
@@ -885,7 +919,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         }
 
         if (source.equals(anonymizeOptionsButton)) {
-            getAnonymizeGui().setVisible(!inCommandLineMode());
+            getAnonymizeGui().getDialog().setVisible(!inCommandLineMode());
         }
 
         if (source.equals(anonymizeRadioButton) || source.equals(uploadRadioButton)) {
@@ -894,7 +928,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
         if (source.equals(anonymizeDestinationBrowseButton)) {
             updateDestination();
-            switch(directoryChooser.showOpenDialog(this)) {
+            switch(directoryChooser.showOpenDialog(getMainContainer())) {
             case JFileChooser.APPROVE_OPTION:
                 anonymizeDestination = directoryChooser.getSelectedFile();
                 anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
@@ -1001,9 +1035,9 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      * Set the upload status (green circle with white plus) associated with the 'Upload All' button.
      */
     public void setProcessedStatus() {
-        boolean all = setUploadStatusWorker(this, true) && !(patientList.isEmpty());
+        boolean all = setUploadStatusWorker(getMainContainer(), true) && !(patientList.isEmpty());
         if (!getAnonymizeMode()) {
-            getAnonymizeGui().setVisible(false);
+            getAnonymizeGui().getDialog().setVisible(false);
         }
         uploadAllIcon.setIcon(all ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty());
         uploadAllButton.setEnabled(uploadEnabled() || getAnonymizeMode());
@@ -1173,7 +1207,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
         }
 
         // Need to set color for all of the new Swing components added.
-        setColor(this);
+        setColor(getMainContainer());
         setProcessedStatus();
     }
 
@@ -1190,9 +1224,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
      * Constructor to build the GUI.
      */
     private DicomClient() {
-        Profile.profile();
         buildMain();
-        Profile.profile();
     }
 
 
@@ -1289,7 +1321,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
     public static File getOutputFile() {
         return outputFile;
     }
-    
+
     private static void usage(String msg) {
         String shell = (OpSys.getOpSysId() == OpSys.OpSysId.WINDOWS) ? "DICOMClient.bat" : "DICOMClient.sh";
         System.err.println(msg);
@@ -1390,7 +1422,7 @@ public class DicomClient extends JFrame implements ActionListener, FileDrop.List
 
             // If in command line mode, then anonymize all files and exit happily
             if (inCommandLineMode()) {
-                processAll(dicomClient);
+                processAll(dicomClient.headlessPanel);
                 System.exit(0);
             }
         }

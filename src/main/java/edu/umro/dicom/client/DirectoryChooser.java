@@ -20,7 +20,7 @@ public class DirectoryChooser extends JDialog {   // TODO remove class?
     private JFileChooser directoryChooser = null;
 
     public DirectoryChooser(ActionListener actionListener) {
-        super(DicomClient.getInstance(), true);
+        super(DicomClient.getInstance().getFrame(), true);
 
         directoryChooser = new JFileChooser();
 

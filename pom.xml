@@ -10,7 +10,7 @@
         <modelVersion>4.0.0</modelVersion>
         <groupId>edu.umro.DICOM</groupId>
         <artifactId>dicomclient</artifactId>
-        <version>1.0.10</version>
+        <version>1.0.11</version>
         <packaging>jar</packaging>
         <name>${artifactId}</name>
         <properties>
