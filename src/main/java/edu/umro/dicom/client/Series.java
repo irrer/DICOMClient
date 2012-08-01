@@ -1,5 +1,21 @@
 package edu.umro.dicom.client;
 
+/*
+ * Copyright 2012 Regents of the University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Component;
@@ -55,6 +71,13 @@ import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
 import edu.umro.util.Utility;
+
+/**
+ * Represent a DICOM series.
+ * 
+ * @author Jim Irrer  irrer@umich.edu
+ *
+ */
 
 public class Series extends JPanel implements ActionListener {
 
@@ -427,9 +450,9 @@ public class Series extends JPanel implements ActionListener {
             DicomClient.getInstance().showMessage(message);
             Log.get().severe(message);
         }
-        catch (Exception ex) {
+        catch (Exception e) {
             String message =
-                "Unexpected problem while uploading series " + seriesSummary + " to " + urlText + ".  Remaining uploads for this series are being aborted." + ex;
+                "Unexpected problem while uploading series " + seriesSummary + " to " + urlText + ".  Remaining uploads for this series are being aborted." + e;
             if (response != null) {
                 message += "\n    Server status: " + response.getStatus() + " : " + response.getEntityAsText();
             }
@@ -680,7 +703,9 @@ public class Series extends JPanel implements ActionListener {
                     keyObject.write(dicomOutputStream);
                     ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
                     if (!uploadStream(urlText, seriesSummary, byteArrayInputStream)) {
-                        Log.get().info("Could not upload Key Object file for series " + seriesSummary);
+                        String msg = "Could not upload Key Object file for series " + seriesSummary;
+                        Log.get().info(msg);
+                        DicomClient.getInstance().showMessage(msg);
                         return;
                     }
                 }

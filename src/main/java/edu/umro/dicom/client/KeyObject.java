@@ -1,5 +1,21 @@
 package edu.umro.dicom.client;
 
+/*
+ * Copyright 2012 Regents of the University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -21,7 +37,7 @@ import edu.umro.util.OpSys;
 /**
  * Construct a Key Object DICOM object from a DICOM series.
  * 
- * @author irrer
+ * @author Jim Irrer  irrer@umich.edu 
  *
  */
 public class KeyObject extends AttributeList {
@@ -163,14 +179,14 @@ public class KeyObject extends AttributeList {
                 seriesDescription += "  Series number: " + seriesNumber; 
             }
         }
-        
+
         if (seriesDescription.length() == 0) {
             seriesDescription = "<no series description or number>";
         }
         return "Manifest of " + seriesDescription + "  Files: " + fileNameList.size();
     }
 
-    
+
     /**
      * Execute 'laundry list' of operations to add all the tags required to
      * construct a KO (Key Object) DICOM object.

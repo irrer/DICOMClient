@@ -1,10 +1,25 @@
 package edu.umro.dicom.client;
 
+/*
+ * Copyright 2012 Regents of the University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 /**
  * Provide a simple profiler to determine processing bottlenecks.
  * 
- * @author irrer
+ * @author Jim Irrer  irrer@umich.edu 
  *
  */
 public class Profile {
@@ -23,7 +38,7 @@ public class Profile {
     /** Determines whether profiling is done or not. */
     private volatile static boolean enabled = false;
 
-    
+
     /**
      * Enable profiling.
      * 
@@ -32,8 +47,8 @@ public class Profile {
     public static void setEnabled(boolean en) {
         enabled = en;
     }
-    
-    
+
+
     /**
      * Get the enabled status (whether profiling is enabled).
      * 
@@ -42,8 +57,8 @@ public class Profile {
     public static boolean getEnabled() {
         return enabled;
     }
-    
-    
+
+
     /**
      * Resets the values so that the next call to profile will
      * not emit an entry.  This is useful to call after waiting
@@ -53,7 +68,7 @@ public class Profile {
         previousLocation = "";
         previousTime = 0;
     }
-    
+
     /**
      * Get just the class name of the given class path.
      * 
@@ -69,7 +84,7 @@ public class Profile {
         return classPath.substring(last+1);
     }
 
-    
+
     /**
      * Determine how long since last called and print
      * the source code location if enough time has elapsed.
@@ -95,7 +110,7 @@ public class Profile {
         }
     }
 
-    
+
     /**
      * For self testing.
      * 

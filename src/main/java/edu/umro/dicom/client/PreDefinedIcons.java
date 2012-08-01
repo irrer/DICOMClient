@@ -1,5 +1,21 @@
 package edu.umro.dicom.client;
 
+/*
+ * Copyright 2012 Regents of the University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import javax.swing.ImageIcon;
 
 /**
@@ -10,14 +26,14 @@ import javax.swing.ImageIcon;
  * The numeric arrays were created by dumping the byte values as integers.  The ImportToUMPlan project
  * has the PreDefinedIcons class that does this.
  * 
- * @author irrer
+ * @author Jim Irrer  irrer@umich.edu 
  *
  */
 
 public class PreDefinedIcons {
 
     /** The two upload icons are exactly the same size to simplify GUI layout. */
-    
+
     /** Indication that the series has been successfully uploaded. */
     private static ImageIcon okIcon = null;
 

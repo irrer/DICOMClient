@@ -1,5 +1,21 @@
 package edu.umro.dicom.client;
 
+/*
+ * Copyright 2012 Regents of the University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -67,7 +83,7 @@ import edu.umro.util.Log;
  * files can be display as an image, and the previewer will automatically
  * switch to text mode for them.
  * 
- * @author irrer
+ * @author Jim Irrer  irrer@umich.edu 
  *
  */
 public class Preview implements ActionListener, ChangeListener, DocumentListener, KeyListener {
@@ -247,7 +263,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /**
      * Custom text highlighter.
      * 
-     * @author irrer
+     * @author Jim Irrer  irrer@umich.edu 
      *
      */
     class MatchHighlightPainter extends DefaultHighlighter.DefaultHighlightPainter {
@@ -265,7 +281,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /**
      * The position of text that matches the search text.
      * 
-     * @author irrer
+     * @author Jim Irrer  irrer@umich.edu 
      *
      */
     class TextMatch {

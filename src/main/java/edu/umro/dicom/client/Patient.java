@@ -1,5 +1,21 @@
 package edu.umro.dicom.client;
 
+/*
+ * Copyright 2012 Regents of the University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -32,7 +48,7 @@ import edu.umro.util.Log;
  * Represent the data and GUI associated with a patient.
  * Patients are uniquely identified by their patient ID tag.
  * 
- * @author irrer
+ * @author Jim Irrer  irrer@umich.edu 
  *
  */
 public class Patient extends JPanel implements Comparable<Patient>, DocumentListener, ActionListener, Runnable {
@@ -78,13 +94,13 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
 
     /** Button that anonymizes all series for this patient. */
     private JButton anonymizePatientButton = null; 
-    
+
     private JComponent buildAnonymizingPatientId(String anonymousPatientId) {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
 
         anonymizePanel = new JPanel();
-        
+
         anonymizePanel.add(new JLabel("New Patient ID: "));
         anonymizePatientIdTextField = new JTextField(16);
         anonymizePatientIdTextField.setText(anonymousPatientId);
@@ -112,7 +128,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         anonymizePanel.add(enableDifferentPatientName);
 
         setDiffPatName();
-        
+
         anonymizePanel.add(new JLabel("        "));
         anonymizePatientButton = new JButton("Anonymize Patient");
         anonymizePatientButton.setToolTipText("<html>Anonymize all series<br>for this patient</html>");
@@ -178,14 +194,14 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         add(study);
     }
 
-    
+
     /**
      * Set the mode (anonymize or upload) for this patient.
      */
     public void setMode() {
         anonymizePanel.setVisible(DicomClient.getInstance().getAnonymizeMode());
     }
-    
+
 
     /**
      * Add a new study to the list of studies.
@@ -319,8 +335,8 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
     public void changedUpdate(DocumentEvent e) {
         updateAnonymizePatientFields();
     }
-    
-    
+
+
     /**
      * Set the state corresponding to whether the user wants the
      * patient name to be different than the patient ID.
@@ -330,7 +346,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         anonymizePatientNameLabel.setEnabled(enableDifferentPatientName.isSelected());
     }
 
-    
+
     private void processAll(Container container) {
         for (Component component : container.getComponents()) {
             if (component instanceof Series) {
@@ -343,14 +359,14 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         DicomClient.getInstance().setProcessedStatus();
     }
 
-    
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == enableDifferentPatientName) {
             setDiffPatName();
             updateAnonymizePatientFields();
         }
-        
+
         if (e.getSource() == anonymizePatientButton) {
             Log.get().info("Anonymizing all series for patient " + this);
             processAll(this);

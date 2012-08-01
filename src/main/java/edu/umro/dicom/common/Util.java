@@ -1,5 +1,21 @@
 package edu.umro.dicom.common;
 
+/*
+ * Copyright 2012 Regents of the University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,7 +49,12 @@ import edu.umro.dicom.common.TrustStore;
 import edu.umro.util.JarInfo;
 import edu.umro.util.Log;
 
-
+/**
+ * General purpose methods.
+ * 
+ * @author Jim Irrer  irrer@umich.edu 
+ *
+ */
 public class Util {
 
     static public final String MEDIA_TYPE_PARAMETER_NAME = "media_type";
@@ -46,7 +67,7 @@ public class Util {
 
     /** The root UID which is used to prefix files constructed by the University of Michigan. */
     public static final String UMRO_ROOT_GUID = "1.3.6.1.4.1.22361";
-    
+
     /** For getting values from the MANIFEST.MF file in the jar. */
     private static JarInfo jarInfo = null;
 
@@ -287,7 +308,7 @@ public class Util {
         return trustStore;
     }
 
-    
+
     /**
      * Get parameter value from jar of the given key.  If there is
      * an error, return "unknown" instead.
@@ -302,7 +323,7 @@ public class Util {
         }
         return jarInfo.getMainManifestValue(key, "unknown");
     }
-    
+
 
     /**
      * Get the vendor organization of this application.

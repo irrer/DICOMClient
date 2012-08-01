@@ -1,5 +1,21 @@
 package edu.umro.dicom.common;
 
+/*
+ * Copyright 2012 Regents of the University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import java.io.File;
 
 import org.w3c.dom.Node;
@@ -7,6 +23,12 @@ import org.w3c.dom.Node;
 import edu.umro.util.UMROException;
 import edu.umro.util.XML;
 
+/**
+ * Represent an SSL certificate java trust store.
+ * 
+ * @author Jim Irrer  irrer@umich.edu 
+ *
+ */
 public class TrustStore {
 
     /** File containing keys */
@@ -52,14 +74,14 @@ public class TrustStore {
         if (fileName != null) {
             keystoreFile = new File(fileName);
         }
-        
+
         try {
             storepass = XML.getValue(node, "../@storepass");
         }
         catch (UMROException e) {
             storepass = null;
         }
-        
+
         try {
             keyPassword = XML.getValue(node, "../@keyPassword");
         }
@@ -83,8 +105,8 @@ public class TrustStore {
         this.keyPassword = keyPassword;
         this.storepass = storepass;
     }
-    
-    
+
+
     /**
      * Determine if this object is viable to use, requiring the file to
      * be readable.
@@ -94,13 +116,13 @@ public class TrustStore {
     public boolean viable() {
         return (keystoreFile != null) && keystoreFile.canRead();
     }
-    
-    
+
+
     @Override
     public String toString() {
         return
-            "File: " + (keystoreFile == null ? "null" : keystoreFile.getAbsoluteFile()) +
-            "    keyPassword: " + keyPassword + 
-            "    storepass: " + storepass;
+        "File: " + (keystoreFile == null ? "null" : keystoreFile.getAbsoluteFile()) +
+        "    keyPassword: " + keyPassword + 
+        "    storepass: " + storepass;
     }
 }
