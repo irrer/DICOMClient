@@ -713,6 +713,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             if ((match != null) && (match.length() > 0)) {
                 searchField.setText(match);
             }
+            searchField.grabFocus();
         }
     }
 
