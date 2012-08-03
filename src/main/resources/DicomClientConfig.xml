@@ -18,9 +18,9 @@
 -->
     
     <!-- URL for the service. -->
-   <!-- <DicomServiceUrl>https://141.214.124.202:8091</DicomServiceUrl>     -->    <!-- rolxdeploy1 -->
+    <DicomServiceUrl>https://141.214.124.202:8091</DicomServiceUrl>      <!-- rolxdeploy1 -->
     <!-- <DicomServiceUrl>https://141.214.124.240:8091</DicomServiceUrl> -->   <!-- rolxdev1 -->
-     <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl>   <!-- irrer desktop -->
+    <!-- <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl>   -->   <!-- irrer desktop -->
     
     <!-- Used to generate the default patient id.  Special character meanings:
         * : a random (capital) alpha or digit : ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
