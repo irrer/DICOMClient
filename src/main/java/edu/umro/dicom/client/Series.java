@@ -506,7 +506,7 @@ public class Series extends JPanel implements ActionListener {
         replacementAttributeList.put(patientId);
 
         Attribute patientName = AttributeFactory.newAttribute(TagFromName.PatientName);
-        patientName.addValue(getPatient().getAnonymizePatientIdText());
+        patientName.addValue(getPatient().getAnonymizePatientNameText());
         replacementAttributeList.put(patientName);
 
         return replacementAttributeList;

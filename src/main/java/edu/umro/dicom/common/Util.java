@@ -16,25 +16,14 @@ package edu.umro.dicom.common;
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.rmi.server.UID;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import org.restlet.Request;
-import org.restlet.Response;
-import org.restlet.data.Form;
-import org.restlet.data.MediaType;
-import org.restlet.data.Parameter;
-import org.restlet.data.Preference;
 import org.w3c.dom.NodeList;
 
 import com.pixelmed.dicom.Attribute;
@@ -57,10 +46,6 @@ import edu.umro.util.Log;
  */
 public class Util {
 
-    static public final String MEDIA_TYPE_PARAMETER_NAME = "media_type";
-
-    static public final String USER_ID_PARAMETER_NAME = "user_id";
-
     /** Number of bytes in a single buffer used for
      * transferring data to and from server. */
     private final static int TRANSFER_BUFFER_SIZE = 64 * 1024;
@@ -79,115 +64,8 @@ public class Util {
     /** Flag to determine whether MAC address has been initialized. */
     private static boolean initialized = false;
 
-    /** DICOM manufacturer name. */
-    public static final String UMRO_MANUFACTURER = "Univ of Mich Radiation Oncology";
-
     /** DICOM postal address. */
     public static final String UMRO_POSTAL_ADDRESS = "University of Michigan Health System, 1500 E. Medical Center Drive Ann Arbor, MI 48109";
-
-    public static String getHtmlHead(String title) {
-        return 
-        "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>\n" +
-        "<html xmlns='http://www.w3.org/1999/xhtml'>\n" +
-        "<head>\n" +
-        "    <meta http-equiv='Content-Type' content='text/html; charset=iso-8859-1' />\n" +
-        "    <title>" + title + "</title>\n" +
-        "    <link rel='stylesheet' type='text/css' href='/example.css'/>\n" +
-        "    <meta name='author' content='Joost de Valk, http://www.joostdevalk.nl/' />\n" +
-        "    <link href='http://www.joostdevalk.nl/' rev='made' />\n" +
-        "    <script type='text/javascript' src='/sortable_us.js'></script>\n" +
-        "</head>\n" +
-        "\n" +
-        "<br><a href='/'>Home</a></br>\n" +
-        "\n" +
-        "<body>\n" +
-        "\n";
-    }   
-
-
-    /**
-     * Get the list of parameters and their values (foo=bar parts of URL).
-     * Set all parameter names to lower case.
-     * 
-     * @param request Request from client.
-     * 
-     * @return list of parameters and their values.
-     */
-    public static HashMap<String, String> getParameterList(Request request) {
-        HashMap<String, String> parameterList = new HashMap<String, String>();
-        Form form = request.getResourceRef().getQueryAsForm();
-        for (Parameter parameter : form) {
-            String name = parameter.getName().toLowerCase();
-            parameterList.put(name, parameter.getValue());
-        }
-        return parameterList;
-    }
-
-
-
-    /**
-     * Copy the input stream to the output stream.
-     *
-     * @param in Data source.
-     *
-     * @param out Data sink.
-     * 
-     * @return Total length of transfer.
-     *
-     * @throws IOException
-     */
-    public static long inToOut(InputStream in, OutputStream out) throws IOException {
-
-        byte[] buffer = new byte[TRANSFER_BUFFER_SIZE];
-        int length = 1;
-        long totalLength = 0;
-        while ((length = in.read(buffer)) >= 0) {
-            totalLength += length;
-            out.write(buffer, 0, length);
-        }
-        return totalLength;
-    }
-
-
-    /**
-     * Get the list of names of the types of media that the client will accept.
-     * Also, if a media type is found in the parameter list, then remove it to
-     * indicate that the parameter has been recognized by it's name.  It
-     * is up to the caller to determine whether or not the media type names are
-     * valid and what to do with them.  If present, the media type specified in
-     * the URL is listed first. 
-     * 
-     * @param request Request from client.
-     * 
-     * @param parameterList List of URL parameters.
-     * 
-     * @return 
-     */
-    public static ArrayList<String> getMediaTypeNameList(Request request, HashMap<String, String> parameterList) {
-        ArrayList<String> mediaTypeList = new ArrayList<String>();
-        String value = parameterList.get(MEDIA_TYPE_PARAMETER_NAME);
-        if (value != null) {
-            mediaTypeList.add(value);
-            parameterList.remove(MEDIA_TYPE_PARAMETER_NAME);
-        }
-
-        for (Preference<MediaType> pmt : request.getClientInfo().getAcceptedMediaTypes()) {
-            String name = pmt.getMetadata().getName();
-            if (!mediaTypeList.contains(name)) {
-                mediaTypeList.add(name);
-            }
-        }
-
-        return mediaTypeList;
-    }
-
-    public static String getUserId(Request request, Response response, HashMap<String, String> parameterList) {
-        String userId = parameterList.get(USER_ID_PARAMETER_NAME);
-        if (userId != null) {
-            parameterList.remove(USER_ID_PARAMETER_NAME);
-        }
-        return userId;
-    }
 
 
     /**

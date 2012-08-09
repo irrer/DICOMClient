@@ -290,7 +290,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
     }
 
 
-    public String getAnonymizePatienteNameText() {
+    public String getAnonymizePatientNameText() {
         return anonymizePatientNameTextField.getText();
     }
 
@@ -306,14 +306,14 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
 
 
     private void updateAnonymizePatientFields() {
-        if ((!enableDifferentPatientName.isSelected()) && (!getAnonymizePatientIdText().equals(getAnonymizePatienteNameText()))) {
+        if ((!enableDifferentPatientName.isSelected()) && (!getAnonymizePatientIdText().equals(getAnonymizePatientNameText()))) {
             SwingUtilities.invokeLater(this);
         }
     }
 
 
     public void run() {
-        if (!getAnonymizePatientIdText().equals(getAnonymizePatienteNameText())) {
+        if (!getAnonymizePatientIdText().equals(getAnonymizePatientNameText())) {
             setAnonymizePatienteNameText(getAnonymizePatientIdText());
         }
     }
