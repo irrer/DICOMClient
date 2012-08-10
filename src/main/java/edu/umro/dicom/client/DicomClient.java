@@ -945,13 +945,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         if (source.equals(anonymizeDestinationBrowseButton)) {
             updateDestination();
             switch(directoryChooser.showOpenDialog(getMainContainer())) {
-            case JFileChooser.APPROVE_OPTION:
-                anonymizeDestination = directoryChooser.getSelectedFile();
-                anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
-                Log.get().info("Destination for anonymized file: " + anonymizeDestination.getAbsolutePath());
-                break;
-            case JFileChooser.CANCEL_OPTION:
-                break;
+                case JFileChooser.APPROVE_OPTION:
+                    anonymizeDestination = directoryChooser.getSelectedFile();
+                    anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
+                    Log.get().info("Destination for anonymized file: " + anonymizeDestination.getAbsolutePath());
+                    break;
+                case JFileChooser.CANCEL_OPTION:
+                    break;
             }
         }
 
@@ -1131,18 +1131,23 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             }
 
-            // There should be at least 3 attributes to be considered valid DICOM
-            if (attributeList.size() < 4) {
-                String msg = "Not a valid DICOM file: " + fileName;
+            
+            Attribute sopInstanceUIDAttr = attributeList.get(TagFromName.SOPInstanceUID);
+            String sopInstanceUID = null;
+            if (sopInstanceUIDAttr != null) {
+                sopInstanceUID = sopInstanceUIDAttr.getSingleStringValueOrNull();
+            }
+            if ((sopInstanceUID == null) || (sopInstanceUID.length() < 10)) {
+                String msg = "No valid SOP Instance UID found, so this is not a valid DICOM file: " + fileName;
                 showMessage(msg);
                 if (inCommandLineMode()) {
                     System.err.println(msg);
                     System.exit(1);
                 }
-
                 return;
             }
 
+            
             Patient patient = patientList.get(patientId);
             if (patient == null) {
                 patient = new Patient(fileName, attributeList, makeNewPatientId());

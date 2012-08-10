@@ -30,7 +30,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.TreeMap;
 
@@ -179,15 +181,95 @@ public class Series extends JPanel implements ActionListener {
     /** Layout that shows the progress bar or preview slider. */
     private CardLayout previewProgressLayout = null;
 
+    private class InstanceList {
+        private class Instance implements Comparable<Instance> {
+            public final int instanceNumber;
+            public String sopInstanceUID;
+            public String fileName;
+
+            public Instance(int instanceNumber, String sopInstanceUID, String fileName) {
+                this.instanceNumber = instanceNumber;
+                this.sopInstanceUID = sopInstanceUID;
+                this.fileName = fileName;
+            }
+
+            @Override
+            public int compareTo(Instance o) {
+                return this.instanceNumber - o.instanceNumber;
+            }
+        }
+
+        private ArrayList<Instance> instList = new ArrayList<Instance>();
+
+        private HashSet<String> sopList = new HashSet<String>();
+        private HashSet<String> fileList = new HashSet<String>();
+        private ArrayList<String> sortedList = null;
+
+        
+        /**
+         * Get the sortedList of file names in ascending order by instance number.
+         * 
+         * @return List of file names.
+         */
+        public ArrayList<String> values() {
+            if (sortedList == null) {
+                Collections.sort(instList);
+                sortedList = new ArrayList<String>();
+                for (Instance inst : instList) {
+                    sortedList.add(inst.fileName);
+                }
+            }
+            return sortedList;
+        }
+        
+        
+        public int size() {
+            return instList.size();
+        }
+
+
+        public String put(String fileName, AttributeList attributeList) {
+
+            if (fileList.contains(fileName)) {
+                return "The file " + fileName + " has already been loaded.";
+            }
+
+            String sopInstanceUID = attributeList.get(TagFromName.SOPInstanceUID).getSingleStringValueOrEmptyString();
+            if (sopList.contains(sopInstanceUID)) {
+                String oldFile = "";
+                for (Instance instance : instList) {
+                    if (instance.sopInstanceUID == sopInstanceUID) {
+                        oldFile = instance.fileName;
+                        break;
+                    }
+                }
+                return "The SOP Instance UID " + sopInstanceUID + " was already loaded with from file " + oldFile + ", so ignoring file " + fileName;
+            }
+
+            Attribute instanceNumberAttr = attributeList.get(TagFromName.InstanceNumber);
+            int instanceNumber = 0;
+            if (instanceNumberAttr != null) {
+                instanceNumber = instanceNumberAttr.getSingleIntegerValueOrDefault(0);
+            }
+
+            instList.add(new Instance(instanceNumber, sopInstanceUID, fileName));
+            sopList.add(sopInstanceUID);
+            fileList.add(fileName);
+            sortedList = null;
+
+            return null;
+        }
+    }
+
     /** List of file names for this series. */
-    private TreeMap<Integer, String> fileNameList = new TreeMap<Integer, String>();
+    private InstanceList instanceList = new InstanceList();
 
     /** List of PACS AE titles to which this series has been uploaded. */
     private HashSet<String> aeTitleUploadList = new HashSet<String>();
 
 
     /**
-     * Find the first non-null value in a list.
+     * Find the first non-null value in a sortedList.
      * 
      * @param textList List of values.
      * 
@@ -217,7 +299,7 @@ public class Series extends JPanel implements ActionListener {
         seriesSummary += (date == null             ) ? "" : " " + date;
         seriesSummary += (time == null             ) ? "" : " " + time;
 
-        seriesSummary += "    Files: " + fileNameList.size();
+        seriesSummary += "    Files: " + instanceList.size();
 
         seriesSummary += "   ";
         summaryLabel.setText(seriesSummary);
@@ -492,9 +574,9 @@ public class Series extends JPanel implements ActionListener {
 
 
     /**
-     * Get the list of anonymization values for this series.
+     * Get the sortedList of anonymization values for this series.
      * 
-     * @return The list of anonymization values for this series.
+     * @return The sortedList of anonymization values for this series.
      * 
      * @throws DicomException On invalid PatientID or PatientName
      */
@@ -626,7 +708,7 @@ public class Series extends JPanel implements ActionListener {
     private void anonymizeSeries() {
         int count = 0;
         try {
-            for (String fileName : fileNameList.values()) {
+            for (String fileName : instanceList.values()) {
                 AttributeList attributeList = new AttributeList();
                 attributeList.read(fileName);
 
@@ -663,8 +745,8 @@ public class Series extends JPanel implements ActionListener {
                 System.exit(1);
             }
         }
-        if (count != fileNameList.size()) {
-            DicomClient.getInstance().showMessage("Unable to anonymize series " + toString() + " .  Only " + count + " slices of " + fileNameList.size() + " were completed.");
+        if (count != instanceList.size()) {
+            DicomClient.getInstance().showMessage("Unable to anonymize series " + toString() + " .  Only " + count + " slices of " + instanceList.size() + " were completed.");
         }
     }
 
@@ -688,7 +770,7 @@ public class Series extends JPanel implements ActionListener {
         if (urlText != null) {
             try {
                 urlText += "/dicom/put?pacs=" + aeTitle + "&user_id=" + DicomClient.getInstance().getLoginName();
-                Log.get().info("Starting upload of " + fileNameList.size() + " file(s) from series " + summaryLabel.getText() + " to PACS " + aeTitle + " using base url: " + urlText);
+                Log.get().info("Starting upload of " + instanceList.size() + " file(s) from series " + summaryLabel.getText() + " to PACS " + aeTitle + " using base url: " + urlText);
                 String seriesSummary = "";
                 seriesSummary += (patientID         == null) ? "" : " " + patientID;
                 seriesSummary += (patientName       == null) ? "" : " " + patientName;
@@ -697,7 +779,7 @@ public class Series extends JPanel implements ActionListener {
                 seriesSummary += (seriesDescription == null) ? "" : " " + seriesDescription;
 
                 try {
-                    KeyObject keyObject = new KeyObject(seriesSummary, fileNameList.values());
+                    KeyObject keyObject = new KeyObject(seriesSummary, instanceList.values());
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                     DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, TransferSyntax.ExplicitVRLittleEndian, TransferSyntax.ExplicitVRLittleEndian);
                     keyObject.write(dicomOutputStream);
@@ -714,8 +796,7 @@ public class Series extends JPanel implements ActionListener {
                     return;
                 }
 
-                for (Integer instance : fileNameList.keySet()) {
-                    String fileName = fileNameList.get(instance);
+                for (String fileName : instanceList.values()) {
                     InputStream inputStream = null;
                     try {
                         inputStream = new FileInputStream(new File(fileName));
@@ -740,33 +821,7 @@ public class Series extends JPanel implements ActionListener {
                 previewProgressLayout.show(previewProgressPanel, CARD_SLIDER);
             }
         }
-        Log.get().info("Uploaded " + fileIndex + " of " + fileNameList.size() + " files.");
-    }
-
-
-    /**
-     * Get the instance number for this series.  If it does not have one,
-     * return <code>Integer.MIN_VALUE</code>.
-     * 
-     * @param attributeList Representation of series.
-     * 
-     * @return Instance (slice) number or <code>Integer.MIN_VALUE</code>.
-     */
-    private Integer getInstance(AttributeList attributeList) {
-        Attribute attribute = attributeList.get(TagFromName.InstanceNumber);
-        if (attribute != null) {
-            try {
-                int[]  instanceNumberList = attribute.getIntegerValues();
-                if ((instanceNumberList != null) && (instanceNumberList.length > 0)) {
-                    return instanceNumberList[0];
-                }
-            }
-            catch (DicomException e) {
-                // Ignore errors, because the series might be a
-                // series of 1 and not have an instance attribute.
-            }
-        }
-        return Integer.MIN_VALUE;
+        Log.get().info("Uploaded " + fileIndex + " of " + instanceList.size() + " files.");
     }
 
 
@@ -778,11 +833,12 @@ public class Series extends JPanel implements ActionListener {
      * @param attributeList Parsed version of the DICOM file contents.
      */
     public void addFile(String fileName, AttributeList attributeList) {
-        Integer instance = getInstance(attributeList);
-        if (!(fileNameList.containsKey(instance))) {
-            fileNameList.put(instance, new File(fileName).getAbsolutePath());
-            progressBar.setMaximum(fileNameList.size());
+        String msg = instanceList.put(fileName, attributeList);
+        if (msg == null) {
             resetSummary();
+        }
+        else {
+            DicomClient.getInstance().showMessage(msg);
         }
     }
 
@@ -814,7 +870,7 @@ public class Series extends JPanel implements ActionListener {
         }
 
         if (ev.getSource() == previewButton) {
-            int slice = fileNameList.size() / 2;
+            int slice = instanceList.size() / 2;
             slice = (slice < 1) ? 1 : slice;
             showPreview(slice);
         }
@@ -841,8 +897,8 @@ public class Series extends JPanel implements ActionListener {
                 Profile.profile();
                 preview.setSeries(this);
                 Profile.profile();
-
-                String fileName = fileNameList.get(fileNameList.keySet().toArray()[value-1]);
+                
+                String fileName = instanceList.values().get(value-1);
                 StringBuffer title = new StringBuffer();
 
                 title.append((patientID         == null) ? "" : "  " + patientID);
@@ -850,7 +906,7 @@ public class Series extends JPanel implements ActionListener {
                 title.append((seriesNumber      == null) ? "" : "  " + seriesNumber);
                 title.append((modality          == null) ? "" : "  " + modality);
                 title.append((seriesDescription == null) ? "" : "  " + seriesDescription);
-                title.append("   " + value + " / " + fileNameList.size());
+                title.append("   " + value + " / " + instanceList.size());
 
                 Profile.profile();
                 preview.showDicom(title.toString(), fileName);
@@ -864,12 +920,12 @@ public class Series extends JPanel implements ActionListener {
 
 
     /**
-     * Get the list of file names.
+     * Get the sortedList of file names.
      * 
      * @return List of file names.
      */
     public Collection<String> getFileNameList() {
-        return fileNameList.values();
+        return instanceList.values();
     }
 
 }
