@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -634,6 +633,7 @@ public class Series extends JPanel implements ActionListener {
         int count = 1;
         while (file.exists()) {
             file = new File(dir, name + "_" + count + DICOM_SUFFIX);
+            count++;
         }
 
         if (!dir.exists()) {
