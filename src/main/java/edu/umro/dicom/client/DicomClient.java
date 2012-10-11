@@ -30,6 +30,7 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,10 +52,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -73,6 +76,7 @@ import org.restlet.data.Method;
 import org.restlet.data.Parameter;
 import org.restlet.data.Protocol;
 import org.restlet.data.Reference;
+import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.data.Status;
 import org.w3c.dom.Document;
@@ -351,7 +355,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private ArrayList<String> getPacsList() {
         String baseUrl = ClientConfig.getInstance().getServerBaseUrl();
 
-        String url = baseUrl + "/pacs?media_type=" + MediaType.TEXT_XML.getName() + "&user_id=" + loginNameTextField.getText();
+        String url = baseUrl + "/pacs?media_type=" + MediaType.TEXT_XML.getName() + "&user_id=" + loginNameTextField.getText().trim();
         Log.get().info("Getting list of pacs.  URL: " + url);
         Request request = new Request(Method.GET, url);
         setChallengeResponse(request);
@@ -371,13 +375,24 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
         }
         else {
-            String msg = "Bad response from URL " + url + " to get XML formatted list of PACS: " + response;
-            showMessage(msg);
-            Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "getPacsList", null, msg);
+            if (response.getStatus().getCode() == Status.CLIENT_ERROR_UNAUTHORIZED.getCode()) {
+                String msg = response.getEntityAsText();
+                if (!msg.startsWith("User")) {
+                    msg = "User name or password is incorrect.";
+                }
+                showMessage(msg);
+                Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "getPacsList", null, msg);
+                loginStatusLabel.setText("<html><font style='color: red'>" + msg.replaceAll("\\n", "<br>") + "</font></html>");
+            }
+            else {
+                String msg = "Bad response from server at " + url + " to get list of PACS   Error: " + response;
+                showMessage(msg);
+                Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "getPacsList", null, msg);
+                loginStatusLabel.setText("<html><font style='color: red'>" + msg + "</font></html>");
+
+            }
         }
-        ArrayList<String> list = new ArrayList<String>();
-        list.add(NO_PACS);
-        return list;
+        return null;
     }
 
 
@@ -421,16 +436,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             pacsLabel.invalidate();
             frame.pack();
         }
-    }
-
-    /**
-     * Put the list of PACS into the GUI so that the user
-     * can see them and select one.
-     */
-    private void populatePacsList() {
-        pacsList = getPacsList();
-        currentPacs = pacsList.size() - 1;
-        pacsLabel.setText(pacsList.get(currentPacs));
     }
 
 
@@ -481,14 +486,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @return GUI for login.
      */
     private JComponent buildLoginPanel() {
-        String toolTipText = "<html>Use your ARIA login<br>and password</html>";
+        String toolTipText = "<html>Use your Level 2 login<br>and password</html>";
         JPanel loginPanel = new JPanel();
         GridLayout gridLayout = new GridLayout(3, 2);
         gridLayout.setVgap(5);
         loginPanel.setLayout(gridLayout);
         loginPanel.setToolTipText(toolTipText);
 
-        JLabel userLabel = new JLabel("Aria User:");
+        JLabel userLabel = new JLabel("Level 2 User:");
         userLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         userLabel.setVerticalAlignment(SwingConstants.CENTER);
         loginPanel.add(userLabel);
@@ -869,6 +874,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      */
     private void authenticate() {
 
+        pacsList = getPacsList();
+
+        /*
         boolean authenticated = false;
         loginStatusLabel.setText("");
         Reference reference = new Reference(ClientConfig.getInstance().getServerBaseUrl());
@@ -884,23 +892,27 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         authenticated = Status.isSuccess(response.getStatus().getCode());
 
         Log.get().info("authenticateResponse for user " + loginNameTextField.getText() + " : " + authenticated);
+         */
 
-        if (authenticated) {
+        if (pacsList != null) {
             loginPacsCardLayout.show(loginPacsPanel, CARD_PACS);
             if (!inCommandLineMode()) {
                 frame.setTitle(WINDOW_NAME + "          User: " + loginNameTextField.getText());
             }
-            populatePacsList();
+            currentPacs = pacsList.size() - 1;
+            pacsLabel.setText(pacsList.get(currentPacs));
             setPacsLabelSize();
         }
+        /*
         else {
             String msg = ClientConfig.getInstance().getServerBaseUrl() + " : " + response.getStatus().toString();
             int code = response.getStatus().getCode();
             if (code == Status.CLIENT_ERROR_UNAUTHORIZED.getCode()) {
-                msg = "ARIA user or password is incorrect.";
+                msg = "Level 2 user or password is incorrect.";
             }
             loginStatusLabel.setText("<html><font style='color: red'>" + msg + "</font></html>");
         }
+         */
     }
 
 
@@ -1007,9 +1019,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      */
     public AnonymizeGUI getAnonymizeGui() {
         if (anonymizeGui == null) {
-            Profile.profile();
             anonymizeGui = new AnonymizeGUI();
-            Profile.profile();
         }
         return anonymizeGui;
     }
@@ -1090,6 +1100,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return fileCount;
     }
 
+
+    long lastRepaint = 0;
     /**
      * Add the given file to the list of loaded files.  If the file is not
      * a DICOM file or can not be read, then show a message and ignore it.
@@ -1099,14 +1111,24 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * patient ID and modality.
      * 
      * @param fileName Name of a DICOM file.
+     * 
+     * @param descend True if it should descend into subdirectories and process files there.
      */
-    private void addDicomFile(File file) {
+    private void addDicomFile(File file, boolean descend) {
+        System.out.println();
         try {
             fileCount++;
             setPreviewEnableable(false);
             String fileName = file.getAbsolutePath();
-            if (new File(fileName).isDirectory()) {
-                showMessage(new File(fileName).getAbsolutePath() + " is a directory and is being ignored.");
+            if (file.isDirectory()) {
+                if (descend) {
+                    for (File child : file.listFiles()) {
+                        addDicomFile(child, false);
+                    }
+                }
+                else {
+                    showMessage(new File(fileName).getAbsolutePath() + " is a directory and is being ignored.");
+                }
                 return;
             }
             AttributeList attributeList = new AttributeList();
@@ -1131,7 +1153,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             }
 
-            
             Attribute sopInstanceUIDAttr = attributeList.get(TagFromName.SOPInstanceUID);
             String sopInstanceUID = null;
             if (sopInstanceUIDAttr != null) {
@@ -1147,17 +1168,19 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 return;
             }
 
-            
             Patient patient = patientList.get(patientId);
             if (patient == null) {
                 patient = new Patient(fileName, attributeList, makeNewPatientId());
                 patientList.put(patientId, patient);
                 patientListPanel.add(patient);
                 setColor(patientListPanel);
+                JScrollBar scrollBar = patientScrollPane.getVerticalScrollBar();
+                scrollBar.setValue(scrollBar.getMaximum());
             }
             else {
                 patient.addStudy(fileName, attributeList);
             }
+
             if (dragHereLabel != null) {
                 Container parent = dragHereLabel.getParent();
                 parent.remove(dragHereLabel);
@@ -1167,77 +1190,70 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             // We have a valid DICOM file, so use its directory in determining where to put files.
             File parent = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
             File anonymizedDirectory = new File(file.isDirectory() ? file : parent, "anonymized");
-            setDefaultDestination(anonymizedDirectory);
+
+            if (anonymizeDestination == null) {
+                anonymizeDestination = anonymizedDirectory;
+                anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
+                directoryChooser.setSelectedFile(anonymizeDestination);
+            }
         }
         finally {
             setPreviewEnableable(true);
+            // Need to set color for all of the new Swing components added.
+            setColor(getMainContainer());
+            setProcessedStatus();
+
+            long now = System.currentTimeMillis();
+            if ((now - lastRepaint) > 200) {
+                JScrollBar scrollBar = patientScrollPane.getVerticalScrollBar();
+                scrollBar.setValue(scrollBar.getMaximum());
+                patientScrollPane.paintAll(patientScrollPane.getGraphics());
+                lastRepaint = now;
+            }
         }
     }
-
-
-
 
 
     /**
-     * Take a file specification from the user and add it to
-     * the list of loaded files.  If a regular file is given,
-     * then load all files in the same directory.  If a directory
-     * is given, then load all files in it.
+     * Recursively set the color of all containers to the same one
+     * so that the whole application looks consistent.
      * 
-     * Files are generally given as the command line arguments
-     * or dragged onto the application.
-     * 
-     * @param fileName File name given by user.
-     */
-    private void addFile(String fileName) {
-        Log.get().info("Processing file: " + fileName + " ...");
-        File file = new File(fileName);
+     * @param container
 
-        if (!file.exists()) {
-            String msg = "File " + fileName + " does not exist.";
-            showMessage(msg);
-            if (inCommandLineMode()) {
-                System.err.println(msg);
-                System.exit(1);
-            }
-            return;
-        }
-        if (!file.canRead()) {
-            String msg = "Do not have permission to read " + fileName;
-            showMessage(msg);
-            if (inCommandLineMode()) {
-                System.err.println(msg);
-                System.exit(1);
-            }
-            return;
-        }
-        if (file.isDirectory()) {
-            String[] fileNameList = file.list();
-            for (String fn : fileNameList) {
-                File childFile = new File(file, fn);
-                addDicomFile(childFile);
-            }
-        }
-        else {
-            if (commandLineMode) {
-                addDicomFile(new File(fileName));
-            } else {
-                File parent = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
-                addFile(parent.getAbsolutePath());
-            }
-        }
+    static private void repaintEverything(Container container) {
 
-        // Need to set color for all of the new Swing components added.
-        setColor(getMainContainer());
-        setProcessedStatus();
+        for (Component component : container.getComponents()) {
+            if (component instanceof Container) {
+                repaintEverything((Container)component);
+                component.validate();
+            }
+            if (component instanceof JComponent) {
+                //component.validate();
+                component.repaint();
+            }
+        }
+        container.paintAll(container.getGraphics());
+
     }
+     */
 
 
     @Override
     public void filesDropped(File[] fileList) {
-        for (File file : fileList) {
-            addFile(file.getAbsolutePath());
+        class Add implements Runnable {
+            File[] fileList = null;
+            Add(File[] fileList) {
+                this.fileList = fileList;
+            }
+
+            @Override
+            public void run() {
+                for (File file : fileList) {
+                    addDicomFile(file, true);
+                }
+            }            
         }
+        SwingUtilities.invokeLater(new Add(fileList));
     }
 
 
@@ -1293,9 +1309,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      */
     public static DicomClient getInstance() {
         if (dicomClient == null) {
-            Profile.profile();
             dicomClient = new DicomClient();
-            Profile.profile();
         }
         return dicomClient;
     }
@@ -1425,7 +1439,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             });
 
-            Profile.profile();
             ClientConfig.getInstance().setupTrustStore();
 
             initCustomDictionary();
@@ -1434,11 +1447,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             Anonymize.setRootGuid(ClientConfig.getInstance().getRootGuid());
 
             DicomClient dicomClient = getInstance();
-            Profile.profile();
             for (String fileName : args) {
-                Profile.profile();
-                dicomClient.addFile(fileName);
-                Profile.profile();
+                dicomClient.addDicomFile(new File(fileName), true);
             }
 
             // If in command line mode, then anonymize all files and exit happily

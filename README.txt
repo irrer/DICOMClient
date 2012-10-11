@@ -125,7 +125,11 @@ src/main/resources/Install
     
 src/main/resources/DICOMUploadHelp.html
     Contains the Dicom Client help text that is edited and then put into the edu.umro.dicom.client.Help class.
-    This class also contains a main method that formats this text for cutting and pasting into the Help.java file.
+    Using vim, process this file with:
+    
+        :%s/.*/"&<br>\\n" +/
+        
+    and then paste into into the Help.java file.
 
 
 The Linux service supports the start, stop, restart, and status operations

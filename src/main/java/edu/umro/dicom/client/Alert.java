@@ -49,6 +49,9 @@ public class Alert extends JDialog implements ActionListener {
     /** Preferred size of screen. */
     private static final Dimension PREFERRED_SIZE = new Dimension(440, 300);
 
+    /** Scroll bar increment. */
+    private static final int SCROLL_INCREMENT = 20;
+
     /** List of buttons */
     private JButton[] buttonList = null;
 
@@ -72,6 +75,8 @@ public class Alert extends JDialog implements ActionListener {
         int gap = 20;
         scrollPane.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));
 
+        scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
+        
         panel.add(scrollPane);
 
         return scrollPane;

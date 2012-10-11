@@ -97,6 +97,23 @@ public class Help extends Alert {
 
     private static final String HELP_TEXT =
         "<html><br>\n" +
+        "<br>\n" +
+        "<!--<br>\n" +
+        "   Copyright 2012 Regents of the University of Michigan<br>\n" +
+        "<br>\n" +
+        "   Licensed under the Apache License, Version 2.0 (the \"License\");<br>\n" +
+        "   you may not use this file except in compliance with the License.<br>\n" +
+        "   You may obtain a copy of the License at<br>\n" +
+        "<br>\n" +
+        "       http://www.apache.org/licenses/LICENSE-2.0<br>\n" +
+        "<br>\n" +
+        "   Unless required by applicable law or agreed to in writing, software<br>\n" +
+        "   distributed under the License is distributed on an \"AS IS\" BASIS,<br>\n" +
+        "   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<br>\n" +
+        "   See the License for the specific language governing permissions and<br>\n" +
+        "   limitations under the License.<br>\n" +
+        "--><br>\n" +
+        "<br>\n" +
         "<!--<br>\n" +
         "Help text built into application.<br>\n" +
         "This text is written in a subset of HTML that is <br>\n" +
@@ -125,7 +142,7 @@ public class Help extends Alert {
         "The program may be started by either:<br>\n" +
         "<br>\n" +
         "<ul><br>\n" +
-        "  <li>dragging a DICOM file or directory onto the program icon</li><br>\n" +
+        "  <li>dragging one or more DICOM files or directories onto the program icon</li><br>\n" +
         "  <li>double clicking the icon</li><br>\n" +
         "</ul><br>\n" +
         "<br>\n" +
@@ -134,14 +151,22 @@ public class Help extends Alert {
         "for your needs.  If you only wish to view (preview) files, then either<br>\n" +
         "mode will suffice.<br>\n" +
         "</up><br>\n" +
-        "When a file is dragged to the shortcut icon, all DICOM files in the<br>\n" +
-        "containing directory are loaded into the program.<br>\n" +
+        "<br>\n" +
+        "A file can be loaded by dragging it into the program.  To load an<br>\n" +
+        "entire directory, you can drag and drop a directory.  If a directory<br>\n" +
+        "is loaded, only the files immediately under that directory are loaded,<br>\n" +
+        "sub-directories are ignored.  It is also possible to select multiple<br>\n" +
+        "files and/or directories and drag them as a group, and they will all<br>\n" +
+        "be loaded.<br>\n" +
+        "<br>\n" +
+        "Loading files does not change them in any way, and is a good way<br>\n" +
+        "to view DICOM files.<br>\n" +
         "<br>\n" +
         "Double clicking the shortcut icon will also start the program, but<br>\n" +
         "with no files loaded.<br>\n" +
         "<br>\n" +
         "After the program has been started, the user may drag additional<br>\n" +
-        "files into it and they will be added to the list.<br>\n" +
+        "files or directories into it and they will be added to the list.<br>\n" +
         "<br>\n" +
         "Files are listed in a hierarchy, which has three levels:<br>\n" +
         "<ul><br>\n" +
@@ -156,9 +181,9 @@ public class Help extends Alert {
         "with descriptive information for each.  Individual files for each<br>\n" +
         "series are not listed, but the number of files in each is shown.<br>\n" +
         "<br>\n" +
-        "For each series, there is a <b>Preview</b> and an <b>Anonymize</b><up> or an<br>\n" +
-        "<b>Upload</b></up> button.  The <b>Preview</b> is used to preview the series<br>\n" +
-        "before anonymizing<up> or uploading</up>.<br>\n" +
+        "For each series, there is a <b>Preview</b> and an <b>Anonymize</b><br>\n" +
+        "<up> or an <b>Upload</b></up> button.  The <b>Preview</b> is used<br>\n" +
+        "to preview the series before anonymizing<up> or uploading</up>.<br>\n" +
         "<br>\n" +
         "Any files that are not valid DICOM files, or, the<br>\n" +
         "program lacks the necessary permissions to read them, will be<br>\n" +
@@ -343,7 +368,7 @@ public class Help extends Alert {
         "be anonymized, but this program does not support the blacking out<br>\n" +
         "of this data.<br>\n" +
         "</html><br>\n" +
-        "";
+        "<br>\n";
 
 
     /**

@@ -204,7 +204,7 @@ public class Series extends JPanel implements ActionListener {
         private HashSet<String> fileList = new HashSet<String>();
         private ArrayList<String> sortedList = null;
 
-        
+
         /**
          * Get the sortedList of file names in ascending order by instance number.
          * 
@@ -220,8 +220,8 @@ public class Series extends JPanel implements ActionListener {
             }
             return sortedList;
         }
-        
-        
+
+
         public int size() {
             return instList.size();
         }
@@ -897,7 +897,7 @@ public class Series extends JPanel implements ActionListener {
                 Profile.profile();
                 preview.setSeries(this);
                 Profile.profile();
-                
+
                 String fileName = instanceList.values().get(value-1);
                 StringBuffer title = new StringBuffer();
 
