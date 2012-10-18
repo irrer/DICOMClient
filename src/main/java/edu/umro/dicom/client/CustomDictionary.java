@@ -157,9 +157,7 @@ public class CustomDictionary extends DicomDictionary {
         if (extensions == null) {
             //extensions = new ArrayList<PrivateTag>();
             //generateCustomAttributes();
-            Profile.profile();
             extensions = ClientConfig.getInstance().getPrivateTagList();
-            Profile.profile();
         }
     }
 

@@ -221,6 +221,12 @@ public class AnonymizeGUI implements ActionListener {
     /** Adds a new anonymize field to the dialog. */
     private JButton addButton = null;
 
+    /** Selects all checkboxes. */
+    private JButton selectAllButton = null;
+
+    /** Selects no checkboxes. */
+    private JButton selectNoneButton = null;
+
     /** Closes the dialog. */
     private JButton closeButton = null;
 
@@ -244,6 +250,16 @@ public class AnonymizeGUI implements ActionListener {
             GridLayout gridLayout = (GridLayout)anonPanel.getLayout();
             gridLayout.setRows(gridLayout.getRows()+1);
             addAttribute(null, null).setTag(TagFromName.AbortFlag);
+        }
+        if (ev.getSource().equals(selectAllButton)) {
+            for (Component aa : anonPanel.getComponents()) {
+                ((AnonymizeAttribute)aa).setActive(true);
+            }
+        }
+        if (ev.getSource().equals(selectNoneButton)) {
+            for (Component aa : anonPanel.getComponents()) {
+                ((AnonymizeAttribute)aa).setActive(false);
+            }
         }
     }
 
@@ -287,31 +303,23 @@ public class AnonymizeGUI implements ActionListener {
      */
     @SuppressWarnings("unchecked")
     private JComponent constructAnonPanel() {
-        Profile.profile();
         anonPanel = new JPanel();
-        Profile.profile();
         AttributeList attributeList = ClientConfig.getInstance().getAnonymizingReplacementList();
-        Profile.profile();
 
         GridLayout gridLayout = new GridLayout(attributeList.size(), 1);
         gridLayout.setVgap(20);
         anonPanel.setLayout(gridLayout);
-        Profile.profile();
 
-        Profile.profile();
         updateTagList(attributeList);
-        Profile.profile();
 
         for (AttributeTag tag : (Set<AttributeTag>)attributeList.keySet()) {
             addAttribute(attributeList, tag);
         }
-        Profile.profile();
 
         anonPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         scrollPane = new JScrollPane(anonPanel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
-        Profile.profile();
         return scrollPane;
     }
 
@@ -343,6 +351,16 @@ public class AnonymizeGUI implements ActionListener {
         FlowLayout layout = new FlowLayout(FlowLayout.CENTER);
         layout.setHgap(30);
         buttonPanel.setLayout(layout);
+                
+        selectAllButton = new JButton("Select All");
+        selectAllButton.addActionListener(this);
+        selectAllButton.setToolTipText("Select all checkboxes");
+        buttonPanel.add(selectAllButton);
+
+        selectNoneButton = new JButton("Select None");
+        selectNoneButton.addActionListener(this);
+        selectNoneButton.setToolTipText("Un-Select all checkboxes");
+        buttonPanel.add(selectNoneButton);
 
         addButton = new JButton("Add");
         addButton.addActionListener(this);
@@ -391,7 +409,6 @@ public class AnonymizeGUI implements ActionListener {
     public void updateTagList(AttributeList attributeList) {
         int oldSize = tagList.size();
 
-        Profile.profile();
         for (Object oAttr : attributeList.values()) {
             Attribute attribute = (Attribute)oAttr;
             tagList.add(attribute.getTag());
@@ -403,7 +420,6 @@ public class AnonymizeGUI implements ActionListener {
                 }
             }
         }
-        Profile.profile();
 
         // If the tag list changed (can only increase), then update the
         // sorted list of tag names
@@ -414,14 +430,11 @@ public class AnonymizeGUI implements ActionListener {
                     tagListSorted.add(name);
                 }
             }
-            Profile.profile();
 
             for (Component aa : anonPanel.getComponents()) {
                 ((AnonymizeAttribute)aa).setChoiceList();
             }
-            Profile.profile();
         }
-        Profile.profile();
     }
 
 

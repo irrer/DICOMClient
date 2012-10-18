@@ -864,7 +864,6 @@ public class Series extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent ev) {
-        Profile.profile();
         if (ev.getSource() == uploadAnonymizeButton) {
             processSeries();
         }
@@ -874,7 +873,6 @@ public class Series extends JPanel implements ActionListener {
             slice = (slice < 1) ? 1 : slice;
             showPreview(slice);
         }
-        Profile.profile();
     }
 
 
@@ -892,11 +890,8 @@ public class Series extends JPanel implements ActionListener {
         if (!inPreview) {
             inPreview = true;
             try {
-                Profile.profile();
                 Preview preview = DicomClient.getInstance().getPreview();
-                Profile.profile();
                 preview.setSeries(this);
-                Profile.profile();
 
                 String fileName = instanceList.values().get(value-1);
                 StringBuffer title = new StringBuffer();
@@ -908,9 +903,7 @@ public class Series extends JPanel implements ActionListener {
                 title.append((seriesDescription == null) ? "" : "  " + seriesDescription);
                 title.append("   " + value + " / " + instanceList.size());
 
-                Profile.profile();
                 preview.showDicom(title.toString(), fileName);
-                Profile.profile();
             }
             finally {
                 inPreview = false;

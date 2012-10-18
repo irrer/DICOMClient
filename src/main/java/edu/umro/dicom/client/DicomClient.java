@@ -30,7 +30,6 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -73,10 +72,7 @@ import org.restlet.data.ChallengeResponse;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
-import org.restlet.data.Parameter;
 import org.restlet.data.Protocol;
-import org.restlet.data.Reference;
-import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 import org.restlet.data.Status;
 import org.w3c.dom.Document;
@@ -148,9 +144,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** Size of mode panel. */
     private static final Dimension MODE_PANEL_DIMENSION = new Dimension(200, 100);
-
-    /** Time in milliseconds to wait for authentication to complete. */
-    private static final String AUTHENTICATE_TIMEOUT = "" + (15 * 1000);
 
     /** List of patients that user has given for possible uploading.  This list
      * is extracted from the DICOM files given by the user.
@@ -1134,14 +1127,29 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             AttributeList attributeList = new AttributeList();
             try {
                 attributeList.read(fileName);
+
+                // The following is faster than the above single statement, as it only reads the first part of every DICOM file, but
+                // it also produces a lot of error messages because of the 'ragged end' of each file.
+                /*
+                {
+                    FileInputStream fis = new FileInputStream(new File(fileName));
+                    int len = 1024 * 32;
+                    byte[] buffer = new byte[len];
+                    len = fis.read(buffer);
+                    DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(buffer, 0, len));
+                    attributeList.read(dis);
+                }
+                */
             }
             catch (IOException ex) {
                 showMessage("Unable to read file " + fileName + " : " + ex.getMessage());
                 return;
             }
             catch (DicomException ex) {
-                showMessage("Error interpreting file " + fileName + " as DICOM : " + ex.getMessage());
-                return;
+                if (!ex.toString().contains("Failed to read value")) {
+                    showMessage("Error interpreting file " + fileName + " as DICOM : " + ex.getMessage());
+                    return;
+                }
             }
 
             String patientId = "none";
