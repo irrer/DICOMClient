@@ -1139,7 +1139,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(buffer, 0, len));
                     attributeList.read(dis);
                 }
-                */
+                 */
             }
             catch (IOException ex) {
                 showMessage("Unable to read file " + fileName + " : " + ex.getMessage());
@@ -1432,6 +1432,29 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     }
 
 
+    private void setupTrustStore() {
+        ArrayList<File> javaKeyStoreList = ClientConfig.getInstance().getJavaKeyStoreList();
+
+        for (File javaKeyStore : javaKeyStoreList) {
+            String fileName = javaKeyStore.getAbsolutePath();
+            Log.get().info("Trying java keystore file: " + fileName + " ...");
+            if (javaKeyStore.canRead()) {
+                System.setProperty("javax.net.ssl.trustStore", fileName);
+                System.setProperty("javax.net.ssl.trustStoreType", "JKS");
+                Log.get().info("Using java keystore file: " + fileName);
+                return;
+            }
+            else {
+                Log.get().info("Unable to read java key store file " + fileName);
+            }
+        }
+        showMessage("Could not find java keystore (*.jks) file to initialize secure communications with server at " + 
+                ClientConfig.getInstance().getServerBaseUrl() + " so you will not be able to upload files.");
+        return;
+    }
+
+
+
     /**
      * @param args
      */
@@ -1447,7 +1470,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             });
 
-            ClientConfig.getInstance().setupTrustStore();
 
             initCustomDictionary();
 
@@ -1455,6 +1477,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             Anonymize.setRootGuid(ClientConfig.getInstance().getRootGuid());
 
             DicomClient dicomClient = getInstance();
+            dicomClient.setupTrustStore();
             for (String fileName : args) {
                 dicomClient.addDicomFile(new File(fileName), true);
             }

@@ -24,8 +24,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.StringTokenizer;
 
-import org.w3c.dom.NodeList;
-
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
@@ -34,9 +32,7 @@ import com.pixelmed.dicom.DateAttribute;
 import com.pixelmed.dicom.PersonNameAttribute;
 import com.pixelmed.dicom.TimeAttribute;
 
-import edu.umro.dicom.common.TrustStore;
 import edu.umro.util.JarInfo;
-import edu.umro.util.Log;
 
 /**
  * General purpose methods.
@@ -170,6 +166,7 @@ public class Util {
      * @param nodeList List of nodes containing file names.
      * @return File to be used for javax.net.ssl.trustStore.  Null indicates failure.
      */
+    /*
     public static synchronized TrustStore setupTrustStore(NodeList nodeList) {
         TrustStore trustStore = new TrustStore();
 
@@ -177,6 +174,8 @@ public class Util {
             trustStore = new TrustStore(nodeList.item(ts));
         }
 
+        
+        
         if (!trustStore.viable()) {
             Log.get().warning("Unable to find a javax.net.ssl.trustStore file");            
         }
@@ -185,6 +184,7 @@ public class Util {
         }
         return trustStore;
     }
+    */
 
 
     /**

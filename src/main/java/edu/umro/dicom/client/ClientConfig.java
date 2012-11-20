@@ -31,7 +31,6 @@ import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.ValueRepresentation;
 
-import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
 import edu.umro.util.Utility;
@@ -262,6 +261,7 @@ public class ClientConfig {
      * 
      * @return The file to be used.
      */
+    /*
     public File setupTrustStore() {
         NodeList nodeList = null;    
         try {
@@ -285,6 +285,29 @@ public class ClientConfig {
             System.setProperty("javax.net.ssl.trustStoreType", "JKS");
         }
         return file;
+    }
+     */
+
+
+    /**
+     * Determine which java key stores are available and return a
+     * list of them.
+     * 
+     * @return List of available java key store files.
+     */
+    public ArrayList<File> getJavaKeyStoreList() {
+        ArrayList<File> list = new ArrayList<File>();
+        try {
+            NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/javax.net.ssl.trustStore/text()");
+            for (int tsd = 0; tsd < nodeList.getLength(); tsd++) {
+                Node node = nodeList.item(tsd);
+                list.add(new File(node.getNodeValue()));
+            }
+        }
+        catch (UMROException e) {
+            Log.get().warning("Unable to parse list of javax.net.ssl.trustStore.  You will not be able to communicate with the DICOM service.");
+        }
+        return list;
     }
 
 

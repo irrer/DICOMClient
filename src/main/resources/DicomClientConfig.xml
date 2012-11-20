@@ -18,9 +18,9 @@
 -->
     
     <!-- URL for the service. -->
-     <DicomServiceUrl>https://172.20.125.41:8091</DicomServiceUrl>   -->     <!-- rolxdeploy1 -->
+    <DicomServiceUrl>https://172.20.125.41:8091</DicomServiceUrl>       <!-- rolxdeploy1 -->
     <!-- <DicomServiceUrl>https://141.214.124.240:8091</DicomServiceUrl> -->  <!-- rolxdev1 -->
-    <!-- <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl>  -->   <!-- irrer desktop -->
+    <!-- <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl>  -->    <!-- irrer desktop -->
     
     <!-- Used to generate the default patient id.  Special character meanings:
         * : a random (capital) alpha or digit : ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
@@ -55,7 +55,8 @@
     multiple locations should be tried in the given order. -->
     <javax.net.ssl.trustStore>dicomsvc.jks</javax.net.ssl.trustStore>
     <javax.net.ssl.trustStore>src/main/resources/dicomsvc.jks</javax.net.ssl.trustStore>
-    
+    <javax.net.ssl.trustStore>C:\Program Files\UMRO\dicomsvc\dicomsvc.jks</javax.net.ssl.trustStore>
+        
    
 	<!-- List of tags whose contents should be anonymized.  Note that for UIDs, the replacement
 	value is ignored, and instead a new unique UID is constructed (with a Univ of Mich Radiation
