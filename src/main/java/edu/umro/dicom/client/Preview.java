@@ -76,6 +76,7 @@ import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
+import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
 /**
@@ -128,6 +129,30 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             vrSet.add(new String(vr));
         }
     }
+
+    /** List of value representations that may contain characters (such as null) that are invalid for XML. */ 
+    private static final byte[][] STRING_VR = {
+        ValueRepresentation.AS,
+        ValueRepresentation.CS,
+        ValueRepresentation.DS,
+        ValueRepresentation.IS,
+        ValueRepresentation.LO,
+        ValueRepresentation.LT,
+        ValueRepresentation.OF,
+        ValueRepresentation.OW,
+        ValueRepresentation.SH,
+        ValueRepresentation.ST,
+        ValueRepresentation.UT
+    };
+
+    /** A quickly searchable list of value representations. */
+    private static HashSet<String> stringSet = new HashSet<String>();
+    {
+        for (byte[] vr : STRING_VR) {
+            stringSet.add(new String(vr));
+        }
+    }
+
 
     /** Preferred size of screen. */
     private static final Dimension PREFERRED_SIZE = new Dimension(610, 830);
@@ -896,6 +921,56 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         i = i & 255;
         return ((i >= 32) && (i <= 126)) ? ("" + (char)i) : ("0x" + Integer.toHexString(i&255));
     }
+
+
+    public static AttributeList replaceNullsWithBlanks(AttributeList attributeList) throws IOException, DicomException {
+
+        attributeList = Util.cloneAttributeList(attributeList);
+
+        Iterator<?> i = attributeList.values().iterator();
+        while (i.hasNext()) {
+            Attribute attribute = (Attribute)i.next();
+            if (attribute instanceof SequenceAttribute) {
+                AttributeTag tag = attribute.getTag();
+                Iterator<?> si = ((SequenceAttribute)attribute).iterator();
+                while (si.hasNext()) {
+                    SequenceItem item = (SequenceItem)si.next();
+                    replaceNullsWithBlanks(item.getAttributeList());
+                }
+            }
+            else {
+                AttributeTag tag = attribute.getTag();
+                byte [] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
+                if ((vr != null) && stringSet.contains(new String(vr))) {
+                    try {
+                        String[] valueList = attribute.getStringValues();
+                        if ((valueList != null) && (valueList.length > 0)) {
+                            boolean same = true;
+                            for (int v = 0; v < valueList.length; v++) {
+                                if (valueList[v].indexOf('\0') != -1) {
+                                    same = false;
+                                    valueList[v] = valueList[v].replace('\0', ' ');
+                                }
+                            }
+                            if (!same) {
+                                attribute.removeValues();
+                                for (String value : valueList) {
+                                    attribute.addValue(value);
+                                }
+                            }
+                        }
+                    }
+                    catch (DicomException e) {
+                        ;
+                    }
+                }
+            }
+        }
+        return attributeList;
+    }
+
+
+
 
 
     /**

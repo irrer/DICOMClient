@@ -1201,8 +1201,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
             if (anonymizeDestination == null) {
                 anonymizeDestination = anonymizedDirectory;
-                anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
-                directoryChooser.setSelectedFile(anonymizeDestination);
+                if (!inCommandLineMode()) {
+                    anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
+                    directoryChooser.setSelectedFile(anonymizeDestination);
+                }
             }
         }
         finally {

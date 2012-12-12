@@ -16,12 +16,16 @@ package edu.umro.dicom.common;
  * limitations under the License.
  */
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.rmi.server.UID;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import com.pixelmed.dicom.Attribute;
@@ -29,9 +33,17 @@ import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DateAttribute;
+import com.pixelmed.dicom.DicomDictionary;
+import com.pixelmed.dicom.DicomException;
+import com.pixelmed.dicom.DicomInputStream;
+import com.pixelmed.dicom.DicomOutputStream;
 import com.pixelmed.dicom.PersonNameAttribute;
+import com.pixelmed.dicom.SequenceAttribute;
+import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.TimeAttribute;
+import com.pixelmed.dicom.TransferSyntax;
 
+import edu.umro.dicom.client.CustomDictionary;
 import edu.umro.util.JarInfo;
 
 /**
@@ -174,8 +186,8 @@ public class Util {
             trustStore = new TrustStore(nodeList.item(ts));
         }
 
-        
-        
+
+
         if (!trustStore.viable()) {
             Log.get().warning("Unable to find a javax.net.ssl.trustStore file");            
         }
@@ -184,7 +196,7 @@ public class Util {
         }
         return trustStore;
     }
-    */
+     */
 
 
     /**
@@ -241,4 +253,30 @@ public class Util {
     public static String getBuiltBy() {
         return getJarInfo("Built-By");
     }
+
+
+    /**
+     * Make a new copy of an attribute list, not sharing any data with the original.
+     * 
+     * @param source List to copy.
+     * 
+     * @return Copy of list.
+     * 
+     * @throws IOException
+     * 
+     * @throws DicomException
+     */
+    public static AttributeList cloneAttributeList(AttributeList source) throws IOException, DicomException {
+        AttributeList dest = new AttributeList();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, TransferSyntax.ExplicitVRLittleEndian, TransferSyntax.ExplicitVRLittleEndian);
+        source.write(dicomOutputStream);
+
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        dest.read(new DicomInputStream(byteArrayInputStream));
+
+        return dest;
+    }
+
 }
