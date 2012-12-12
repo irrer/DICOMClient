@@ -43,6 +43,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.restlet.Client;
 import org.restlet.Request;
@@ -55,6 +56,7 @@ import org.restlet.data.Status;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
+import org.w3c.dom.Document;
 
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
@@ -65,6 +67,7 @@ import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.TransferSyntax;
+import com.pixelmed.dicom.XMLRepresentationOfDicomObjectFactory;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
 import edu.umro.dicom.common.Anonymize;
@@ -72,6 +75,7 @@ import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
 import edu.umro.util.Utility;
+import edu.umro.util.XML;
 
 /**
  * Represent a DICOM series.
@@ -651,23 +655,26 @@ public class Series extends JPanel implements ActionListener {
      * 
      * @param file File where anonymized DICOM is to be written.
      */
-    private void saveTextAndImageFiles(AttributeList attributeList, File file) {
+    private void saveTextAndXmlAndImageFiles(AttributeList attributeList, File file) {
         if (DicomClient.inCommandLineMode()) {
             StringBuffer text = new StringBuffer();
             DicomClient.getInstance().getPreview().addTextAttributes(attributeList, text, 0);
             String fileName = file.getName();
             String textFileName = null;
             String imageFileName = null;
+            String xmlFileName = null;
             File dir = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
             int dotIndex = fileName.lastIndexOf('.');
             if (dotIndex == -1) {
                 textFileName = fileName + ".TXT";
-                imageFileName = fileName + ".JPG";
+                imageFileName = fileName + ".PNG";
+                xmlFileName = fileName + ".XML";
             }
             else {
                 String baseName = fileName.substring(0, dotIndex);
                 textFileName = baseName + ".TXT";
                 imageFileName = baseName + ".PNG";
+                xmlFileName = baseName + ".XML";
             }
 
             File textFile = new File(dir, textFileName);
@@ -678,10 +685,12 @@ public class Series extends JPanel implements ActionListener {
             }
             catch (UMROException e) {
                 System.err.println("Unable to write anonymized text file: " + e);
+                e.printStackTrace();
                 System.exit(1);
             }
             catch (IOException e) {
                 System.err.println("Unable to create anonymized text file " + textFile.getAbsolutePath() + " : " + e);
+                e.printStackTrace();
                 System.exit(1);
             }
 
@@ -698,6 +707,24 @@ public class Series extends JPanel implements ActionListener {
             catch (DicomException e) {
                 // Ignore exception because this was not an image file.
             }
+            
+           
+            try {
+                Document document = new XMLRepresentationOfDicomObjectFactory().getDocument(attributeList);
+                String xmlText = XML.domToString(document);
+                Utility.writeFile(new File(dir, xmlFileName), xmlText.getBytes());
+            }
+            catch (ParserConfigurationException e) {
+                System.err.println("Unable to parse anonymized DICOM as XML: " + e);
+                e.printStackTrace();
+                System.exit(1);
+}
+            catch (UMROException e) {
+                System.err.println("Unable to write anonymized XML file: " + e);
+                e.printStackTrace();
+                System.exit(1);
+            }
+            
         }
     }
 
@@ -722,7 +749,7 @@ public class Series extends JPanel implements ActionListener {
                 File parent = (newFile.getParentFile() == null) ? new File(".") : newFile.getParentFile();
                 parent.mkdirs();
                 attributeList.write(newFile, TransferSyntax.ExplicitVRLittleEndian, true, true);
-                saveTextAndImageFiles(attributeList, newFile);
+                saveTextAndXmlAndImageFiles(attributeList, newFile);
                 count++;
                 Log.get().info("Anonymized to file: " + newFile.getAbsolutePath());
             }
