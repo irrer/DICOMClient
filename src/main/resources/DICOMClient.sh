@@ -4,7 +4,7 @@
 export dirname=$( dirname $0 )
 
 java \
-    -Xmx200m                                                              \
+    -Xmx2048m                                                              \
     -cp ${dirname}/@@with-dep-jar@@                                       \
     -Ddicomclient.config=${dirname}/DicomClientConfig.xml                 \
     -Djava.util.logging.config.file=${dirname}/logging.propertiesLinux    \
