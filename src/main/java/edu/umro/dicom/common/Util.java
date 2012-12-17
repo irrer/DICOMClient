@@ -25,7 +25,6 @@ import java.rmi.server.UID;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import com.pixelmed.dicom.Attribute;
@@ -33,17 +32,13 @@ import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DateAttribute;
-import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.DicomOutputStream;
 import com.pixelmed.dicom.PersonNameAttribute;
-import com.pixelmed.dicom.SequenceAttribute;
-import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.TimeAttribute;
 import com.pixelmed.dicom.TransferSyntax;
 
-import edu.umro.dicom.client.CustomDictionary;
 import edu.umro.util.JarInfo;
 
 /**

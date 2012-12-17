@@ -686,12 +686,10 @@ public class Series extends JPanel implements ActionListener {
             catch (UMROException e) {
                 System.err.println("Unable to write anonymized text file: " + e);
                 e.printStackTrace();
-                System.exit(1);
             }
             catch (IOException e) {
                 System.err.println("Unable to create anonymized text file " + textFile.getAbsolutePath() + " : " + e);
                 e.printStackTrace();
-                System.exit(1);
             }
 
             try {
@@ -717,12 +715,10 @@ public class Series extends JPanel implements ActionListener {
             catch (ParserConfigurationException e) {
                 System.err.println("Unable to parse anonymized DICOM as XML: " + e);
                 e.printStackTrace();
-                System.exit(1);
 }
             catch (UMROException e) {
                 System.err.println("Unable to write anonymized XML file: " + e);
                 e.printStackTrace();
-                System.exit(1);
             }
             
         }

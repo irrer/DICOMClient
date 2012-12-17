@@ -16,7 +16,6 @@ package edu.umro.dicom.common;
  * limitations under the License.
  */
 
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -202,9 +201,6 @@ public class Anonymize {
             } catch (UnknownHostException e) {
                 Log.get().logrb(Level.SEVERE, Anonymize.class.getCanonicalName(),
                         "translateGuid", null, "UnknownHostException Unable to generate new GUID", e);
-            } catch (SocketException e) {
-                Log.get().logrb(Level.SEVERE, Anonymize.class.getCanonicalName(),
-                        "translateGuid", null, "SocketException Unable to generate new GUID", e);
             }
         }
         return newGuid;
