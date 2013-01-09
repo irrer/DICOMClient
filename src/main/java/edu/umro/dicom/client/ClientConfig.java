@@ -19,6 +19,8 @@ package edu.umro.dicom.client;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.logging.Level;
 
 import org.w3c.dom.Document;
@@ -166,6 +168,7 @@ public class ClientConfig {
      */
     public HashMap<String,String> getAggressiveAnonymization(AttributeList attributeList, DicomDictionary dictionary) {
         HashMap<String,String> replaceList = new HashMap<String, String>();
+        getReservedWordList();
         if (config != null) {
             try {
                 NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/AggressiveAnonymization");
@@ -183,7 +186,7 @@ public class ClientConfig {
                         for (String value : attribute.getOriginalStringValues()) {
                             String[] tokenList = value.toLowerCase().split("[^a-z0-9]");
                             for (String token : tokenList) {
-                                if (token.length() > 1) {
+                                if ((token.length() > 1) && (!reservedWordList.contains(token))) {
                                     replaceList.put(token, replacement);
                                     Log.get().info("Aggressive anonymization replace " + tagName + " value of " + token + " with " + replacement);
                                 }
@@ -196,6 +199,37 @@ public class ClientConfig {
             catch (DicomException e) { Log.get().severe("DicomException getAggressiveAnonymization : " + e);}
         }
         return replaceList;
+    }
+
+    private HashSet<String> reservedWordList = null;
+    
+    private HashSet<String> getReservedWordList() {
+        if (reservedWordList == null) {
+            reservedWordList = new HashSet<String>();
+            if (config != null) {
+                String text = null;
+                try {
+                    text = XML.getValue(config, "/DicomClientConfig/ReservedWordList/text()");
+                    String[] list = text.toLowerCase().replace('\r', ' ').replace('\n', ' ').split(" ");
+                    for (String word : list) {
+                        reservedWordList.add(word);
+                    }
+                    DicomDictionary dictionary = new DicomDictionary();
+                    Iterator i = dictionary.getTagIterator();
+                    while (i.hasNext()) {
+                        AttributeTag tag = (AttributeTag)i.next();
+                        String fullName = dictionary.getFullNameFromTag(tag);
+                        String[] wordList = fullName.toLowerCase().split(" ");
+                        for (String word : wordList) {
+                            reservedWordList.add(word);
+                        }
+                    }
+                }
+                catch (UMROException e) {
+                }
+            }
+        }
+        return reservedWordList;
     }
 
 
