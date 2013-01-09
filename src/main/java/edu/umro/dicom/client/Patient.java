@@ -106,7 +106,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         anonymizePatientIdTextField.setText(anonymousPatientId);
         PlainDocument plainIdDocument = (PlainDocument)anonymizePatientIdTextField.getDocument();
         plainIdDocument.setDocumentFilter(new LimitedDocumentFilter(PATIENT_ID_MAX_LEN));
-        anonymizePatientIdTextField.setToolTipText("<html>The ID that to be used as<br>the anonymized patient ID</html>");
+        anonymizePatientIdTextField.setToolTipText("<html>The ID to be used as<br>the anonymized patient ID</html>");
         anonymizePatientIdTextField.getDocument().addDocumentListener(this);
         anonymizePanel.add(anonymizePatientIdTextField);
 
@@ -118,7 +118,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         anonymizePatientNameTextField.setText(anonymousPatientId);
         PlainDocument plainNameDocument = (PlainDocument)anonymizePatientNameTextField.getDocument();
         plainNameDocument.setDocumentFilter(new LimitedDocumentFilter(PATIENT_NAME_MAX_LEN));
-        anonymizePatientNameTextField.setToolTipText("<html>The ID that to be used as<br>the anonymized patient name</html>");
+        anonymizePatientNameTextField.setToolTipText("<html>The name to be used as<br>the anonymized patient name</html>");
         // TODO needed? anonymizePatientNameTextField.getDocument().addDocumentListener(this);
         anonymizePanel.add(anonymizePatientNameTextField);
 

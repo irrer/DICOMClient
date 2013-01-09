@@ -61,8 +61,6 @@ public class Alert extends JDialog implements ActionListener {
     /** The index in the array of buttons of the button that was clicked. */
     int selectedButton = -1;
 
-    protected JPanel cont = null;  // TODO remove
-
     /**
      * Build the center of the dialog.
      * 
@@ -70,7 +68,6 @@ public class Alert extends JDialog implements ActionListener {
      */
     private JComponent buildCenter(String msg) {
         JPanel panel = new JPanel();
-        cont = panel;
         JScrollPane scrollPane = new JScrollPane(new JLabel(msg));
         int gap = 20;
         scrollPane.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));

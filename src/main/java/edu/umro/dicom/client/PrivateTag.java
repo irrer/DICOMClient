@@ -19,6 +19,7 @@ package edu.umro.dicom.client;
 import org.w3c.dom.Node;
 
 import com.pixelmed.dicom.AttributeTag;
+import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.ValueRepresentation;
 
@@ -44,6 +45,8 @@ public class PrivateTag {
 
     /** Attribute tag. */
     private AttributeTag attributeTag = null;
+    
+    private static final DicomDictionary DICOM_DICTIONARY = new DicomDictionary(); 
 
     // ----------------------------------------------------------------
 
@@ -69,6 +72,37 @@ public class PrivateTag {
         attributeTag = new AttributeTag(group, element);
     }
 
+    
+    /**
+     * Override name for given tag.
+     * 
+     * @param tag Attribute tag, must be in given dictionary.
+     * 
+     * @param name New name.
+     * 
+     * @param dicomDictionary Dictionary from which this is based.
+     */
+    public PrivateTag(AttributeTag tag, String name, DicomDictionary dicomDictionary) {
+        this.valueRepresentation = dicomDictionary.getValueRepresentationFromTag(tag);
+        this.name = name;
+        this.fullName = dicomDictionary.getFullNameFromTag(tag);
+        this.attributeTag = tag;
+    }
+    
+
+    /**
+     * Override name for given tag.
+     * 
+     * @param tag Attribute tag, must be in given dictionary.
+     * 
+     * @param name New name.
+     * 
+     * @param dicomDictionary Dictionary from which this is based.
+     */
+    public PrivateTag(AttributeTag tag, String name) {
+        this(tag, name, DICOM_DICTIONARY);
+    }
+    
 
     /**
      * Construct an attribute tag from a DOM node.  Example XML text:<p>
@@ -88,28 +122,6 @@ public class PrivateTag {
         fullName = XML.getValue(node, "@fullName");
     }
 
-    /**
-     * Format an integer as a hex number with leading zeroes
-     * padded to the indicated length.
-     *
-     * @param i Integer to format.
-     *
-     * @param len Number of resulting digits.
-     *
-     * @return Formatted integer.
-     */
-    private String intToHex(int i, int len) {
-        String text = Integer.toHexString(i);
-        if (text.length() > len) {
-            throw new NumberFormatException("Unable to fit integer value of '" + i +
-                    "' into " + len + " hex digits.  Result is: " + text);
-        }
-        while (text.length() < len) {
-            text = "0" + text;
-        }
-        return text;
-    }
-
 
     /**
      * Convert this to XML.
@@ -117,15 +129,14 @@ public class PrivateTag {
      * return String containing XML.
      */
     public String toXml() {
-        // out.write(getNameFromTag(tag) + " : " + tag);
-        // String tagName = getNameFromTag(tag);
-        return
-        "<" + name +
-        " element='" + intToHex(attributeTag.getElement(), 4) + "'" +
-        " group='" + intToHex(attributeTag.getGroup(), 4) + "'" +
-        " vr='" + ValueRepresentation.getAsString(valueRepresentation) + "'" +
-        " fullName='" + XML.escapeSpecialChars(fullName) + "'" +
-        "></" + name + ">";
+        return String.format("<%s group='%04x' element='%04x' vr='%s' fullName='%s'/>",
+                name, attributeTag.getGroup(), attributeTag.getElement(), ValueRepresentation.getAsString(valueRepresentation), fullName);
+    }
+    
+    
+    @Override
+    public String toString() {
+        return toXml();
     }
 
 

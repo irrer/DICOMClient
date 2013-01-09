@@ -16,7 +16,9 @@ package edu.umro.dicom.common;
  * limitations under the License.
  */
 
+import java.lang.reflect.Field;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,14 +27,18 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 
 import com.pixelmed.dicom.Attribute;
+import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.TagFromName;
+import com.pixelmed.dicom.UnknownAttribute;
 import com.pixelmed.dicom.ValueRepresentation;
 
+import edu.umro.dicom.client.ClientConfig;
+import edu.umro.dicom.client.CustomDictionary;
 import edu.umro.util.Log;
 import edu.umro.util.UMROGUID;
 
@@ -117,30 +123,30 @@ public class Anonymize {
         Random random = new Random();
         while (t < tmpl.length) {
             switch (tmpl[t]) {
-            case '*' :
-                int r = random.nextInt(36);
-                if (r < 10) {
-                    patientId.append((char)('0' + r));
-                }
-                else {
-                    patientId.append((char)('A' + (r-10)));
-                }
-                break;
-            case '?' :
-                patientId.append((char)('A' + random.nextInt(26)));
-                break;
-            case '#' :
-                patientId.append((char)('0' + random.nextInt(10)));
-                break;
-            case '%' :
-                t++;
-                if (t <= (tmpl.length-1)) {
+                case '*' :
+                    int r = random.nextInt(36);
+                    if (r < 10) {
+                        patientId.append((char)('0' + r));
+                    }
+                    else {
+                        patientId.append((char)('A' + (r-10)));
+                    }
+                    break;
+                case '?' :
+                    patientId.append((char)('A' + random.nextInt(26)));
+                    break;
+                case '#' :
+                    patientId.append((char)('0' + random.nextInt(10)));
+                    break;
+                case '%' :
+                    t++;
+                    if (t <= (tmpl.length-1)) {
+                        patientId.append(tmpl[t]);
+                    }
+                    break;
+                default :
                     patientId.append(tmpl[t]);
-                }
-                break;
-            default :
-                patientId.append(tmpl[t]);
-                break;
+                    break;
             }
             t++;
         }
@@ -225,7 +231,6 @@ public class Anonymize {
             }
 
             else {
-
                 try {
                     if (tag.equals(TagFromName.PatientID)) {
                         attribute.setValue(replacement.getSingleStringValueOrEmptyString());
@@ -254,6 +259,70 @@ public class Anonymize {
     }
 
 
+    private static void aggressivelyAnonymize(Attribute attribute, HashMap<String,String> aggressiveReplaceList) {
+        try {
+            ArrayList<String> newValueList = new ArrayList<String>();
+            String[] originalValueList = null;
+            try { originalValueList = attribute.getStringValues(); }
+            catch (Exception e) { originalValueList = null; }
+
+            if (originalValueList != null) {
+                int changeCount = 0;
+                for (String originalValue : originalValueList) {
+                    String newValue = originalValue;
+                    boolean changed = false;
+                    for (String aggressiveValue : aggressiveReplaceList.keySet()) {
+                        // Do not allow too many replacements.  There is the possibility of recursion.
+                        int count = 0;
+                        int start;
+                        int finish = 0;
+                        while (((start = newValue.substring(finish).toLowerCase().indexOf(aggressiveValue)) != -1) && (count < 100)) {
+                            start += finish;
+                            finish = start + aggressiveValue.length();
+                            newValue = newValue.substring(0, start) + aggressiveReplaceList.get(aggressiveValue) + newValue.substring(finish);
+                            changed = true;
+                            count++;
+                        }
+                    }
+                    if (changed) {
+                        newValueList.add(newValue);
+                        changeCount++;
+                    }
+                    else {
+                        newValueList.add(originalValue);
+                    }
+                }
+                if (changeCount != 0) {
+                    if (attribute instanceof UnknownAttribute) {
+                        if (newValueList.size() > 0) {
+                            Field origValues = UnknownAttribute.class.getDeclaredField("originalLittleEndianByteValues");
+                            origValues.setAccessible(true);
+                            origValues.set(attribute, newValueList.get(0).getBytes());
+                        }
+                    }
+                    else {
+                        attribute.removeValues();
+                        for (String value : newValueList) {
+                            try {
+                                attribute.addValue(value);
+                            } catch (Exception e) {
+                                attribute.setValues(value.getBytes());
+                                String name = CustomDictionary.getInstance().getNameFromTag(attribute.getTag());
+                                if (name == null) name = attribute.toString();
+                                Log.get().info("Value for attribute " + name + " removed entirely due to aggressive anonymization.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            Log.get().severe("Unexpected exception (ignored) for attribute " + attribute + " in Anonymize.aggressivelyAnonymize: " + e);
+            e.printStackTrace();
+        }
+    }
+
+
     /**
      * Perform anonymization recursively to accommodate sequence attributes.
      * 
@@ -263,14 +332,14 @@ public class Anonymize {
      * 
      * @param replacementAttributeList Reference this for what is to be anonymized.
      */
-    private static void anonymize(String patientId, AttributeList attributeList, AttributeList replacementAttributeList) {
+    private static void anonymize(String patientId, AttributeList attributeList, AttributeList replacementAttributeList, HashMap<String,String> aggressiveReplaceList) {
         for (Attribute attribute : getAttributeListValues(attributeList).values()) {
             AttributeTag tag = attribute.getTag();
             if (attribute instanceof SequenceAttribute) {
                 Iterator<?> si = ((SequenceAttribute)attribute).iterator();
                 while (si.hasNext()) {
                     SequenceItem item = (SequenceItem)si.next();
-                    anonymize(patientId, item.getAttributeList(), replacementAttributeList);
+                    anonymize(patientId, item.getAttributeList(), replacementAttributeList, aggressiveReplaceList);
                 }
             }
             else {
@@ -278,6 +347,7 @@ public class Anonymize {
                 if (replacement != null) {
                     anonymizeNonSequenceAttribute(patientId, attribute, replacement);
                 }
+                aggressivelyAnonymize(attribute, aggressiveReplaceList);
             }
         }
     }
@@ -297,6 +367,38 @@ public class Anonymize {
      * @param replacementAttributeList List of values to be written into the attributeList.
      */
     public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList) {
-        anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList);
+        HashMap<String,String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
+        anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList);
+    }
+
+
+    /**
+     * For testing only.
+     * 
+     * @param args Ignored.
+     * 
+     * @throws Exception Should never happen.
+     */
+    public static void main(String[] args) throws Exception {
+        HashMap<String,String> aggressiveReplaceList = new HashMap<String, String>();
+        aggressiveReplaceList.put("ril", "-----");
+        aggressiveReplaceList.put("anc", "--");
+        aggressiveReplaceList.put("big", "---");
+        aggressiveReplaceList.put("18000101", "77777777");
+        aggressiveReplaceList.put("orig", "origin");
+
+        Attribute attribute = AttributeFactory.newAttribute(TagFromName.ManufacturerModelName);
+        String origValue = "Brilliance Big Bore orig orig ";
+        attribute.addValue(origValue);
+        aggressivelyAnonymize(attribute, aggressiveReplaceList);
+        System.out.println(origValue + " --> " + attribute);
+
+        attribute = AttributeFactory.newAttribute(TagFromName.PatientBirthDate);
+        origValue = "18000101";
+        attribute.addValue(origValue);
+        aggressivelyAnonymize(attribute, aggressiveReplaceList);
+        System.out.println(origValue + " --> " + attribute);
+
+
     }
 }

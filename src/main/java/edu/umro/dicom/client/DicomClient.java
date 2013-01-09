@@ -162,6 +162,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** Displays the anonymizeDestination PACS. */
     private JLabel pacsLabel = null;
 
+    private JLabel uploadCountLabel = null;
+    private long uploadCount = 0;
+    
     /** Selects next PACS choice above. */
     private BasicArrowButton pacsNorth = null;
 
@@ -467,6 +470,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         uploadLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         outerPanel.add(uploadLabel);
         outerPanel.add(panel);
+        uploadCountLabel = new JLabel("Upload Count: 0");
+        outerPanel.add(uploadCountLabel);
         outerPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
 
         return outerPanel;
@@ -962,6 +967,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     }
 
+    
+    /**
+     * Determine if the user has authenticated with the server.
+     * 
+     * @return True if authenticated, false if not.
+     */
+    private boolean isAuthenticated(){
+        return pacsList != null;
+    }
+    
 
     /**
      * Set the mode to reflect anonymizing or uploading.
@@ -970,6 +985,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         modeCardLayout.show(modePanel, getAnonymizeMode() ? CARD_ANONYMIZE : CARD_UPLOAD);
         uploadAllButton.setText(getAnonymizeMode() ? "Anonymize All" : "Upload All");
         setProcessedStatus();
+        // For convenience, if the user is switching to upload mode and has not yet authenticated, set
+        // the mouse focus to the password field so they can just start typing without having to click
+        // on it first.
+        if ((!getAnonymizeMode()) && (!isAuthenticated())) loginPasswordTextField.grabFocus();
     }
 
 
@@ -1003,6 +1022,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
 
+    public void incrementUploadCount() {
+        uploadCount++;
+        uploadCountLabel.setText("Upload Count: " + uploadCount);
+        Container container = uploadCountLabel.getParent();
+        Graphics graphics = container.getGraphics();
+        container.paintAll(graphics);
+    }
 
 
     /**
@@ -1326,20 +1352,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
     /**
-     * Generate the custom dictionary in the background.  It can take a while.
-     */
-    private static synchronized void initCustomDictionary() {
-        new Thread(
-                new Runnable() {
-                    public void run() {
-                        CustomDictionary.getInstance();
-                    }
-                }
-        ).start();
-    }
-
-
-    /**
      * Make a new patient ID for anonymizing.
      * 
      * @return A new patient ID.
@@ -1472,8 +1484,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             });
 
-
-            initCustomDictionary();
+            CustomAttributeList.setDictionary(CustomDictionary.getInstance());
 
             Anonymize.setTemplate(ClientConfig.getInstance().getAnonPatientIdTemplate());
             Anonymize.setRootGuid(ClientConfig.getInstance().getRootGuid());

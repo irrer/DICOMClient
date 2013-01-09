@@ -403,20 +403,6 @@ public class Help extends Alert {
      */
     public Help(boolean showUploadHelp) {
         super(getMessage(showUploadHelp), WINDOW_TITLE, new String[] { "About", "Close" }, PREFERRED_HELP_SIZE);
-        if (this == null) {  // TODO remove - for development only
-            for (int i = 0; i < 4; i++) {
-                cont.invalidate();
-                cont.repaint();
-                cont.setPreferredSize(PREFERRED_HELP_SIZE);
-                cont.setSize(PREFERRED_HELP_SIZE);
-                setPreferredSize(PREFERRED_HELP_SIZE);
-                setSize(PREFERRED_HELP_SIZE);
-                pack();
-                invalidate();
-                repaint();
-                setResizable(true);
-            }
-        }
         switch (getSelectedButtonIndex()) {
         case 0:
             new Alert(getAboutText(), "About DICOM Utility", null, PREFERRED_ABOUT_SIZE);

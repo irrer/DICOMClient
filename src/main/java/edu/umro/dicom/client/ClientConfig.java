@@ -18,6 +18,7 @@ package edu.umro.dicom.client;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.w3c.dom.Document;
@@ -28,6 +29,7 @@ import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
+import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.ValueRepresentation;
 
@@ -61,6 +63,10 @@ public class ClientConfig {
     private volatile Document config = null;
 
 
+    /** List of private tags. */
+    private ArrayList<PrivateTag> privateTagList = null;
+
+
     /**
      * Read in the configuration for the client from the configuration file.  Try
      * all files on the list and use the first one that parses.
@@ -68,16 +74,14 @@ public class ClientConfig {
     private void parseConfigFile() {
         for (String configFileName : CONFIG_FILE_LIST) {
             try {
+                Log.get().info("Trying configuration file " + (new File(configFileName)).getAbsolutePath());
                 config = XML.parseToDocument(Utility.readFile(new File(configFileName)));
             }
             catch (Exception e) {
-                Log.get().warning("Unable to parse file " + configFileName + " : " + e);
+                ;
             }
-            if (config == null) {
-                Log.get().warning("Unable to read and parse configuration file: " + configFileName);
-            }
-            else {
-                Log.get().info("Using configuration file " + configFileName);
+            if (config != null) {
+                Log.get().info("Using configuration file " + (new File(configFileName)).getAbsolutePath());
                 break;
             }
         }
@@ -156,6 +160,46 @@ public class ClientConfig {
 
 
     /**
+     * Get the values that should be replaced for aggressive patient anonymization.
+     *  
+     * @return List of values (in lower case) and their replacement values.  
+     */
+    public HashMap<String,String> getAggressiveAnonymization(AttributeList attributeList, DicomDictionary dictionary) {
+        HashMap<String,String> replaceList = new HashMap<String, String>();
+        if (config != null) {
+            try {
+                NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/AggressiveAnonymization");
+                for (int n = 0; n < nodeList.getLength(); n++) {
+                    Node node = nodeList.item(n);
+                    String replacement = XML.getAttributeValue(node, "replacement");
+                    replacement = (replacement == null) ? "" : replacement;
+                    String tagName = XML.getValue(node, "text()");
+                    AttributeTag tag = dictionary.getTagFromName(tagName);
+                    if (tag == null) {
+                        throw new RuntimeException("Unknown DICOM attribute " + tagName + " in AggressiveAnonymization list.");
+                    }
+                    Attribute attribute = attributeList.get(tag);
+                    if (attribute != null) {
+                        for (String value : attribute.getOriginalStringValues()) {
+                            String[] tokenList = value.toLowerCase().split("[^a-z0-9]");
+                            for (String token : tokenList) {
+                                if (token.length() > 1) {
+                                    replaceList.put(token, replacement);
+                                    Log.get().info("Aggressive anonymization replace " + tagName + " value of " + token + " with " + replacement);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (UMROException e) { Log.get().severe("UMROException getAggressiveAnonymization : " + e);}
+            catch (DicomException e) { Log.get().severe("DicomException getAggressiveAnonymization : " + e);}
+        }
+        return replaceList;
+    }
+
+
+    /**
      * Get the template that controls how new patient IDs are generated for anonymization.
      *  
      * @return Template that controls how new patient IDs are generated for anonymization.
@@ -174,6 +218,33 @@ public class ClientConfig {
     }
 
 
+    private boolean isTrue(String text) {
+        return
+        text.equalsIgnoreCase("true") || 
+        text.equalsIgnoreCase("yes") || 
+        text.equalsIgnoreCase("y") || 
+        text.equalsIgnoreCase("1") || 
+        text.equalsIgnoreCase("t");
+    }
+
+
+    private boolean getFlag(String path, String flagName) {
+        if (config != null) {
+            try {
+                String text = XML.getValue(config, path).trim();
+                boolean enabled = isTrue(text);
+                return enabled;
+            }
+            catch (UMROException e) {
+                Log.get().info(flagName + " : Unable to get flag: " + e);
+
+            }
+        }
+        Log.get().info(flagName + " : Unable to read configuration file " + CONFIG_FILE_NAME);
+        return false;
+    }
+
+
     /**
      * Get flag indicating whether or not profiling is to be done.  If there is a problem
      * getting the flag, then assume false.
@@ -181,24 +252,17 @@ public class ClientConfig {
      * @return Flag indicating whether profiling should be done.
      */
     public boolean getProfileFlag() {
-        if (config != null) {
-            try {
-                String text = XML.getValue(config, "/DicomClientConfig/Profile/text()").trim();
-                boolean enabled =
-                    text.equalsIgnoreCase("true") || 
-                    text.equalsIgnoreCase("yes") || 
-                    text.equalsIgnoreCase("y") || 
-                    text.equalsIgnoreCase("1") || 
-                    text.equalsIgnoreCase("t");
-                return enabled;
-            }
-            catch (UMROException e) {
-                Log.get().info("getProfileFlag: Unable to get flag: " + e);
+        return getFlag("/DicomClientConfig/Profile/text()", "getProfileFlag");
+    }
 
-            }
-        }
-        Log.get().info("getProfileFlag: Unable to read configuration file " + CONFIG_FILE_NAME);
-        return false;
+
+    public boolean restrictXmlTagsToLength32() {
+        return getFlag("/DicomClientConfig/RestrictXmlTagsToLength32/text()", "restrictXmlTagsToLength32");
+    }
+
+
+    public boolean replaceControlCharacters() {
+        return getFlag("/DicomClientConfig/ReplaceControlCharacters/text()", "replaceControlCharacters");
     }
 
 
@@ -231,12 +295,14 @@ public class ClientConfig {
                 String tagText = XML.getValue(node, "@Name");
                 if (tagText != null) {
                     AttributeTag tag = CustomDictionary.getInstance().getTagFromName(tagText);
-                    String value = XML.getValue(node, "text()");
-                    value = (value == null) ? "" : value;
-                    Attribute attribute = AttributeFactory.newAttribute(tag);
-                    if (canControlAnonymizing(tag)) {
-                        attribute.addValue(value);
-                        attributeList.put(attribute);
+                    if (tag != null) {
+                        String value = XML.getValue(node, "text()");
+                        value = (value == null) ? "" : value;
+                        Attribute attribute = AttributeFactory.newAttribute(tag);
+                        if (canControlAnonymizing(tag)) {
+                            attribute.addValue(value);
+                            attributeList.put(attribute);
+                        }
                     }
                 }
             }
@@ -311,25 +377,42 @@ public class ClientConfig {
     }
 
 
-    public ArrayList<PrivateTag> getPrivateTagList() {
-        ArrayList<PrivateTag> tagList = new ArrayList<PrivateTag>();
-        try {
-            NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/PrivateTagList/*");
-            for (int n = 0; n < nodeList.getLength(); n++) {
-                tagList.add(new PrivateTag(nodeList.item(n)));
+    public synchronized ArrayList<PrivateTag> getPrivateTagList() {
+        if (privateTagList == null) {
+            privateTagList = new ArrayList<PrivateTag>();
+            try {
+                NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/PrivateTagList/*");
+                for (int n = 0; n < nodeList.getLength(); n++) {
+                    Node node = nodeList.item(n);
+                    String group = XML.getValue(node, "@group");
+                    if (group.contains(":")) {
+                        int element = Integer.parseInt(XML.getValue(node, "@element").toUpperCase(), 16);
+                        byte[] valueRepresentation = XML.getValue(node, "@vr").getBytes();
+                        String name = node.getNodeName();
+                        String fullName = XML.getValue(node, "@fullName");
+                        String[] parts = group.split(":");
+                        int firstGroup = Integer.parseInt(parts[0].toUpperCase(), 16);
+                        int lastGroup = Integer.parseInt(parts[1].toUpperCase(), 16);
+                        int incr = (parts.length < 2) ? 1 : Integer.parseInt(parts[2].toUpperCase(), 16);
+                        for(int g = firstGroup; g <= lastGroup; g += incr) {
+                            String gHex = String.format("%04x", g);
+                            privateTagList.add(new PrivateTag(g, element, valueRepresentation, name+gHex, fullName + " " + gHex));
+                        }
+                    }
+                    else {
+                        privateTagList.add(new PrivateTag(node));
+                    }
+                }
+            }
+            catch (UMROException e) {
+                Log.get().warning("Problem interpreting custom tags: " + e);
+            }
+            catch (DicomException e) {
+                Log.get().warning("DICOM Problem interpreting custom tags: " + e);
             }
         }
-        catch (UMROException e) {
-            Log.get().warning("Problem interpreting custom tags: " + e);
-        }
-        catch (DicomException e) {
-            Log.get().warning("DICOM Problem interpreting custom tags: " + e);
-        }
-        return tagList;
+        return privateTagList;
     }
-
-
-
 
 
     public static ClientConfig getInstance() {

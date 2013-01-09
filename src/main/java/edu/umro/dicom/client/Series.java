@@ -449,7 +449,6 @@ public class Series extends JPanel implements ActionListener {
         setProgress(0);
     }
 
-
     /**
      * Set the progress bar to the given value.
      * 
@@ -705,22 +704,25 @@ public class Series extends JPanel implements ActionListener {
             catch (DicomException e) {
                 // Ignore exception because this was not an image file.
             }
-            
-           
+
+
             try {
                 Document document = new XMLRepresentationOfDicomObjectFactory().getDocument(attributeList);
+                if (ClientConfig.getInstance().replaceControlCharacters()) {
+                    XML.replaceControlCharacters(document, ' ');
+                }
                 String xmlText = XML.domToString(document);
                 Utility.writeFile(new File(dir, xmlFileName), xmlText.getBytes());
             }
             catch (ParserConfigurationException e) {
                 System.err.println("Unable to parse anonymized DICOM as XML: " + e);
                 e.printStackTrace();
-}
+            }
             catch (UMROException e) {
                 System.err.println("Unable to write anonymized XML file: " + e);
                 e.printStackTrace();
             }
-            
+
         }
     }
 
@@ -732,7 +734,7 @@ public class Series extends JPanel implements ActionListener {
         int count = 0;
         try {
             for (String fileName : instanceList.values()) {
-                AttributeList attributeList = new AttributeList();
+                CustomAttributeList attributeList = new CustomAttributeList();
                 attributeList.read(fileName);
 
                 //DicomClient.getInstance().getAnonymize().anonymizeAttributeList(attributeList);
@@ -832,6 +834,7 @@ public class Series extends JPanel implements ActionListener {
                         fileIndex++;
                         Log.get().info("Uploaded file " + fileName + " from series " + seriesSummary + " to PACS " + aeTitle);
                         setProgress(fileIndex);
+                        DicomClient.getInstance().incrementUploadCount();
                     }
                     else {
                         return;
@@ -857,6 +860,7 @@ public class Series extends JPanel implements ActionListener {
      */
     public void addFile(String fileName, AttributeList attributeList) {
         String msg = instanceList.put(fileName, attributeList);
+        progressBar.setMaximum(instanceList.size());
         if (msg == null) {
             resetSummary();
         }

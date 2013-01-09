@@ -931,7 +931,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         while (i.hasNext()) {
             Attribute attribute = (Attribute)i.next();
             if (attribute instanceof SequenceAttribute) {
-                AttributeTag tag = attribute.getTag();
                 Iterator<?> si = ((SequenceAttribute)attribute).iterator();
                 while (si.hasNext()) {
                     SequenceItem item = (SequenceItem)si.next();
