@@ -80,6 +80,9 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
     /** Panel containing anonymizing fields. */
     private JPanel anonymizePanel = null;
 
+    /** Button that clears this patient from the list. */
+    private JButton clearButton = null;
+
     /** Contains new patient ID for anonymizing. */
     private JTextField anonymizePatientIdTextField = null;
 
@@ -140,6 +143,24 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         return mainPanel;
     }
 
+    private JComponent buildPatientButtonPanel(String anonymousPatientId) {
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+
+        clearButton = new JButton("Clear");
+        clearButton.addActionListener(this);
+        clearButton.setToolTipText("<html>Clear this patient<br>from display</html>");
+
+        JPanel clearPanel = new JPanel();
+        clearPanel.add(clearButton);
+  
+        panel.add(clearPanel, BorderLayout.WEST);
+        panel.add(buildAnonymizingPatientId(anonymousPatientId));
+        
+        return panel;
+    }
+
     /**
      * Construct a new patient with the given file.  If the file identifies a
      * study that is not already listed, then add it to the list.  If the study
@@ -188,7 +209,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        add(buildAnonymizingPatientId(anonymousPatientId));
+        add(buildPatientButtonPanel(anonymousPatientId));
 
         Study study = new Study(fileName, attributeList);
         add(study);
@@ -370,6 +391,11 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         if (e.getSource() == anonymizePatientButton) {
             Log.get().info("Anonymizing all series for patient " + this);
             processAll(this);
+        }
+
+        if (e.getSource() == clearButton) {
+            Log.get().info("Clearing all series for patient " + this);
+            DicomClient.getInstance().clearPatient(this);
         }
     }
 

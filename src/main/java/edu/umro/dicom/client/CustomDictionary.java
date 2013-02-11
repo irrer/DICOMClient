@@ -638,7 +638,7 @@ public class CustomDictionary extends DicomDictionary {
         // only do this once.
         if (extensions == null) {
             extensions = ClientConfig.getInstance().getPrivateTagList();
-            if (ClientConfig.getInstance().restrictXmlTagsToLength32()) {
+            if (DicomClient.getRestrictXmlTagsToLength32()) {
                 useShortenedAttributeNames();
             }
         }

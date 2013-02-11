@@ -164,7 +164,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     private JLabel uploadCountLabel = null;
     private long uploadCount = 0;
-    
+
     /** Selects next PACS choice above. */
     private BasicArrowButton pacsNorth = null;
 
@@ -173,6 +173,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** Button for showing anonymizeGui options. */
     private JButton anonymizeOptionsButton = null;
+
+    /** Button that clears the patient list. */
+    private JButton clearButton = null;
 
     /** Button that shows help. */
     private JButton helpButton = null;
@@ -277,6 +280,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** True if it is ok to make the previewer visible. */
     private volatile boolean previewEnableable = true;
+
+    /** If true, shorten attribute names to 32 characters.  Required for SAS interpretation of XML. */ 
+    private static boolean restrictXmlTagsToLength32 = false;
+
+    /** If true, replace each control characters in DICOM attribute values with a space.  Required for SAS interpretation of XML. */ 
+    private static boolean replaceControlCharacters = false;
 
 
     /**
@@ -764,12 +773,35 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         uploadAllButton.setToolTipText(UPLOAD_ALL_BUTTON_TOOLTIP_TEXT_DISABLED);
         buttonPanel.add(uploadAllButton);
 
+        clearButton = new JButton("Clear");
+        clearButton.setFont(FONT_MEDIUM);
+        buttonPanel.add(clearButton);
+        clearButton.addActionListener(this);
+        clearButton.setToolTipText("<html>Clear all patients<br>from display</html>");
+
         uploadAllIcon = new JLabel(PreDefinedIcons.getEmpty());
         buttonPanel.add(uploadAllIcon);
 
         panel.add(buttonPanel);
 
         return panel;
+    }
+
+
+    /**
+     * Remove the given patient.
+     * 
+     * @param patient
+     */
+    public void clearPatient(Patient patient) {
+        if (preview != null) preview.setVisible(false);
+        for (String id : patientList.keySet()) {
+            if (patientList.get(id) == patient) {
+                patient.setVisible(false);
+                patientList.remove(id);
+                break;
+            }
+        }
     }
 
 
@@ -922,6 +954,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             System.exit(0);
         }
 
+        if (source.equals(clearButton)) {
+            if (preview != null) preview.setVisible(false);
+            for (Patient patient : patientList.values()) {
+                patient.setVisible(false);
+            }
+            patientList = new TreeMap<String, Patient>();
+        }
+
         if (source.equals(helpButton)) {
             new Help(ClientConfig.getInstance().getShowUploadCapability());
         }
@@ -967,7 +1007,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     }
 
-    
+
     /**
      * Determine if the user has authenticated with the server.
      * 
@@ -976,7 +1016,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private boolean isAuthenticated(){
         return pacsList != null;
     }
-    
+
 
     /**
      * Set the mode to reflect anonymizing or uploading.
@@ -1388,6 +1428,17 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         System.exit(1);
     }
 
+
+    public static boolean getRestrictXmlTagsToLength32() {
+        return restrictXmlTagsToLength32;
+    }
+
+
+    public static boolean getReplaceControlCharacters() {
+        return replaceControlCharacters;
+    }
+
+
     private static String[] parseArguments(String[] args) {
         String[] fileList = new String[0];
         try {
@@ -1405,18 +1456,28 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         if (args[a].equals("-c")) {
                             commandLineMode = true;
                         }
-
-                        else {
-                            if (args[a].startsWith("-")) {
-                                usage("Invalid argument: " + args[a]);
-                                System.exit(1);
+                        else { 
+                            if (args[a].equals("-3")) {
+                                restrictXmlTagsToLength32 = true;
                             }
-                            else {
-                                fileList = new String[args.length - a];
-                                int f = 0;
-                                for (; a < args.length; a++) {
-                                    fileList[f] = args[a];
-                                    f++;
+                            else { 
+                                if (args[a].equals("-z")) {
+                                    replaceControlCharacters = true;
+                                }
+
+                                else {
+                                    if (args[a].startsWith("-")) {
+                                        usage("Invalid argument: " + args[a]);
+                                        System.exit(1);
+                                    }
+                                    else {
+                                        fileList = new String[args.length - a];
+                                        int f = 0;
+                                        for (; a < args.length; a++) {
+                                            fileList[f] = args[a];
+                                            f++;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1427,7 +1488,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         catch (Exception e) {
             String msg =
                 "Unable to parse command line arguments.  Usage:\n\n" +
-                "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] inFile1 inFile2 ...\n";
+                "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] inFile1 inFile2 ...\n" + 
+                "        -c Run without GUI in command line mode\n" +
+                "        -P Specify new patient ID for anonymization\n" +
+                "        -o Specify output file for anonymization\n" +
+                "        -3 Restrict generated XML to 32 character tag names, as required by SAS\n" +
+                "        -z Replace each control character in DICOM attributes with a blank.  Required by SAS\n";
             System.err.println(msg);
             System.exit(1);
         }

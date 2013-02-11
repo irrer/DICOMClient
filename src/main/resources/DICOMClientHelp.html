@@ -255,6 +255,27 @@ Pressing <b>Enter</b> from the search field will scroll the
 text window to show the next match.  After the last match is
 scrolled to, the window will scroll back to the first match.
 
+<h3>Running from the Command Line</h3>
+
+This progam can be invoked to anonymize from the command line,
+which is useful for anonymizing large numbers of file or running
+from a service that does not display a GUI.  The general command
+line usage is:
+
+&nbsp; &nbsp; &nbsp; &nbsp; <b>DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] inFile1 inFile2 ...</b>
+    
+<ul>
+    
+<li>-c Run without GUI in command line mode</li>
+<li>-P Specify new patient ID for anonymization</li>
+<li>-o Specify output file for anonymization</li>
+<li>-3 Restrict generated XML to 32 character tag names, as required by SAS</li>
+<li>-z Replace each control character in DICOM attributes with a blank.  Required by SAS</li>
+</ul>
+
+Note that only anonymization is supported in non-GUI mode, not
+uploading.
+
 <h3>Additional Notes</h3>
 
 <up>In general, uploading the same series multiple times has no real

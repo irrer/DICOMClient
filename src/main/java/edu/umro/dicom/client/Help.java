@@ -353,6 +353,27 @@ public class Help extends Alert {
         "text window to show the next match.  After the last match is<br>\n" +
         "scrolled to, the window will scroll back to the first match.<br>\n" +
         "<br>\n" +
+        "<h3>Running from the Command Line</h3><br>\n" +
+        "<br>\n" +
+        "This progam can be invoked to anonymize from the command line,<br>\n" +
+        "which is useful for anonymizing large numbers of file or running<br>\n" +
+        "from a service that does not display a GUI.  The general command<br>\n" +
+        "line usage is:<br>\n" +
+        "<br>\n" +
+        "&nbsp; &nbsp; &nbsp; &nbsp; <b>DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] inFile1 inFile2 ...</b><br>\n" +
+        "    <br>\n" +
+        "<ul><br>\n" +
+        "    <br>\n" +
+        "<li>-c Run without GUI in command line mode</li><br>\n" +
+        "<li>-P Specify new patient ID for anonymization</li><br>\n" +
+        "<li>-o Specify output file for anonymization</li><br>\n" +
+        "<li>-3 Restrict generated XML to 32 character tag names, as required by SAS</li><br>\n" +
+        "<li>-z Replace each control character in DICOM attributes with a blank.  Required by SAS</li><br>\n" +
+        "</ul><br>\n" +
+        "<br>\n" +
+        "Note that only anonymization is supported in non-GUI mode, not<br>\n" +
+        "uploading.<br>\n" +
+        "<br>\n" +
         "<h3>Additional Notes</h3><br>\n" +
         "<br>\n" +
         "<up>In general, uploading the same series multiple times has no real<br>\n" +
@@ -404,11 +425,11 @@ public class Help extends Alert {
     public Help(boolean showUploadHelp) {
         super(getMessage(showUploadHelp), WINDOW_TITLE, new String[] { "About", "Close" }, PREFERRED_HELP_SIZE);
         switch (getSelectedButtonIndex()) {
-        case 0:
-            new Alert(getAboutText(), "About DICOM Utility", null, PREFERRED_ABOUT_SIZE);
-            break;
-        default:
-            break;
+            case 0:
+                new Alert(getAboutText(), "About DICOM Utility", null, PREFERRED_ABOUT_SIZE);
+                break;
+            default:
+                break;
         }
 
     }

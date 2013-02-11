@@ -708,7 +708,7 @@ public class Series extends JPanel implements ActionListener {
 
             try {
                 Document document = new XMLRepresentationOfDicomObjectFactory().getDocument(attributeList);
-                if (ClientConfig.getInstance().replaceControlCharacters()) {
+                if (DicomClient.getReplaceControlCharacters()) {
                     XML.replaceControlCharacters(document, ' ');
                 }
                 String xmlText = XML.domToString(document);
@@ -751,11 +751,10 @@ public class Series extends JPanel implements ActionListener {
                 count++;
                 Log.get().info("Anonymized to file: " + newFile.getAbsolutePath());
             }
-            isAnonymized = true;
-            setProcessedStatus();
         }
         catch (DicomException e) {
             String msg = "DICOM error - unable to anonymize series " + toString() + " : " + e;
+            DicomClient.getInstance().showMessage(msg);
             Log.get().severe(msg);
             if (DicomClient.inCommandLineMode()) {
                 System.err.println(msg);
@@ -764,14 +763,20 @@ public class Series extends JPanel implements ActionListener {
         }
         catch (IOException e) {
             String msg = "File error - unable to anonymize series " + toString() + " : " + e;
+            DicomClient.getInstance().showMessage(msg);
             Log.get().severe(msg);
             if (DicomClient.inCommandLineMode()) {
                 System.err.println(msg);
                 System.exit(1);
             }
         }
-        if (count != instanceList.size()) {
-            DicomClient.getInstance().showMessage("Unable to anonymize series " + toString() + " .  Only " + count + " slices of " + instanceList.size() + " were completed.");
+        if (count == instanceList.size()) {
+            isAnonymized = true;
+            setProcessedStatus();
+        }
+        else {
+            String msg = "Unable to anonymize series " + toString() + " .  Only " + count + " slices of " + instanceList.size() + " were completed.";
+            DicomClient.getInstance().showMessage(msg);
         }
     }
 

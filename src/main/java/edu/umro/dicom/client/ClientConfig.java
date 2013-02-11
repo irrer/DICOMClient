@@ -215,6 +215,7 @@ public class ClientConfig {
                         reservedWordList.add(word);
                     }
                     DicomDictionary dictionary = new DicomDictionary();
+                    @SuppressWarnings("rawtypes")
                     Iterator i = dictionary.getTagIterator();
                     while (i.hasNext()) {
                         AttributeTag tag = (AttributeTag)i.next();
@@ -287,16 +288,6 @@ public class ClientConfig {
      */
     public boolean getProfileFlag() {
         return getFlag("/DicomClientConfig/Profile/text()", "getProfileFlag");
-    }
-
-
-    public boolean restrictXmlTagsToLength32() {
-        return getFlag("/DicomClientConfig/RestrictXmlTagsToLength32/text()", "restrictXmlTagsToLength32");
-    }
-
-
-    public boolean replaceControlCharacters() {
-        return getFlag("/DicomClientConfig/ReplaceControlCharacters/text()", "replaceControlCharacters");
     }
 
 
