@@ -287,7 +287,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** If true, replace each control characters in DICOM attribute values with a space.  Required for SAS interpretation of XML. */ 
     private static boolean replaceControlCharacters = false;
 
-
+    /** If true, activate the <AggressiveAnonymization> tags in configuration file. */ 
+    private static boolean aggressivelyAnonymize = false;
+    
     /**
      * Append a message to the list of messages and show
      * it to the user.
@@ -1420,10 +1422,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     }
 
     private static void usage(String msg) {
-        String shell = (OpSys.getOpSysId() == OpSys.OpSysId.WINDOWS) ? "DICOMClient.bat" : "DICOMClient.sh";
         System.err.println(msg);
         String usage =
-            "Usage: \n\n    " + shell + " [ -c ] [ -P patient_id ] [ -o output_file ] DICOM_input_1 DICOM_input_2 ... ";
+                "Usage:\n\n" +
+                "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 ...\n" + 
+                "        -c Run without GUI in command line mode\n" +
+                "        -P Specify new patient ID for anonymization\n" +
+                "        -o Specify output file for anonymization\n" +
+                "        -3 Restrict generated XML to 32 character tag names, as required by SAS\n" +
+                "        -z Replace each control character in DICOM attributes with a blank.  Required by SAS\n" +
+                "        -g Perform aggressive anonymization.\n";
         System.err.println(usage);
         System.exit(1);
     }
@@ -1436,6 +1444,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     public static boolean getReplaceControlCharacters() {
         return replaceControlCharacters;
+    }
+
+
+    public static boolean getAggressivelyAnonymize() {
+        return aggressivelyAnonymize;
     }
 
 
@@ -1464,8 +1477,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                                 if (args[a].equals("-z")) {
                                     replaceControlCharacters = true;
                                 }
-
                                 else {
+                                    if (args[a].equals("-g")) {
+                                        aggressivelyAnonymize = true;
+                                    }
+                                    else {
                                     if (args[a].startsWith("-")) {
                                         usage("Invalid argument: " + args[a]);
                                         System.exit(1);
@@ -1479,6 +1495,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                                         }
                                     }
                                 }
+                                }
                             }
                         }
                     }
@@ -1486,16 +1503,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
         }
         catch (Exception e) {
-            String msg =
-                "Unable to parse command line arguments.  Usage:\n\n" +
-                "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] inFile1 inFile2 ...\n" + 
-                "        -c Run without GUI in command line mode\n" +
-                "        -P Specify new patient ID for anonymization\n" +
-                "        -o Specify output file for anonymization\n" +
-                "        -3 Restrict generated XML to 32 character tag names, as required by SAS\n" +
-                "        -z Replace each control character in DICOM attributes with a blank.  Required by SAS\n";
-            System.err.println(msg);
-            System.exit(1);
+            usage("Unable to parse command line arguments.");
         }
         return fileList;
     }

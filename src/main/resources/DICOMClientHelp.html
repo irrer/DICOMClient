@@ -271,6 +271,8 @@ line usage is:
 <li>-o Specify output file for anonymization</li>
 <li>-3 Restrict generated XML to 32 character tag names, as required by SAS</li>
 <li>-z Replace each control character in DICOM attributes with a blank.  Required by SAS</li>
+<li>-g Perform aggressive anonymization, which looks for instances of
+the patient name and ID in all (not just anonymized) fields and anonymizes them.</li>
 </ul>
 
 Note that only anonymization is supported in non-GUI mode, not

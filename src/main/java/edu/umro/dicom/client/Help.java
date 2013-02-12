@@ -369,6 +369,8 @@ public class Help extends Alert {
         "<li>-o Specify output file for anonymization</li><br>\n" +
         "<li>-3 Restrict generated XML to 32 character tag names, as required by SAS</li><br>\n" +
         "<li>-z Replace each control character in DICOM attributes with a blank.  Required by SAS</li><br>\n" +
+        "<li>-g Perform aggressive anonymization, which looks for instances of<br>\n" +
+        "the patient name and ID in all (not just anonymized) fields and anonymizes them.</li><br>\n" +
         "</ul><br>\n" +
         "<br>\n" +
         "Note that only anonymization is supported in non-GUI mode, not<br>\n" +
@@ -388,8 +390,7 @@ public class Help extends Alert {
         "It is possible that images contain imprinted text data that should<br>\n" +
         "be anonymized, but this program does not support the blacking out<br>\n" +
         "of this data.<br>\n" +
-        "</html><br>\n" +
-        "<br>\n";
+        "</html><br>\n";
 
 
     /**

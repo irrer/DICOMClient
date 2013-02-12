@@ -168,6 +168,7 @@ public class ClientConfig {
      */
     public HashMap<String,String> getAggressiveAnonymization(AttributeList attributeList, DicomDictionary dictionary) {
         HashMap<String,String> replaceList = new HashMap<String, String>();
+        if (!DicomClient.getAggressivelyAnonymize()) return replaceList;
         getReservedWordList();
         if (config != null) {
             try {
