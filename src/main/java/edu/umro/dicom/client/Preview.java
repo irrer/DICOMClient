@@ -800,6 +800,17 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             this.series = series;
             sliceSlider.setMaximum(series.getFileNameList().size());
         }
+        DicomClient.getInstance().setProcessedStatus();
+    }
+    
+    
+    /**
+     * Get the currently previewed series.
+     * @return
+     */
+    public Series getPreviewedSeries() {
+        if (!dialog.isShowing()) return null;
+        return series;
     }
 
 
@@ -1125,6 +1136,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * Display the current DICOM file as text to the user.
      */
     private void showText() {
+        if (attributeList == null) return;
         StringBuffer text = new StringBuffer();
         matchCountLabel.setText("  0 of 0");
         int oldMatchListSize = matchList.size();
@@ -1193,6 +1205,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         else {
             dialog.setVisible(false);
         }
+        DicomClient.getInstance().setProcessedStatus();
     }
 
     /**
@@ -1242,6 +1255,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             catch (IOException ex) {
                 DicomClient.getInstance().showMessage("Unable to read file " + fileName + " : " + ex.getMessage());
             }
+            DicomClient.getInstance().setProcessedStatus();
         }
     }
 
@@ -1272,7 +1286,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             dialog.setPreferredSize(PREFERRED_SIZE);
             dialog.getContentPane().add(panel);
             dialog.pack();
-            dialog.setVisible(true);
+            //dialog.setVisible(true);
         }
     }
 }

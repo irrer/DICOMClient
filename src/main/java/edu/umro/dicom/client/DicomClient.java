@@ -289,7 +289,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** If true, activate the <AggressiveAnonymization> tags in configuration file. */ 
     private static boolean aggressivelyAnonymize = false;
-    
+
     /**
      * Append a message to the list of messages and show
      * it to the user.
@@ -804,6 +804,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 break;
             }
         }
+        if (patientList.isEmpty()) {
+            resetAnonymizeDestination();
+        }
     }
 
 
@@ -948,6 +951,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     }
 
 
+    private void resetAnonymizeDestination() {
+        anonymizeDestinationText.setText("");
+        anonymizeDestination = null;
+    }
+
+
+
     @Override
     public void actionPerformed(ActionEvent ev) {
         Object source = ev.getSource();
@@ -961,6 +971,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             for (Patient patient : patientList.values()) {
                 patient.setVisible(false);
             }
+            resetAnonymizeDestination();
             patientList = new TreeMap<String, Patient>();
         }
 
@@ -1424,14 +1435,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private static void usage(String msg) {
         System.err.println(msg);
         String usage =
-                "Usage:\n\n" +
-                "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 ...\n" + 
-                "        -c Run without GUI in command line mode\n" +
-                "        -P Specify new patient ID for anonymization\n" +
-                "        -o Specify output file for anonymization\n" +
-                "        -3 Restrict generated XML to 32 character tag names, as required by SAS\n" +
-                "        -z Replace each control character in DICOM attributes with a blank.  Required by SAS\n" +
-                "        -g Perform aggressive anonymization.\n";
+            "Usage:\n\n" +
+            "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 ...\n" + 
+            "        -c Run without GUI in command line mode\n" +
+            "        -P Specify new patient ID for anonymization\n" +
+            "        -o Specify output file for anonymization\n" +
+            "        -3 Restrict generated XML to 32 character tag names, as required by SAS\n" +
+            "        -z Replace each control character in DICOM attributes with a blank.  Required by SAS\n" +
+            "        -g Perform aggressive anonymization.\n";
         System.err.println(usage);
         System.exit(1);
     }
@@ -1482,19 +1493,19 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                                         aggressivelyAnonymize = true;
                                     }
                                     else {
-                                    if (args[a].startsWith("-")) {
-                                        usage("Invalid argument: " + args[a]);
-                                        System.exit(1);
-                                    }
-                                    else {
-                                        fileList = new String[args.length - a];
-                                        int f = 0;
-                                        for (; a < args.length; a++) {
-                                            fileList[f] = args[a];
-                                            f++;
+                                        if (args[a].startsWith("-")) {
+                                            usage("Invalid argument: " + args[a]);
+                                            System.exit(1);
+                                        }
+                                        else {
+                                            fileList = new String[args.length - a];
+                                            int f = 0;
+                                            for (; a < args.length; a++) {
+                                                fileList[f] = args[a];
+                                                f++;
+                                            }
                                         }
                                     }
-                                }
                                 }
                             }
                         }

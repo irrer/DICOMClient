@@ -6,7 +6,7 @@ for %%F in (%0) do set dirname=%%~dpF
 @rem set JAVA_HOME=\\robkup\TPSData\java\jre6-32
 set JAVA_HOME=S:\Physics\Projects\jre6-32
 
-set PATH=%JAVA_HOME%\bin;%PATH%
+set PATH=%PATH%;%JAVA_HOME%\bin
 
 @rem set the current directory so that logs will go in the right place
 cd %dirname%

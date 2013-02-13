@@ -18,6 +18,7 @@ package edu.umro.dicom.client;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -295,7 +296,7 @@ public class Series extends JPanel implements ActionListener {
         String date = firstNonNull(new String[] { seriesDate, contentDate, acquisitionDate, instanceCreationDate, rtPlanDate, structureSetDate });
         String time = firstNonNull(new String[] { seriesTime, contentTime, acquisitionTime, instanceCreationTime, rtPlanTime, structureSetTime });
 
-        String seriesSummary = "        Series: ";
+        String seriesSummary = "         ";
         seriesSummary += (seriesNumber == null     ) ? "" : " " + seriesNumber;
         seriesSummary += (modality == null         ) ? " No modality" : " " + modality;
         seriesSummary += (seriesDescription == null) ? "" : " " + seriesDescription;
@@ -469,6 +470,9 @@ public class Series extends JPanel implements ActionListener {
      * @return True if it has been uploaded, false if not.
      */
     public boolean setProcessedStatus() {
+        Color foregroundColor = (DicomClient.getInstance().getPreview().getPreviewedSeries() == this) ? Color.GREEN : DicomClient.COLOR_FONT;
+        previewButton.setForeground(foregroundColor);
+        
         if (DicomClient.getInstance().getAnonymizeMode()) {
             uploadButtonIcon.setIcon(isAnonymized ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty());
             uploadAnonymizeButton.setToolTipText(ANONYMIZE_BUTTON_TOOLTIP);
