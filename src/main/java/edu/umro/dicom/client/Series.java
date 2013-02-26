@@ -472,7 +472,7 @@ public class Series extends JPanel implements ActionListener {
     public boolean setProcessedStatus() {
         Color foregroundColor = (DicomClient.getInstance().getPreview().getPreviewedSeries() == this) ? Color.GREEN : DicomClient.COLOR_FONT;
         previewButton.setForeground(foregroundColor);
-        
+
         if (DicomClient.getInstance().getAnonymizeMode()) {
             uploadButtonIcon.setIcon(isAnonymized ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty());
             uploadAnonymizeButton.setToolTipText(ANONYMIZE_BUTTON_TOOLTIP);
@@ -735,22 +735,25 @@ public class Series extends JPanel implements ActionListener {
      * AnonymizeGUI this series and write the results to new files.
      */
     private void anonymizeSeries() {
+        File newDir = DicomClient.getInstance().getDestination();
+        File newFile = null;
         int count = 0;
+        int tries = 0;
         try {
             for (String fileName : instanceList.values()) {
+                tries++;
                 CustomAttributeList attributeList = new CustomAttributeList();
                 attributeList.read(fileName);
 
                 //DicomClient.getInstance().getAnonymize().anonymizeAttributeList(attributeList);
                 Anonymize.anonymize(attributeList, getAnonymizingReplacementList());
-                FileMetaInformation.addFileMetaInformation(attributeList, TransferSyntax.ExplicitVRLittleEndian, "DICOMService");
+                FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, "DICOMService");
 
                 // set up to put file in new directory
-                File newDir = DicomClient.getInstance().getDestination();
-                File newFile = getNewFileName(newDir, attributeList);
+                newFile = getNewFileName(newDir, attributeList);
                 File parent = (newFile.getParentFile() == null) ? new File(".") : newFile.getParentFile();
                 parent.mkdirs();
-                attributeList.write(newFile, TransferSyntax.ExplicitVRLittleEndian, true, true);
+                attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
                 saveTextAndXmlAndImageFiles(attributeList, newFile);
                 count++;
                 Log.get().info("Anonymized to file: " + newFile.getAbsolutePath());
@@ -769,6 +772,14 @@ public class Series extends JPanel implements ActionListener {
             String msg = "File error - unable to anonymize series " + toString() + " : " + e;
             DicomClient.getInstance().showMessage(msg);
             Log.get().severe(msg);
+            // If there was an IO exception, then
+            if (tries == 1) { // only tell user once per series
+                String ioMsg =
+                    "<html>Unable to write file\n\n    " + newFile.getAbsolutePath() +
+                    "\n<p><br><p>It is possible that you do not have permission to write to this directory." +
+                    "\n<p><br><p>Technical details:<br>" + e + "\n</html>";
+                new Alert(ioMsg, "Unable to write file");
+            }
             if (DicomClient.inCommandLineMode()) {
                 System.err.println(msg);
                 System.exit(1);
@@ -815,7 +826,7 @@ public class Series extends JPanel implements ActionListener {
                 try {
                     KeyObject keyObject = new KeyObject(seriesSummary, instanceList.values());
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, TransferSyntax.ExplicitVRLittleEndian, TransferSyntax.ExplicitVRLittleEndian);
+                    DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, Util.DEFAULT_STORAGE_SYNTAX, TransferSyntax.ExplicitVRLittleEndian);
                     keyObject.write(dicomOutputStream);
                     ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
                     if (!uploadStream(urlText, seriesSummary, byteArrayInputStream)) {
@@ -901,7 +912,7 @@ public class Series extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent ev) {
         if (ev.getSource() == uploadAnonymizeButton) {
-            processSeries();
+            if (DicomClient.getInstance().ensureAnonymizeDirectoryExists()) processSeries();
         }
 
         if (ev.getSource() == previewButton) {

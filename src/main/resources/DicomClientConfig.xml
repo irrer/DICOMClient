@@ -18,9 +18,9 @@
 -->
 
     <!-- URL for the service. -->
-    <DicomServiceUrl>https://172.20.125.41:8091</DicomServiceUrl>       <!-- rolxdeploy1 -->
+    <DicomServiceUrl>https://172.20.125.41:8091</DicomServiceUrl>        <!-- rolxdeploy1 -->
     <!-- <DicomServiceUrl>https://141.214.124.240:8091</DicomServiceUrl> -->  <!-- rolxdev1 -->
-    <!-- <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl>  -->    <!-- irrer desktop -->
+    <!-- <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl> -->    <!-- irrer desktop -->
 
     <!-- Used to generate the default patient id.  Special character meanings:
         * : a random (capital) alpha or digit : ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
@@ -244,7 +244,9 @@
         <Tag Name='StorageMediaFileSetUID'              ></Tag>
         <Tag Name='ReferencedFrameOfReferenceUID'       ></Tag>
         <Tag Name='RelatedFrameOfReferenceUID'          ></Tag>
-        <!-- <Tag Name='RTPlanName'                          >none</Tag> at one time was a problem -->
+        <Tag Name='RTPlanName'                          >none</Tag>  <!-- UMPlan sometimes puts patient info here -->
+        <Tag Name='DoseReferenceUID'                    ></Tag>
+        <Tag Name='ReferencedPrimaryDoseRefUID'         ></Tag>
 	</AnonymizeDefaultList>
 
     <!-- The following list defines private tags that are not in the DICOM standard.

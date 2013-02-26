@@ -107,17 +107,28 @@ public class ClientConfig {
      * @return Base URL for DICOM service, or null if not initialized.
      */
     public String getServerBaseUrl() {
-        if (config != null) {
+        String dicomServiceUrl = null;
+        // This special property is mostly used in development environment for using a private server.
+        if (System.getProperty("DicomServiceUrl") != null) {
+            dicomServiceUrl = System.getProperty("DicomServiceUrl");
+        }
+        else {
             try {
-                return XML.getValue(config, "/DicomClientConfig/DicomServiceUrl/text()");
+                dicomServiceUrl = XML.getValue(config, "/DicomClientConfig/DicomServiceUrl/text()");
             }
             catch (UMROException e) {
                 Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "AriaVerifier", null,
                         "Failed to get DICOM service URL from configuration file " + CONFIG_FILE_NAME, e);
-            }
+            }     
         }
-        Log.get().severe("ClientConfig.getServerBaseUrl: Unable to read configuration file " + CONFIG_FILE_NAME);
-        return null;
+
+        if (dicomServiceUrl == null) {
+            Log.get().severe("ClientConfig.getServerBaseUrl: Unable to read configuration file " + CONFIG_FILE_NAME);
+        }
+        else {
+            Log.get().info("Using DicomServiceUrl: " + dicomServiceUrl);
+        }
+        return dicomServiceUrl;
     }
 
 
@@ -128,14 +139,12 @@ public class ClientConfig {
      * @return True if all help, false if only anonymize help.
      */
     public boolean getShowUploadCapability() {
-        if (config != null) {
-            try {
-                String text = XML.getValue(config, "/DicomClientConfig/ShowUploadHelp/text()");
-                return text.equalsIgnoreCase("true") || text.equalsIgnoreCase("yes");
-            }
-            catch (UMROException e) {
+        try {
+            String text = XML.getValue(config, "/DicomClientConfig/ShowUploadHelp/text()");
+            return text.equalsIgnoreCase("true") || text.equalsIgnoreCase("yes");
+        }
+        catch (UMROException e) {
 
-            }
         }
         Log.get().severe("getShowUploadHelp: Unable to read configuration file " + CONFIG_FILE_NAME);
         return true;
@@ -148,13 +157,11 @@ public class ClientConfig {
      * @return Template that controls how new patient IDs are generated for anonymization.
      */
     public String getAnonPatientIdTemplate() {
-        if (config != null) {
-            try {
-                return XML.getValue(config, "/DicomClientConfig/AnonPatientIdTemplate/text()");
-            }
-            catch (UMROException e) {
+        try {
+            return XML.getValue(config, "/DicomClientConfig/AnonPatientIdTemplate/text()");
+        }
+        catch (UMROException e) {
 
-            }
         }
         Log.get().severe("getAnonPatientIdTemplate: Unable to read configuration file " + CONFIG_FILE_NAME);
         return null;
@@ -170,65 +177,62 @@ public class ClientConfig {
         HashMap<String,String> replaceList = new HashMap<String, String>();
         if (!DicomClient.getAggressivelyAnonymize()) return replaceList;
         getReservedWordList();
-        if (config != null) {
-            try {
-                NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/AggressiveAnonymization");
-                for (int n = 0; n < nodeList.getLength(); n++) {
-                    Node node = nodeList.item(n);
-                    String replacement = XML.getAttributeValue(node, "replacement");
-                    replacement = (replacement == null) ? "" : replacement;
-                    String tagName = XML.getValue(node, "text()");
-                    AttributeTag tag = dictionary.getTagFromName(tagName);
-                    if (tag == null) {
-                        throw new RuntimeException("Unknown DICOM attribute " + tagName + " in AggressiveAnonymization list.");
-                    }
-                    Attribute attribute = attributeList.get(tag);
-                    if (attribute != null) {
-                        for (String value : attribute.getOriginalStringValues()) {
-                            String[] tokenList = value.toLowerCase().split("[^a-z0-9]");
-                            for (String token : tokenList) {
-                                if ((token.length() > 1) && (!reservedWordList.contains(token))) {
-                                    replaceList.put(token, replacement);
-                                    Log.get().info("Aggressive anonymization replace " + tagName + " value of " + token + " with " + replacement);
-                                }
+        try {
+            NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/AggressiveAnonymization");
+            for (int n = 0; n < nodeList.getLength(); n++) {
+                Node node = nodeList.item(n);
+                String replacement = XML.getAttributeValue(node, "replacement");
+                replacement = (replacement == null) ? "" : replacement;
+                String tagName = XML.getValue(node, "text()");
+                AttributeTag tag = dictionary.getTagFromName(tagName);
+                if (tag == null) {
+                    throw new RuntimeException("Unknown DICOM attribute " + tagName + " in AggressiveAnonymization list.");
+                }
+                Attribute attribute = attributeList.get(tag);
+                if (attribute != null) {
+                    for (String value : attribute.getOriginalStringValues()) {
+                        String[] tokenList = value.toLowerCase().split("[^a-z0-9]");
+                        for (String token : tokenList) {
+                            if ((token.length() > 1) && (!reservedWordList.contains(token))) {
+                                replaceList.put(token, replacement);
+                                Log.get().info("Aggressive anonymization replace " + tagName + " value of " + token + " with " + replacement);
                             }
                         }
                     }
                 }
             }
-            catch (UMROException e) { Log.get().severe("UMROException getAggressiveAnonymization : " + e);}
-            catch (DicomException e) { Log.get().severe("DicomException getAggressiveAnonymization : " + e);}
         }
+        catch (UMROException e) { Log.get().severe("UMROException getAggressiveAnonymization : " + e);}
+        catch (DicomException e) { Log.get().severe("DicomException getAggressiveAnonymization : " + e);}
+
         return replaceList;
     }
 
     private HashSet<String> reservedWordList = null;
-    
+
     private HashSet<String> getReservedWordList() {
         if (reservedWordList == null) {
             reservedWordList = new HashSet<String>();
-            if (config != null) {
-                String text = null;
-                try {
-                    text = XML.getValue(config, "/DicomClientConfig/ReservedWordList/text()");
-                    String[] list = text.toLowerCase().replace('\r', ' ').replace('\n', ' ').split(" ");
-                    for (String word : list) {
+            String text = null;
+            try {
+                text = XML.getValue(config, "/DicomClientConfig/ReservedWordList/text()");
+                String[] list = text.toLowerCase().replace('\r', ' ').replace('\n', ' ').split(" ");
+                for (String word : list) {
+                    reservedWordList.add(word);
+                }
+                DicomDictionary dictionary = new DicomDictionary();
+                @SuppressWarnings("rawtypes")
+                Iterator i = dictionary.getTagIterator();
+                while (i.hasNext()) {
+                    AttributeTag tag = (AttributeTag)i.next();
+                    String fullName = dictionary.getFullNameFromTag(tag);
+                    String[] wordList = fullName.toLowerCase().split(" ");
+                    for (String word : wordList) {
                         reservedWordList.add(word);
                     }
-                    DicomDictionary dictionary = new DicomDictionary();
-                    @SuppressWarnings("rawtypes")
-                    Iterator i = dictionary.getTagIterator();
-                    while (i.hasNext()) {
-                        AttributeTag tag = (AttributeTag)i.next();
-                        String fullName = dictionary.getFullNameFromTag(tag);
-                        String[] wordList = fullName.toLowerCase().split(" ");
-                        for (String word : wordList) {
-                            reservedWordList.add(word);
-                        }
-                    }
                 }
-                catch (UMROException e) {
-                }
+            }
+            catch (UMROException e) {
             }
         }
         return reservedWordList;
@@ -241,13 +245,11 @@ public class ClientConfig {
      * @return Template that controls how new patient IDs are generated for anonymization.
      */
     public String getRootGuid() {
-        if (config != null) {
-            try {
-                return XML.getValue(config, "/DicomClientConfig/RootGuid/text()");
-            }
-            catch (UMROException e) {
+        try {
+            return XML.getValue(config, "/DicomClientConfig/RootGuid/text()");
+        }
+        catch (UMROException e) {
 
-            }
         }
         Log.get().severe("getRootGuid: Unable to read configuration file " + CONFIG_FILE_NAME);
         return null;
@@ -265,16 +267,13 @@ public class ClientConfig {
 
 
     private boolean getFlag(String path, String flagName) {
-        if (config != null) {
-            try {
-                String text = XML.getValue(config, path).trim();
-                boolean enabled = isTrue(text);
-                return enabled;
-            }
-            catch (UMROException e) {
-                Log.get().info(flagName + " : Unable to get flag: " + e);
-
-            }
+        try {
+            String text = XML.getValue(config, path).trim();
+            boolean enabled = isTrue(text);
+            return enabled;
+        }
+        catch (UMROException e) {
+            Log.get().info(flagName + " : Unable to get flag: " + e);
         }
         Log.get().info(flagName + " : Unable to read configuration file " + CONFIG_FILE_NAME);
         return false;

@@ -30,7 +30,6 @@ import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClass;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.TagFromName;
-import com.pixelmed.dicom.TransferSyntax;
 import edu.umro.dicom.common.Util;
 import edu.umro.util.OpSys;
 
@@ -201,7 +200,7 @@ public class KeyObject extends AttributeList {
 
         addAttr(TagFromName.MediaStorageSOPClassUID, SOPClass.KeyObjectSelectionDocumentStorage);
         addAttr(TagFromName.MediaStorageSOPInstanceUID, sopInstanceUID);
-        addAttr(TagFromName.TransferSyntaxUID, TransferSyntax.ExplicitVRLittleEndian);
+        addAttr(TagFromName.TransferSyntaxUID, Util.DEFAULT_STORAGE_SYNTAX);
         addAttr(TagFromName.ImplementationClassUID, Util.UMRO_ROOT_GUID);
         addAttr(TagFromName.SpecificCharacterSet, "ISO_IR 100");
         addAttr(TagFromName.SOPClassUID, SOPClass.KeyObjectSelectionDocumentStorage);
@@ -374,6 +373,6 @@ public class KeyObject extends AttributeList {
         sampleInstance = new AttributeList();
         sampleInstance.read((String)(fileNameList.toArray()[0]));
         addRequiredTags();
-        FileMetaInformation.addFileMetaInformation(this, TransferSyntax.ExplicitVRLittleEndian, PROGRAM_NAME);
+        FileMetaInformation.addFileMetaInformation(this, Util.DEFAULT_STORAGE_SYNTAX, PROGRAM_NAME);
     }
 }

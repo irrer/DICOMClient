@@ -980,7 +980,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
 
         if (source.equals(uploadAllButton)) {
-            processAll(getMainContainer());
+            if (ensureAnonymizeDirectoryExists()) processAll(getMainContainer());
         }
 
         if (source.equals(pacsNorth) || source.equals(pacsSouth)) {
@@ -1030,6 +1030,28 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return pacsList != null;
     }
 
+    
+    public boolean ensureAnonymizeDirectoryExists() {
+        boolean ok = false;
+        if (DicomClient.getInstance().getAnonymizeMode()) {
+            File newDir = getDestination();
+            if (newDir.isDirectory()) ok = true;
+            else {
+                newDir.mkdirs();
+                ok = newDir.isDirectory();
+            }
+            if (!ok) {
+                String msg =
+                    "<html><p>Unable to create anonymization destination<p><br> &nbsp; &nbsp; &nbsp; " + newDir.getAbsolutePath() +
+                    "<p><br><p>It is most likely that you do not have<br>permission to write to this directory.</html>";
+                new Alert(msg, "Can Not Create Directory");
+            }
+        }
+        else ok = true;
+        return ok;
+    }
+
+    
 
     /**
      * Set the mode to reflect anonymizing or uploading.

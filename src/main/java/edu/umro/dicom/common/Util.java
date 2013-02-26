@@ -55,6 +55,11 @@ public class Util {
 
     /** The root UID which is used to prefix files constructed by the University of Michigan. */
     public static final String UMRO_ROOT_GUID = "1.3.6.1.4.1.22361";
+    
+    /** Default transfer syntax for serializing DICOM files. */
+    public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ImplicitVRLittleEndian;
+    public static final String DEFAULT_STORAGE_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
+    //public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
 
     /** For getting values from the MANIFEST.MF file in the jar. */
     private static JarInfo jarInfo = null;
@@ -265,7 +270,7 @@ public class Util {
         AttributeList dest = new AttributeList();
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, TransferSyntax.ExplicitVRLittleEndian, TransferSyntax.ExplicitVRLittleEndian);
+        DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, DEFAULT_TRANSFER_SYNTAX, DEFAULT_TRANSFER_SYNTAX);
         source.write(dicomOutputStream);
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());

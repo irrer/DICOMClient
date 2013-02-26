@@ -154,10 +154,10 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
 
         JPanel clearPanel = new JPanel();
         clearPanel.add(clearButton);
-  
+
         panel.add(clearPanel, BorderLayout.WEST);
         panel.add(buildAnonymizingPatientId(anonymousPatientId));
-        
+
         return panel;
     }
 
@@ -389,8 +389,10 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         }
 
         if (e.getSource() == anonymizePatientButton) {
-            Log.get().info("Anonymizing all series for patient " + this);
-            processAll(this);
+            if (DicomClient.getInstance().ensureAnonymizeDirectoryExists()) {
+                Log.get().info("Anonymizing all series for patient " + this);
+                processAll(this);
+            }
         }
 
         if (e.getSource() == clearButton) {
