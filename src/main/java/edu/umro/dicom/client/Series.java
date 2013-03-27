@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -62,6 +63,7 @@ import org.w3c.dom.Document;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
+import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.DicomOutputStream;
 import com.pixelmed.dicom.FileMetaInformation;
@@ -429,7 +431,7 @@ public class Series extends JPanel implements ActionListener {
         buildGui();
         resetSummary();
         addFile(fileName, attributeList);
-        Log.get().info("Added series: " + summaryLabel.getText());
+        Log.get().info("Added series");
     }
 
 
@@ -524,14 +526,14 @@ public class Series extends JPanel implements ActionListener {
             }
             else {
                 String message =
-                    "Problem uploading series " + seriesSummary + ".  Remaining uploads for this series are being aborted.\n" +
+                    "Problem uploading series.  Remaining uploads for this series are being aborted.\n" +
                     "    Server status: " + status + " : " + response.getEntityAsText();
                 DicomClient.getInstance().showMessage(message);
             }
         }
         catch (ResourceException ex) {
             String message =
-                "Problem uploading series " + seriesSummary + " to " + urlText + " .  Remaining uploads for this series are being aborted. : " + ex;
+                "Problem uploading series to " + urlText + " .  Remaining uploads for this series are being aborted. : " + ex;
             if (response != null) {
                 message += "\n    Server status: " + response.getStatus() + " : " + response.getEntityAsText();
             }
@@ -540,7 +542,7 @@ public class Series extends JPanel implements ActionListener {
         }
         catch (Exception e) {
             String message =
-                "Unexpected problem while uploading series " + seriesSummary + " to " + urlText + ".  Remaining uploads for this series are being aborted." + e;
+                "Unexpected problem while uploading series to " + urlText + ".  Remaining uploads for this series are being aborted." + e;
             if (response != null) {
                 message += "\n    Server status: " + response.getStatus() + " : " + response.getEntityAsText();
             }
@@ -760,7 +762,7 @@ public class Series extends JPanel implements ActionListener {
             }
         }
         catch (DicomException e) {
-            String msg = "DICOM error - unable to anonymize series " + toString() + " : " + e;
+            String msg = "DICOM error - unable to anonymize series : " + e;
             DicomClient.getInstance().showMessage(msg);
             Log.get().severe(msg);
             if (DicomClient.inCommandLineMode()) {
@@ -769,7 +771,7 @@ public class Series extends JPanel implements ActionListener {
             }
         }
         catch (IOException e) {
-            String msg = "File error - unable to anonymize series " + toString() + " : " + e;
+            String msg = "File error - unable to anonymize series : " + e;
             DicomClient.getInstance().showMessage(msg);
             Log.get().severe(msg);
             // If there was an IO exception, then
@@ -815,7 +817,7 @@ public class Series extends JPanel implements ActionListener {
         if (urlText != null) {
             try {
                 urlText += "/dicom/put?pacs=" + aeTitle + "&user_id=" + DicomClient.getInstance().getLoginName();
-                Log.get().info("Starting upload of " + instanceList.size() + " file(s) from series " + summaryLabel.getText() + " to PACS " + aeTitle + " using base url: " + urlText);
+                Log.get().info("Starting upload of " + instanceList.size() + " file(s) from series to PACS " + aeTitle + " using base url: " + urlText);
                 String seriesSummary = "";
                 seriesSummary += (patientID         == null) ? "" : " " + patientID;
                 seriesSummary += (patientName       == null) ? "" : " " + patientName;
@@ -830,14 +832,14 @@ public class Series extends JPanel implements ActionListener {
                     keyObject.write(dicomOutputStream);
                     ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
                     if (!uploadStream(urlText, seriesSummary, byteArrayInputStream)) {
-                        String msg = "Could not upload Key Object file for series " + seriesSummary;
+                        String msg = "Could not upload Key Object file for series";
                         Log.get().info(msg);
-                        DicomClient.getInstance().showMessage(msg);
+                        DicomClient.getInstance().showMessage(msg + seriesSummary);
                         return;
                     }
                 }
                 catch (Exception e) {
-                    Log.get().info("Upload failed.  Could not generate Key Object File for series " + seriesSummary + " : " + e);
+                    Log.get().info("Upload failed.  Could not generate Key Object File for series: " + e);
                     return;
                 }
 
@@ -847,12 +849,12 @@ public class Series extends JPanel implements ActionListener {
                         inputStream = new FileInputStream(new File(fileName));
                     }
                     catch (FileNotFoundException e) {
-                        Log.get().severe("Unable to upload file " + fileName + " . Was it deleted, renamed, or moved?   Error: " + e);
+                        Log.get().severe("Unable to upload file. Was it deleted, renamed, or moved?   Error: " + e);
                     }
 
                     if (uploadStream(urlText, seriesSummary, inputStream)) {
                         fileIndex++;
-                        Log.get().info("Uploaded file " + fileName + " from series " + seriesSummary + " to PACS " + aeTitle);
+                        Log.get().info("Uploaded file to PACS " + aeTitle);
                         setProgress(fileIndex);
                         DicomClient.getInstance().incrementUploadCount();
                     }
@@ -870,7 +872,20 @@ public class Series extends JPanel implements ActionListener {
         Log.get().info("Uploaded " + fileIndex + " of " + instanceList.size() + " files.");
     }
 
+    @SuppressWarnings("unchecked")
+    private void addAnonymousAttributes(AttributeList attributeList) {
+        AttributeList anonList = ClientConfig.getInstance().getAnonymizingReplacementList();
+        AttributeList newAttrs = new AttributeList();
+        
+        for (AttributeTag tag : (Set<AttributeTag>)attributeList.keySet()) {
+            if ((anonList.get(tag) != null) && (newAttrs.get(tag) == null)) {
+                newAttrs.put(anonList.get(tag));
+            }
+        }
+        DicomClient.getInstance().getAnonymizeGui().updateTagList(newAttrs);
+    }
 
+    
     /**
      * Add the given file to this series.
      * 
@@ -879,6 +894,8 @@ public class Series extends JPanel implements ActionListener {
      * @param attributeList Parsed version of the DICOM file contents.
      */
     public void addFile(String fileName, AttributeList attributeList) {
+        DicomClient.getInstance().getAnonymizeGui().updateTagList(attributeList);
+        addAnonymousAttributes(attributeList);  // TODO remove?
         String msg = instanceList.put(fileName, attributeList);
         progressBar.setMaximum(instanceList.size());
         if (msg == null) {

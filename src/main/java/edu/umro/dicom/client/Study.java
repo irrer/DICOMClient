@@ -76,7 +76,7 @@ public class Study extends JPanel {
         studySummary += (studyDate == null) ? "" : "   " + studyDate;
         studySummary += (studyTime == null) ? "" : "  " + studyTime;
 
-        Log.get().info("Added study: " + studySummary);
+        Log.get().info("Added study");
 
         setLayout(new BorderLayout());
         JLabel summaryLabel = new JLabel(studySummary);

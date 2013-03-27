@@ -809,6 +809,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * @return
      */
     public Series getPreviewedSeries() {
+        if (DicomClient.inCommandLineMode()) return null;
         if (!dialog.isShowing()) return null;
         return series;
     }
@@ -1188,8 +1189,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             setCurrentlySelectedMatch(oldMatchIndex, matchIndex);
         }
 
-        cardLayout.show(cardPanel, TEXT_VIEW);
-        Log.get().info("Previewed in text mode: " + dialog.getTitle());            
+        cardLayout.show(cardPanel, TEXT_VIEW);  
     }
 
     /**
@@ -1240,7 +1240,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      */
     public void showDicom(String title, String fileName) {
         if (!DicomClient.inCommandLineMode()) {
-            Log.get().info("Previewing DICOM file: " + fileName + "   title: " + title);
             fileNameLabel.setText(fileName);
             dialog.setTitle(TITLE_PREFIX + "  " + title);
             attributeList = new AttributeList();

@@ -29,7 +29,7 @@
         <modelVersion>4.0.0</modelVersion>
         <groupId>edu.umro.DICOM</groupId>
         <artifactId>dicomclient</artifactId>
-        <version>1.0.22</version>
+        <version>1.0.23</version>
         <packaging>jar</packaging>
         <name>${artifactId}</name>
         <properties>
@@ -205,7 +205,9 @@
                                                                 <copy file="${resource.dir}/DICOMClient.sh" toDir="${dest.dir}" />
                                                                 <replace file="${dest.dir}/DICOMClient.sh" token="@@with-dep-jar@@"
                                                                         value="${artifactId}-${version}-jar-with-dependencies.jar" />
-                                                                <zip basedir="${dest.dir}" destfile="${project.dir}/${artifactId}-${version}_Install.zip"/>
+                                                                <property name="zip.dest" value="${project.dir}/${artifactId}-${version}_Install.zip" />
+                                                                <zip basedir="${dest.dir}" destfile="${zip.dest}"/>
+                                                                <copy file="${zip.dest}" toDir="prebuilt_packages" />
                                                         </tasks>
                                                 </configuration>
                                                 <goals>

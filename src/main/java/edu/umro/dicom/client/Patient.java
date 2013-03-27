@@ -195,7 +195,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         }
 
         patientSummary = " " + patientSummary + " ";
-        Log.get().info("Added patient: " + patientSummary);
+        Log.get().info("Added patient");
 
         Border titledBorder = BorderFactory.createTitledBorder(border, patientSummary, TitledBorder.LEFT,
                 TitledBorder.TOP , DicomClient.FONT_MEDIUM, DicomClient.COLOR_FONT);
@@ -390,13 +390,13 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
 
         if (e.getSource() == anonymizePatientButton) {
             if (DicomClient.getInstance().ensureAnonymizeDirectoryExists()) {
-                Log.get().info("Anonymizing all series for patient " + this);
+                Log.get().info("Anonymizing all series for patient");
                 processAll(this);
             }
         }
 
         if (e.getSource() == clearButton) {
-            Log.get().info("Clearing all series for patient " + this);
+            Log.get().info("Clearing all series for patient");
             DicomClient.getInstance().clearPatient(this);
         }
     }

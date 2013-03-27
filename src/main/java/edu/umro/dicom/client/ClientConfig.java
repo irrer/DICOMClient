@@ -68,6 +68,7 @@ public class ClientConfig {
     /** List of private tags. */
     private ArrayList<PrivateTag> privateTagList = null;
 
+    private AttributeList anonymizingReplacementList = null;
 
     /**
      * Read in the configuration for the client from the configuration file.  Try
@@ -190,12 +191,14 @@ public class ClientConfig {
                 }
                 Attribute attribute = attributeList.get(tag);
                 if (attribute != null) {
-                    for (String value : attribute.getOriginalStringValues()) {
-                        String[] tokenList = value.toLowerCase().split("[^a-z0-9]");
-                        for (String token : tokenList) {
-                            if ((token.length() > 1) && (!reservedWordList.contains(token))) {
-                                replaceList.put(token, replacement);
-                                Log.get().info("Aggressive anonymization replace " + tagName + " value of " + token + " with " + replacement);
+                    String[] origValueList = attribute.getOriginalStringValues();
+                    if ((origValueList != null) && (origValueList.length > 0)) {
+                        for (String value : origValueList) {
+                            String[] tokenList = value.toLowerCase().split("[^a-z0-9]");
+                            for (String token : tokenList) {
+                                if ((token.length() > 1) && (!reservedWordList.contains(token))) {
+                                    replaceList.put(token, replacement);
+                                }
                             }
                         }
                     }
@@ -203,7 +206,7 @@ public class ClientConfig {
             }
         }
         catch (UMROException e) { Log.get().severe("UMROException getAggressiveAnonymization : " + e);}
-        catch (DicomException e) { Log.get().severe("DicomException getAggressiveAnonymization : " + e);}
+        catch (DicomException e) { Log.get().severe("DicomException getAggressiveAnonymization"); e.printStackTrace();}
 
         return replaceList;
     }
@@ -307,38 +310,40 @@ public class ClientConfig {
 
     /**
      * Get the list of attributes to anonymize and their values.  All UIDs are
-     * anonymized by default.
+     * anonymized using a manufactured UID.
      * 
      * @return
      */
     public AttributeList getAnonymizingReplacementList() {
-        AttributeList attributeList = new AttributeList();
-        try {
-            NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/AnonymizeDefaultList/*");
-            for (int ad = 0; ad < nodeList.getLength(); ad++) {
-                Node node = nodeList.item(ad);
-                String tagText = XML.getValue(node, "@Name");
-                if (tagText != null) {
-                    AttributeTag tag = CustomDictionary.getInstance().getTagFromName(tagText);
-                    if (tag != null) {
-                        String value = XML.getValue(node, "text()");
-                        value = (value == null) ? "" : value;
-                        Attribute attribute = AttributeFactory.newAttribute(tag);
-                        if (canControlAnonymizing(tag)) {
-                            attribute.addValue(value);
-                            attributeList.put(attribute);
+        if (anonymizingReplacementList == null) {
+            anonymizingReplacementList = new AttributeList();
+            try {
+                NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/AnonymizeDefaultList/*");
+                for (int ad = 0; ad < nodeList.getLength(); ad++) {
+                    Node node = nodeList.item(ad);
+                    String tagText = XML.getValue(node, "@Name");
+                    if (tagText != null) {
+                        AttributeTag tag = CustomDictionary.getInstance().getTagFromName(tagText);
+                        if (tag != null) {
+                            String value = XML.getValue(node, "text()");
+                            value = (value == null) ? "" : value;
+                            Attribute attribute = AttributeFactory.newAttribute(tag);
+                            if (canControlAnonymizing(tag)) {
+                                attribute.addValue(value);
+                                anonymizingReplacementList.put(attribute);
+                            }
                         }
                     }
                 }
             }
+            catch (UMROException e) {
+                Log.get().warning("Unable to parse list of default attributes to anonymize.  User will have to supply them manually.");
+            }
+            catch (DicomException e) {
+                Log.get().warning(this.getClass().getName() + ".getAnonymizingReplacementList : Failed to construct DICOM Attribute: " + e);
+            }
         }
-        catch (UMROException e) {
-            Log.get().warning("Unable to parse list of default attributes to anonymize.  User will have to supply them manually.");
-        }
-        catch (DicomException e) {
-            Log.get().warning(this.getClass().getName() + ".getAnonymizingReplacementList : Failed to construct DICOM Attribute: " + e);
-        }
-        return attributeList;
+        return anonymizingReplacementList;
     }
 
 

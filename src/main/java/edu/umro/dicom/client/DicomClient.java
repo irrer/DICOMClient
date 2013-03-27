@@ -30,7 +30,9 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -81,6 +83,7 @@ import org.w3c.dom.NodeList;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.DicomException;
+import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.TagFromName;
 
 import edu.umro.dicom.common.Anonymize;
@@ -106,6 +109,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** Default ID. */
     private static final long serialVersionUID = 1L;
+
+    /** The portion of a DICOM file that must be read to get the metadata required to get generatl information about it. */
+    private static final int DICOM_METADATA_LENGTH = 4 * 1024;
 
     /** Name that appears in title bar of window. */
     private static final String WINDOW_NAME = "DICOM Utility";
@@ -289,6 +295,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** If true, activate the <AggressiveAnonymization> tags in configuration file. */ 
     private static boolean aggressivelyAnonymize = false;
+
+    /** Last time that updates were made to the screen. */
+    long lastRepaint = 0;
+
 
     /**
      * Append a message to the list of messages and show
@@ -1030,7 +1040,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return pacsList != null;
     }
 
-    
+
     public boolean ensureAnonymizeDirectoryExists() {
         boolean ok = false;
         if (DicomClient.getInstance().getAnonymizeMode()) {
@@ -1051,7 +1061,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return ok;
     }
 
-    
+
 
     /**
      * Set the mode to reflect anonymizing or uploading.
@@ -1110,10 +1120,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * Get the instance of the anonymizeGui GUI.
      * 
      * @return The instance of the anonymizeGui GUI.
+     * @throws DicomException 
      */
     public AnonymizeGUI getAnonymizeGui() {
         if (anonymizeGui == null) {
-            anonymizeGui = new AnonymizeGUI();
+            try { anonymizeGui = new AnonymizeGUI(); } catch (DicomException e) {}
         }
         return anonymizeGui;
     }
@@ -1195,7 +1206,41 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     }
 
 
-    long lastRepaint = 0;
+    /**
+     * Read at a minimum the first portion of the given DICOM file.  The
+     * 'portion' is defined to be long enough to get the basic meta-data.
+     * 
+     * @param fileName
+     * 
+     * @return The contents of the file
+     */
+    private AttributeList readDicomFile(String fileName) {
+        AttributeList attributeList = new AttributeList(); 
+
+        try {
+            if (inCommandLineMode()) {
+                // this does not show any annoying messages in the log
+                attributeList.read(fileName);
+            }
+            else {
+                // The following is faster than <code>attributeList.read(fileName);</code>, as it only reads the first part of every DICOM file, but
+                // it also produces a lot of error messages because of the 'ragged end' of each file.
+                FileInputStream fis = new FileInputStream(new File(fileName));
+                byte[] buffer = new byte[DICOM_METADATA_LENGTH];
+                DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(buffer, 0, fis.read(buffer)));
+                attributeList.read(dis);
+            }
+        }
+        catch (Exception e) {
+            // Exceptions do not matter because
+            //     1: If reading a partial file, there will always be an exception
+            //     2: The content is checked anyway
+            Log.get().severe("Error reading DICOM file " + fileName + " : " + e);
+        }
+        return attributeList;
+    }
+
+
     /**
      * Add the given file to the list of loaded files.  If the file is not
      * a DICOM file or can not be read, then show a message and ignore it.
@@ -1225,33 +1270,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
                 return;
             }
-            AttributeList attributeList = new AttributeList();
-            try {
-                attributeList.read(fileName);
-
-                // The following is faster than the above single statement, as it only reads the first part of every DICOM file, but
-                // it also produces a lot of error messages because of the 'ragged end' of each file.
-                /*
-                {
-                    FileInputStream fis = new FileInputStream(new File(fileName));
-                    int len = 1024 * 32;
-                    byte[] buffer = new byte[len];
-                    len = fis.read(buffer);
-                    DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(buffer, 0, len));
-                    attributeList.read(dis);
-                }
-                 */
-            }
-            catch (IOException ex) {
-                showMessage("Unable to read file " + fileName + " : " + ex.getMessage());
-                return;
-            }
-            catch (DicomException ex) {
-                if (!ex.toString().contains("Failed to read value")) {
-                    showMessage("Error interpreting file " + fileName + " as DICOM : " + ex.getMessage());
-                    return;
-                }
-            }
+            AttributeList attributeList = readDicomFile(fileName);
 
             String patientId = "none";
             Attribute patientAttribute = attributeList.get(TagFromName.PatientID);

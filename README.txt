@@ -40,6 +40,8 @@ This will generate all of the required resources including the jar file with
 all dependencies and the RPM file for Linux installation.  The generated files
 are put in the target directory.
 
+A copy of the zipped binaries will also be put in the packages directory.
+
 To install the client, put the files:
 
     dicomsvc-*-jar-with-dependencies.jar

@@ -55,7 +55,7 @@ public class Util {
 
     /** The root UID which is used to prefix files constructed by the University of Michigan. */
     public static final String UMRO_ROOT_GUID = "1.3.6.1.4.1.22361";
-    
+
     /** Default transfer syntax for serializing DICOM files. */
     public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ImplicitVRLittleEndian;
     public static final String DEFAULT_STORAGE_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
@@ -279,4 +279,24 @@ public class Util {
         return dest;
     }
 
+
+    /**
+     * Determine if the given UID is syntactically valid, which
+     * means that it must start and end with a digit and contain
+     * only digits and periods (.) .
+     * 
+     * Example of valid UID:  98.09877.897.908.9
+     * @param uid
+     * @return
+     */
+    public static boolean isValidUid(String uid) {
+        int len = uid.length();
+        boolean ok =
+            (uid.trim().length() > 0) &&
+            uid.matches("[0-9\\.]*") &&
+            uid.substring(0, 1).matches("[0-9]") &&
+            uid.substring(len-1, len).matches("[0-9]");
+        return ok;
+
+    }
 }

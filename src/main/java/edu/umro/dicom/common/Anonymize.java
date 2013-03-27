@@ -215,12 +215,12 @@ public class Anonymize {
 
     private static void anonymizeNonSequenceAttribute(String patientId, Attribute attribute, Attribute replacement) {
         if (replacement != null) {
-            AttributeTag tag = attribute.getTag();
+            String replacementValue = replacement.getSingleStringValueOrEmptyString();
 
             if (ValueRepresentation.isUniqueIdentifierVR(attribute.getVR())) {
                 String oldGuid = attribute.getSingleStringValueOrNull();
                 if (oldGuid != null) {
-                    String newGuid = translateGuid(patientId, oldGuid);
+                    String newGuid = Util.isValidUid(replacementValue) ? replacementValue : translateGuid(patientId, oldGuid);
                     try {
                         attribute.setValue(newGuid);
                     }
@@ -232,14 +232,9 @@ public class Anonymize {
 
             else {
                 try {
-                    if (tag.equals(TagFromName.PatientID)) {
-                        attribute.setValue(replacement.getSingleStringValueOrEmptyString());
-                    }
-                    else {
-                        attribute.setValue(replacement.getSingleStringValueOrEmptyString());                        
-                    }
-
-                } catch (DicomException e) {
+                    attribute.setValue(replacementValue);                        
+                }
+                catch (DicomException e) {
                     // If there is a problem, then just make the attribute empty
                     try {
                         attribute.removeValues();
@@ -353,6 +348,26 @@ public class Anonymize {
     }
 
 
+    // TODO remove.  For Martha's test case only.
+    /*
+    private static void justChangeImageOrientationPatient(AttributeList attributeList) {
+        try {
+            Attribute iop = AttributeFactory.newAttribute(TagFromName.ImageOrientationPatient);
+            iop.addValue(1);
+            iop.addValue(0);
+            iop.addValue(0);
+            iop.addValue(0);
+            iop.addValue(1);
+            iop.addValue(0);
+            attributeList.put(iop);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+    */
+
     /**
      * Anonymize the given DICOM object.  Values are replaced with corresponding values
      * in the replacement list.  All UIDs are replaced with newly constructed ones, and
@@ -367,8 +382,13 @@ public class Anonymize {
      * @param replacementAttributeList List of values to be written into the attributeList.
      */
     public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList) {
-        HashMap<String,String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
-        anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList);
+        //if (attributeList == null) {
+            HashMap<String,String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
+            anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList);
+        //}
+        //else {
+        //    justChangeImageOrientationPatient(attributeList);
+        //}
     }
 
 
@@ -380,6 +400,12 @@ public class Anonymize {
      * @throws Exception Should never happen.
      */
     public static void main(String[] args) throws Exception {
+
+        String[] uidList = { "2.318828.3", " 123", "", "123", "123...a45.6", ".32362.38.6.8468.7.3.2.4252", "1.2.3." };
+        for (String uid : uidList) {
+            System.out.println("'" + uid +  "' :" + Util.isValidUid(uid));
+        }
+
         HashMap<String,String> aggressiveReplaceList = new HashMap<String, String>();
         aggressiveReplaceList.put("ril", "-----");
         aggressiveReplaceList.put("anc", "--");
