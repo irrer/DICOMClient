@@ -39,8 +39,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.PlainDocument;
 
 import com.pixelmed.dicom.AttributeList;
+import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.TagFromName;
 
+import edu.umro.dicom.client.AnonymizeGUI.AnonymizeAttribute;
 import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
@@ -122,7 +124,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         PlainDocument plainNameDocument = (PlainDocument)anonymizePatientNameTextField.getDocument();
         plainNameDocument.setDocumentFilter(new LimitedDocumentFilter(PATIENT_NAME_MAX_LEN));
         anonymizePatientNameTextField.setToolTipText("<html>The name to be used as<br>the anonymized patient name</html>");
-        // TODO needed? anonymizePatientNameTextField.getDocument().addDocumentListener(this);
+        anonymizePatientNameTextField.getDocument().addDocumentListener(this);
         anonymizePanel.add(anonymizePatientNameTextField);
 
         enableDifferentPatientName = new JCheckBox();
@@ -327,16 +329,35 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
 
 
     private void updateAnonymizePatientFields() {
-        if ((!enableDifferentPatientName.isSelected()) && (!getAnonymizePatientIdText().equals(getAnonymizePatientNameText()))) {
-            SwingUtilities.invokeLater(this);
-        }
+        SwingUtilities.invokeLater(this);
     }
 
 
+    /**
+     * Set one of the special fields (anonymizing information is on
+     * patient panel, patient id and name) values in the anonymizing
+     * GUI so that they stay synchronized.
+     * 
+     * @param local
+     * @param tag
+     */
+    /*
+    private void setSpecialField(JTextField local, AttributeTag tag) {
+        AnonymizeAttribute aa = AnonymizeGUI.getInstance().getAnonymizeAttribute(tag);
+        if ((aa != null) && (!aa.getValue().equalsIgnoreCase(local.getText()))) {
+            aa.setValue(local.getText());
+        }
+    }
+    */
+
+
     public void run() {
-        if (!getAnonymizePatientIdText().equals(getAnonymizePatientNameText())) {
+        if ((!enableDifferentPatientName.isSelected()) && (!getAnonymizePatientIdText().equals(getAnonymizePatientNameText()))) {
             setAnonymizePatienteNameText(getAnonymizePatientIdText());
         }
+
+        //setSpecialField(anonymizePatientIdTextField, TagFromName.PatientID);
+        //setSpecialField(anonymizePatientNameTextField, TagFromName.PatientName);
     }
 
 
@@ -364,7 +385,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
      */
     private void setDiffPatName() {
         anonymizePatientNameTextField.setEnabled(enableDifferentPatientName.isSelected());
-        anonymizePatientNameLabel.setEnabled(enableDifferentPatientName.isSelected());
+        anonymizePatientNameLabel.    setEnabled(enableDifferentPatientName.isSelected());
     }
 
 

@@ -589,7 +589,7 @@ public class Series extends JPanel implements ActionListener {
      * @throws DicomException On invalid PatientID or PatientName
      */
     private synchronized AttributeList getAnonymizingReplacementList() throws DicomException {
-        AttributeList replacementAttributeList = DicomClient.getInstance().getAnonymizeGui().getAttributeList();
+        AttributeList replacementAttributeList = AnonymizeGUI.getInstance().getAttributeList();
 
         Attribute patientId = AttributeFactory.newAttribute(TagFromName.PatientID);
         patientId.addValue(getPatient().getAnonymizePatientIdText());
@@ -876,16 +876,16 @@ public class Series extends JPanel implements ActionListener {
     private void addAnonymousAttributes(AttributeList attributeList) {
         AttributeList anonList = ClientConfig.getInstance().getAnonymizingReplacementList();
         AttributeList newAttrs = new AttributeList();
-        
+
         for (AttributeTag tag : (Set<AttributeTag>)attributeList.keySet()) {
             if ((anonList.get(tag) != null) && (newAttrs.get(tag) == null)) {
                 newAttrs.put(anonList.get(tag));
             }
         }
-        DicomClient.getInstance().getAnonymizeGui().updateTagList(newAttrs);
+        AnonymizeGUI.getInstance().updateTagList(newAttrs);
     }
 
-    
+
     /**
      * Add the given file to this series.
      * 
@@ -894,8 +894,8 @@ public class Series extends JPanel implements ActionListener {
      * @param attributeList Parsed version of the DICOM file contents.
      */
     public void addFile(String fileName, AttributeList attributeList) {
-        DicomClient.getInstance().getAnonymizeGui().updateTagList(attributeList);
-        addAnonymousAttributes(attributeList);  // TODO remove?
+        AnonymizeGUI.getInstance().updateTagList(attributeList);
+        //addAnonymousAttributes(attributeList);  // TODO remove?
         String msg = instanceList.put(fileName, attributeList);
         progressBar.setMaximum(instanceList.size());
         if (msg == null) {
@@ -903,6 +903,11 @@ public class Series extends JPanel implements ActionListener {
         }
         else {
             DicomClient.getInstance().showMessage(msg);
+        }
+        if (DicomClient.getInstance().getPreview().getPreviewedSeries() == this) {
+            int sliceNumber = instanceList.size() / 2;
+            sliceNumber = (sliceNumber < 1) ? 1 : sliceNumber;
+            showPreview(sliceNumber);
         }
     }
 
@@ -945,34 +950,26 @@ public class Series extends JPanel implements ActionListener {
         return summaryLabel.getText();
     }
 
-    private volatile boolean inPreview = false;
+
+    public String getPreviewTitle(int sliceNumber) {
+        StringBuffer title = new StringBuffer();
+
+        title.append((patientID         == null) ? "" : "  " + patientID);
+        title.append((patientName       == null) ? "" : "  " + patientName);
+        title.append((seriesNumber      == null) ? "" : "  " + seriesNumber);
+        title.append((modality          == null) ? "" : "  " + modality);
+        title.append((seriesDescription == null) ? "" : "  " + seriesDescription);
+        title.append("   " + sliceNumber + " / " + instanceList.size());
+        return title.toString();
+    }
 
     /**
      * Show the current slice in the previewer.
      */
-    public synchronized void showPreview(int value) {
-        if (!inPreview) {
-            inPreview = true;
-            try {
-                Preview preview = DicomClient.getInstance().getPreview();
-                preview.setSeries(this);
-
-                String fileName = instanceList.values().get(value-1);
-                StringBuffer title = new StringBuffer();
-
-                title.append((patientID         == null) ? "" : "  " + patientID);
-                title.append((patientName       == null) ? "" : "  " + patientName);
-                title.append((seriesNumber      == null) ? "" : "  " + seriesNumber);
-                title.append((modality          == null) ? "" : "  " + modality);
-                title.append((seriesDescription == null) ? "" : "  " + seriesDescription);
-                title.append("   " + value + " / " + instanceList.size());
-
-                preview.showDicom(title.toString(), fileName);
-            }
-            finally {
-                inPreview = false;
-            }
-        }
+    public synchronized void showPreview(int sliceNumber) {
+        Preview preview = DicomClient.getInstance().getPreview();
+        String fileName = instanceList.values().get(sliceNumber-1);
+        preview.showDicom(this, getPreviewTitle(sliceNumber), sliceNumber, getFileNameList().size(), fileName);
     }
 
 

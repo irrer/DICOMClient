@@ -1008,7 +1008,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
 
         if (source.equals(anonymizeOptionsButton)) {
-            getAnonymizeGui().getDialog().setVisible(!inCommandLineMode());
+            AnonymizeGUI.getInstance().getDialog().setVisible(!inCommandLineMode());
         }
 
         if (source.equals(anonymizeRadioButton) || source.equals(uploadRadioButton)) {
@@ -1117,20 +1117,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
     /**
-     * Get the instance of the anonymizeGui GUI.
-     * 
-     * @return The instance of the anonymizeGui GUI.
-     * @throws DicomException 
-     */
-    public AnonymizeGUI getAnonymizeGui() {
-        if (anonymizeGui == null) {
-            try { anonymizeGui = new AnonymizeGUI(); } catch (DicomException e) {}
-        }
-        return anonymizeGui;
-    }
-
-
-    /**
      * Find all of the Series and reset their done icons to reflect
      * the proper status.
      * 
@@ -1168,7 +1154,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public void setProcessedStatus() {
         boolean all = setUploadStatusWorker(getMainContainer(), true) && !(patientList.isEmpty());
         if (!getAnonymizeMode()) {
-            getAnonymizeGui().getDialog().setVisible(false);
+            AnonymizeGUI.getInstance().getDialog().setVisible(false);
         }
         uploadAllIcon.setIcon(all ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty());
         uploadAllButton.setEnabled(uploadEnabled() || getAnonymizeMode());

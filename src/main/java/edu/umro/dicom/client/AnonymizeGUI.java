@@ -58,6 +58,7 @@ import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
+import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.ValueRepresentation;
 
 import edu.umro.dicom.common.Anonymize;
@@ -79,7 +80,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
      * @author Jim Irrer  irrer@umich.edu 
      *
      */
-    private class AnonymizeAttribute extends JPanel implements ActionListener, ItemListener {
+    public class AnonymizeAttribute extends JPanel implements ActionListener, ItemListener {
         /** Default ID */
         private static final long serialVersionUID = 1L;
 
@@ -165,6 +166,11 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             return textField.getText();
         }
 
+        
+        public void setValue(String value) {
+            textField.setText(value);
+        }
+
 
         @Override
         public void itemStateChanged(ItemEvent e) {
@@ -185,7 +191,6 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         public JTextField getTextField() {
             return attrNameLabel;
         }
-
     }
 
 
@@ -296,6 +301,8 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
     /** Index indicating which matched string is currently displayed via the scroll bar. */
     int matchIndex = 0;
 
+    /** Singleton instance of this class. */
+    private static AnonymizeGUI anonymizeGUI = null;
 
     public JDialog getDialog() {
         return dialog;
@@ -560,17 +567,17 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         //buttonPanel.add(constructSearchPanel());
         //buttonPanel.add(new JLabel("      "));
 
-        selectAllButton = new JButton("Select All");
+        selectAllButton = new JButton("All");
         selectAllButton.addActionListener(this);
         selectAllButton.setToolTipText("Select all checkboxes");
         buttonPanel.add(selectAllButton);
 
-        selectNoneButton = new JButton("Select None");
+        selectNoneButton = new JButton("None");
         selectNoneButton.addActionListener(this);
         selectNoneButton.setToolTipText("Un-Select all checkboxes");
         buttonPanel.add(selectNoneButton);
 
-        selectDefaultsButton = new JButton("Select Defaults");
+        selectDefaultsButton = new JButton("Defaults");
         selectDefaultsButton.addActionListener(this);
         selectDefaultsButton.setToolTipText("<html>Reset selections to<br>the defaults</html>");
         buttonPanel.add(selectDefaultsButton);
@@ -631,7 +638,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         for (Object oAttr : attributeList.values()) {
             Attribute attribute = (Attribute)oAttr;
             AttributeTag tag = attribute.getTag();
-            if (knownAttributes.get(tag) == null) {
+            if ((knownAttributes.get(tag) == null) && (!tag.equals(TagFromName.PatientID) && (!tag.equals(TagFromName.PatientName)))) {
                 try {
                     String value = "";
                     Attribute newAttr = AttributeFactory.newAttribute(new AttributeTag(tag.getGroup(), tag.getElement()));
@@ -682,7 +689,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
      * @throws DicomException 
      * 
      */
-    public AnonymizeGUI() throws DicomException {
+    private AnonymizeGUI() throws DicomException {
 
         if (DicomClient.inCommandLineMode()) {
             mainContainer = new Container();
@@ -708,8 +715,20 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             dialog.pack();
         }
     }
+    
 
+    public static AnonymizeGUI getInstance() {
+        if (anonymizeGUI == null)
+            try {
+                anonymizeGUI = new AnonymizeGUI();
+            } catch (DicomException e) {
+                Log.get().severe("Unable to construct anonymize GUI: " + e);
+                e.printStackTrace();
+            }
+        return anonymizeGUI;
+    }
 
+    
     /**
      * Get the attribute list containing tags and values to be used
      * for anonymization.
@@ -735,5 +754,16 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
 
         return attributeList;
     }
-
+    
+    private AnonymizeAttribute getAnonymizeAttribute(AttributeTag tag) {
+        for (Component component : anonPanel.getComponents()) {
+            if (component instanceof AnonymizeAttribute) {
+                AnonymizeAttribute aa = (AnonymizeAttribute)component;
+                if (aa.getTag().equals(tag)) {
+                    return aa;
+                }
+            }
+        }
+        return null;
+    }
 }

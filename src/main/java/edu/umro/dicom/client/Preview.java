@@ -796,10 +796,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * @param series Series to be previewed.
      */
     public void setSeries(Series series) {
-        if (this.series != series) {
-            this.series = series;
-            sliceSlider.setMaximum(series.getFileNameList().size());
-        }
+        sliceSlider.setMaximum(series.getFileNameList().size());
         DicomClient.getInstance().setProcessedStatus();
     }
     
@@ -1238,14 +1235,19 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * 
      * @param fileName Name of DICOM file.
      */
-    public void showDicom(String title, String fileName) {
+    public void showDicom(Series series, String title, int sliceNumber, int maxSlice, String fileName) {
         if (!DicomClient.inCommandLineMode()) {
+            this.series = series;
+            sliceSlider.setMaximum(maxSlice);
+            DicomClient.getInstance().setProcessedStatus();
+
             fileNameLabel.setText(fileName);
             dialog.setTitle(TITLE_PREFIX + "  " + title);
             attributeList = new AttributeList();
             try {
                 attributeList.read(fileName);
-                DicomClient.getInstance().getAnonymizeGui().updateTagList(attributeList);
+                AnonymizeGUI.getInstance().updateTagList(attributeList);
+                sliceSlider.setValue(sliceNumber);
                 showDicom();
             }
             catch (DicomException ex) {
@@ -1285,7 +1287,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             dialog.setPreferredSize(PREFERRED_SIZE);
             dialog.getContentPane().add(panel);
             dialog.pack();
-            //dialog.setVisible(true);
         }
     }
 }
