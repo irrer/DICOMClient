@@ -517,9 +517,12 @@ public class Series extends JPanel implements ActionListener {
             Representation representation = new InputRepresentation(inputStream, MediaType.APPLICATION_OCTET_STREAM);
             request.setEntity(representation);
             request.setMethod(Method.PUT);
+            long start = System.currentTimeMillis();
             response = client.handle(request);
             representation.release();
             Status status = response.getStatus();
+            long elapsed = System.currentTimeMillis() - start;
+            Log.get().info("Elapsed upload time in ms: " + elapsed);
 
             if (status.equals(Status.SUCCESS_OK)) {
                 ok = true;
@@ -825,22 +828,28 @@ public class Series extends JPanel implements ActionListener {
                 seriesSummary += (modality          == null) ? "" : " " + modality;
                 seriesSummary += (seriesDescription == null) ? "" : " " + seriesDescription;
 
-                try {
-                    KeyObject keyObject = new KeyObject(seriesSummary, instanceList.values());
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, Util.DEFAULT_STORAGE_SYNTAX, TransferSyntax.ExplicitVRLittleEndian);
-                    keyObject.write(dicomOutputStream);
-                    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-                    if (!uploadStream(urlText, seriesSummary, byteArrayInputStream)) {
-                        String msg = "Could not upload Key Object file for series";
-                        Log.get().info(msg);
-                        DicomClient.getInstance().showMessage(msg + seriesSummary);
+                if (DicomClient.getInstance().getKoManifestPolicy()) {
+                    try {
+                        Log.get().info("Sending KO file for series " + seriesSummary);
+                        KeyObject keyObject = new KeyObject(seriesSummary, instanceList.values());
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, Util.DEFAULT_STORAGE_SYNTAX, TransferSyntax.ExplicitVRLittleEndian);
+                        keyObject.write(dicomOutputStream);
+                        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+                        if (!uploadStream(urlText, seriesSummary, byteArrayInputStream)) {
+                            String msg = "Could not upload Key Object file for series";
+                            Log.get().info(msg);
+                            DicomClient.getInstance().showMessage(msg + seriesSummary);
+                            return;
+                        }
+                    }
+                    catch (Exception e) {
+                        Log.get().info("Upload failed.  Could not generate Key Object File for series: " + e);
                         return;
                     }
                 }
-                catch (Exception e) {
-                    Log.get().info("Upload failed.  Could not generate Key Object File for series: " + e);
-                    return;
+                else {
+                    Log.get().info("Not sending KO file for series " + seriesSummary);
                 }
 
                 for (String fileName : instanceList.values()) {

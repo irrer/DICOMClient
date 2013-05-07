@@ -17,7 +17,7 @@ set PATH=%JAVA_HOME%\bin;%PATH%
 :javaok
 
 @rem set the current directory so that logs will go in the right place
-@rem and the jks file is accessable
+@rem and the jks file is accessible
 @rem first set the drive (equivalent to S: or whatever drive)
 %dirname:~0,2%
 @rem then set the directory

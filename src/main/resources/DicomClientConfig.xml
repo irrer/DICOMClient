@@ -18,8 +18,9 @@
 -->
 
     <!-- URL for the service. -->
-    <DicomServiceUrl>https://172.20.125.41:8091</DicomServiceUrl>        <!-- rolxdeploy1 -->
-    <!-- <DicomServiceUrl>https://141.214.124.240:8091</DicomServiceUrl> -->  <!-- rolxdev1 -->
+    <DicomServiceUrl>https://rolxdeploy1:8091</DicomServiceUrl>
+    <!-- <DicomServiceUrl>https://rolxdev1:8091</DicomServiceUrl> -->
+    <!--<DicomServiceUrl>https://localhost:8091</DicomServiceUrl>  -->
     <!-- <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl> -->    <!-- irrer desktop -->
 
     <!-- Used to generate the default patient id.  Special character meanings:
@@ -46,8 +47,8 @@
     <!-- If true, upload help is shown.  It makes sense to not show the upload help for sites where the server is not installed. -->
     <ShowUploadHelp>true</ShowUploadHelp>
 
-    <!-- If true, enable internal profiling.  Setting this to true is only useful for diagnosing performance problems. -->
-    <Profile>false</Profile>
+    <!-- The flag that indicates whether KO manifest files should be sent by default.  The user can override this via the GUI. -->
+    <KOManifestDefault>true</KOManifestDefault>
 
     <!-- Location of java keystore file.  If this value is specified by the
     system property javax.net.ssl.trustStore then the system property will

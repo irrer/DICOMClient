@@ -46,6 +46,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -170,6 +171,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     private JLabel uploadCountLabel = null;
     private long uploadCount = 0;
+    
+    private JCheckBox koManifest = null;
 
     /** Selects next PACS choice above. */
     private BasicArrowButton pacsNorth = null;
@@ -489,10 +492,26 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         JLabel uploadLabel = new JLabel("Upload DICOM files to");
         uploadLabel.setFont(FONT_TINY);
         uploadLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JPanel southPanel = new JPanel();
+        
+        uploadCountLabel = new JLabel("Upload Count: 0");
+        uploadCountLabel.setToolTipText("<html>Total number of<br>files uploaded.</html>");
+        
+        
+        koManifest = new JCheckBox("Manifest");
+        koManifest.setToolTipText("<html>If checked, then send a manfest in the form of a DICOM<br>KO preceeding each series to allow the completeness<br>of the series to be verified.</html>");
+        koManifest.setSelected(ClientConfig.getInstance().getKoManifestDefault());
+        
+        southPanel.add(koManifest);
+        southPanel.add(new JLabel("    "));
+        southPanel.add(uploadCountLabel);
+        
         outerPanel.add(uploadLabel);
         outerPanel.add(panel);
-        uploadCountLabel = new JLabel("Upload Count: 0");
-        outerPanel.add(uploadCountLabel);
+        outerPanel.add(southPanel);
+
+        
         outerPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
 
         return outerPanel;
@@ -1487,6 +1506,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     public static boolean getAggressivelyAnonymize() {
         return aggressivelyAnonymize;
+    }
+    
+    
+    public boolean getKoManifestPolicy() {
+        return koManifest.isSelected();
     }
 
 

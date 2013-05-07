@@ -44,7 +44,7 @@ public class Help extends Alert {
     private static final Dimension PREFERRED_HELP_SIZE = new Dimension(440, 550);
 
     /** Preferred size of about screen. */
-    private static final Dimension PREFERRED_ABOUT_SIZE = new Dimension(440, 440);
+    private static final Dimension PREFERRED_ABOUT_SIZE = new Dimension(440, 600);
 
 
     /**
@@ -73,7 +73,7 @@ public class Help extends Alert {
      */
     private static String getAboutText() {
         StringBuffer text = new StringBuffer("<html>\n");
-        text.append("<h2>DICOM Anonymize and Upload</h2><br>\n");
+        text.append("<h2>DICOM View, Anonymize, and Upload</h2><br>\n");
 
         JarInfo jarInfo = new JarInfo(Help.class);
 
@@ -85,6 +85,8 @@ public class Help extends Alert {
                     text.append("<br>\n");
                 }
             }
+            text.append("Server: " + ClientConfig.getInstance().getServerBaseUrl() + "<br>\n<br>\n");
+            text.append("User: " + System.getProperty("user.name") + "<br>\n");
         }
         catch (UMROException e) {
             ;

@@ -170,6 +170,26 @@ public class ClientConfig {
 
 
     /**
+     * Get the default state for sending the KO manifest.  If there is a config problem, default to TRUE.
+     *  
+     * @return Default state for sending the KO manifest.
+     */
+    public boolean getKoManifestDefault() {
+        try {
+            String text = XML.getValue(config, "/DicomClientConfig/KOManifestDefault/text()");
+            String[] falseText = { "f", "false", "no", "0" };
+            for (String f : falseText) {
+                if (f.equalsIgnoreCase(text)) return false;
+            }
+        }
+        catch (UMROException e) {
+
+        }
+        return true;
+    }
+
+
+    /**
      * Get the values that should be replaced for aggressive patient anonymization.
      *  
      * @return List of values (in lower case) and their replacement values.  
@@ -266,31 +286,6 @@ public class ClientConfig {
         text.equalsIgnoreCase("y") || 
         text.equalsIgnoreCase("1") || 
         text.equalsIgnoreCase("t");
-    }
-
-
-    private boolean getFlag(String path, String flagName) {
-        try {
-            String text = XML.getValue(config, path).trim();
-            boolean enabled = isTrue(text);
-            return enabled;
-        }
-        catch (UMROException e) {
-            Log.get().info(flagName + " : Unable to get flag: " + e);
-        }
-        Log.get().info(flagName + " : Unable to read configuration file " + CONFIG_FILE_NAME);
-        return false;
-    }
-
-
-    /**
-     * Get flag indicating whether or not profiling is to be done.  If there is a problem
-     * getting the flag, then assume false.
-     *  
-     * @return Flag indicating whether profiling should be done.
-     */
-    public boolean getProfileFlag() {
-        return getFlag("/DicomClientConfig/Profile/text()", "getProfileFlag");
     }
 
 
