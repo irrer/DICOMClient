@@ -73,7 +73,7 @@ public class Alert extends JDialog implements ActionListener {
         scrollPane.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));
 
         scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
-        
+
         panel.add(scrollPane);
 
         return scrollPane;
@@ -132,25 +132,27 @@ public class Alert extends JDialog implements ActionListener {
     /**
      * Build the GUI and display it.
      */
-    public Alert(String msg, String title, String[] buttonNameList, Dimension preferredSize) {
-        super(DicomClient.getInstance().getFrame(), true);
+    public Alert(String msg, String title, String[] buttonNameList, Dimension preferredSize, boolean modal) {
+        super(DicomClient.getInstance().getFrame(), modal);
 
-        buttonNameList = (buttonNameList == null) ? DEFAULT_BUTTON_NAME_LIST : buttonNameList;
+        if (!DicomClient.inCommandLineMode()) {
+            buttonNameList = (buttonNameList == null) ? DEFAULT_BUTTON_NAME_LIST : buttonNameList;
 
-        setTitle(title);
+            setTitle(title);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
+            JPanel panel = new JPanel();
+            panel.setLayout(new BorderLayout());
 
-        panel.add(buildCenter(msg), BorderLayout.CENTER);
-        panel.add(buildSouth(buttonNameList), BorderLayout.SOUTH);
+            panel.add(buildCenter(msg), BorderLayout.CENTER);
+            panel.add(buildSouth(buttonNameList), BorderLayout.SOUTH);
 
-        DicomClient.setColor(panel);
+            DicomClient.setColor(panel);
 
-        setPreferredSize(preferredSize);
-        getContentPane().add(panel);
-        pack();
-        setVisible(!DicomClient.inCommandLineMode());
+            setPreferredSize(preferredSize);
+            getContentPane().add(panel);
+            pack();
+            setVisible(true);
+        }
     }
 
 
@@ -163,7 +165,7 @@ public class Alert extends JDialog implements ActionListener {
      * @param title Window title.
      */
     public Alert(String msg, String title) {
-        this(msg, title, DEFAULT_BUTTON_NAME_LIST, PREFERRED_SIZE);
+        this(msg, title, DEFAULT_BUTTON_NAME_LIST, PREFERRED_SIZE, false);
     }
 
 
@@ -177,7 +179,7 @@ public class Alert extends JDialog implements ActionListener {
      * @param buttonName Single button to be shown.  If null, use the default button.
      */
     public Alert(String msg, String title, String buttonName) {
-        this(msg, title, (buttonName == null) ? DEFAULT_BUTTON_NAME_LIST : new String[] { buttonName }, PREFERRED_SIZE);
+        this(msg, title, (buttonName == null) ? DEFAULT_BUTTON_NAME_LIST : new String[] { buttonName }, PREFERRED_SIZE, false);
     }
 
 

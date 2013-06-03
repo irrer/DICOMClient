@@ -39,10 +39,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.PlainDocument;
 
 import com.pixelmed.dicom.AttributeList;
-import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.TagFromName;
 
-import edu.umro.dicom.client.AnonymizeGUI.AnonymizeAttribute;
 import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
@@ -412,6 +410,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         if (e.getSource() == anonymizePatientButton) {
             if (DicomClient.getInstance().ensureAnonymizeDirectoryExists()) {
                 Log.get().info("Anonymizing all series for patient");
+                Series.processOk = true;
                 processAll(this);
             }
         }

@@ -279,16 +279,6 @@ public class ClientConfig {
     }
 
 
-    private boolean isTrue(String text) {
-        return
-        text.equalsIgnoreCase("true") || 
-        text.equalsIgnoreCase("yes") || 
-        text.equalsIgnoreCase("y") || 
-        text.equalsIgnoreCase("1") || 
-        text.equalsIgnoreCase("t");
-    }
-
-
     /**
      * Only let user control certain types of attributes.  It does not make
      * sense to manually control values of UIDs, and sequence attributes do

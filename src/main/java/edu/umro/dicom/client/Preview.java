@@ -32,15 +32,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -78,7 +73,6 @@ import com.pixelmed.dicom.OtherFloatAttribute;
 import com.pixelmed.dicom.OtherWordAttribute;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
-import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
@@ -824,6 +818,94 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     private void showImage() {
         try {
             BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
+
+            /** /
+            if (this != null) { // TODO remove
+                Attribute pd = attributeList.get(TagFromName.PixelData);
+                if ((pd != null) && (pd instanceof OtherWordAttribute)) {
+                    short[] sData = pd.getShortValues();
+
+                    int min = Integer.MAX_VALUE;
+                    int max = Integer.MIN_VALUE;
+
+                    for (int s = 0; s < sData.length; s++) {
+                        int pixel = sData[s] & 0xffff;
+                        min = (pixel < min) ? pixel : min;
+                        max = (pixel > max) ? pixel : max;
+                    }
+
+                    int width = attributeList.get(TagFromName.Columns).getIntegerValues()[0];
+                    int height = attributeList.get(TagFromName.Rows).getIntegerValues()[0];
+                    image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                    //double threshold = min + ((max-min) * .1);
+
+                    double background = min + ((max-min) * .8);
+                    double target = min + ((max-min) * .2);
+                    int loColor = 85;
+                    //double m = (threshold - min) / 255.0;
+                    for (int h = 0; h < height; h++) {
+                        for (int w = 0; w < width; w++) {
+                            int loc = (h * width) + w;
+                            int pixel = sData[loc] & 0xffff;
+                            
+                            if (pixel > background) {
+                                double scale = (255.0-loColor) / (max - background);
+                                int p = (int)((pixel - background) * scale);
+                                if (p < loColor) p = loColor;  if (p > 255) p = 255;
+                                pixel = 255<<16; //p << 16;
+                            }
+                            else {
+                                if (pixel < target) {
+                                    double scale = (255.0-loColor) / (target - min);
+                                    int p = (int)((pixel - min) * scale);
+                                    if (p < loColor) p = loColor;  if (p > 255) p = 255;
+                                    pixel = 255; //p;
+                                }
+                                else {
+                                    double scale = (255.0-loColor) / (background - target);
+                                    int p = (int)((pixel - target) * scale);
+                                    if (p < loColor) p = loColor;  if (p > 255) p = 255;
+                                    pixel = 255<<8; // p << 8;
+                                }
+                            }
+
+                            image.setRGB(w, h, pixel);
+                        }
+                    }
+                }
+            }
+            if (this == null) {
+                int width = 400;
+                int height = 400;
+                image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                double[] xdata = { 50, 100, 150, 200, 250, 300, 350 };
+                double[] ydata = { 80, 100, 150, 155, 250, 300, 300 };
+                org.opensourcephysics.numerics.CubicSpline spline = new org.opensourcephysics.numerics.CubicSpline(xdata, ydata);
+                for (int h = 0; h < height; h++) {
+                    for (int w = 0; w < width; w++) {
+                        image.setRGB(w, h, 255);
+                    }
+                }
+                int white = 0xffffff;
+                int red = 0xff0000;
+                double h = 0;
+                for (int w = 0; w < width; w++) {
+                    h = Math.round(spline.evaluate((double)w));
+                    if (h < 0) h = 0;
+                    if (h >= height) h = height-1;
+                    image.setRGB(w, (int)h, white);
+                }
+                for (int p = 0; p < xdata.length; p++) {
+                    for (int x = -1; x < 2; x++) {
+                        for (int y = -1; y < 2; y++) {
+                            int xx = (int)xdata[p] + x;
+                            int yy = (int)ydata[p] + y;
+                            image.setRGB(xx, yy, red);
+                        }
+                    }
+                }
+            }
+            /**/
             float contrast = (float)contrastSlider.getValue() / (float)10.0;
             float offset = (float)brightnessSlider.getValue();
             RescaleOp rescale = new RescaleOp(contrast, offset, null);
@@ -1260,109 +1342,50 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                             OtherWordAttribute owa = (OtherWordAttribute)pd;
                             short[] sData = pd.getShortValues();
 
-                            if (false && imageRadioButton.isSelected()) {
+                            if (imageRadioButton.isSelected()) {
                                 Attribute rescaleIntercept = attributeList.get(TagFromName.RescaleIntercept);
                                 Attribute rescaleSlope = attributeList.get(TagFromName.RescaleSlope);
-                                
+
                                 rescaleIntercept.removeValues();
                                 rescaleIntercept.addValue("-32768");
-                                
+
                                 rescaleSlope.removeValues();
-                                rescaleSlope.addValue("1");
+                                rescaleSlope.addValue("1.0");
                             }
 
-                            //File file = new File(new File("D:\\tmp\\Winston-Lutz\\dicom"), "PixData" + System.currentTimeMillis());
-                            //FileOutputStream fos = new FileOutputStream(file);
-                            //byte[] data = new byte[sData.length];
-                            int loMin = 256;
-                            int loMax = -1;
-                            int hiMin = 256;
-                            int hiMax = 0;
-                            int[] loCount = new int[256];
-                            int[] hiCount = new int[256];
-                            for (int s = 0; s < 256; s++) {
-                                loCount[s] = hiCount[s] = 0;
-                            }
-                            //File file = new File("D:\\tmp\\pixels" + System.currentTimeMillis() + ".txt");
-                            //System.out.println("Saving info to : " + file.getAbsolutePath());
-                            //FileOutputStream fos = new FileOutputStream(file);
                             int min = Integer.MAX_VALUE;
                             int max = Integer.MIN_VALUE;
 
                             for (int s = 0; s < sData.length; s++) {
-                                int comp = sData[s] & 0xffff;
-                                min = (comp < min) ? comp : min;
-                                max = (comp > max) ? comp : max;
+                                int pixel = sData[s] & 0xffff;
+                                min = (pixel < min) ? pixel : min;
+                                max = (pixel > max) ? pixel : max;
                             }
 
-                            {
-                                // map to a saner range
-                                double rl = 31059;
-                                double rh = 32819;
-
-                                double a = (rh-rl)/(max-min);
-                                double b = rl - (a*min);
-                                System.out.println("++++");
-                                for (int s = 0; s < sData.length; s++) {
-                                    int v = sData[s];
-                                    v = (v < 0) ? -v : v;
-                                    if (s < 1000) System.out.print("  " + v);
-                                    int x = (int)(a*v+b);
-                                    if (x < 0) {
-                                        x = x * 1;
-                                    }
-                                    //sData[s] = (short)x;
-                                }
-                                System.out.println("++++");
-                            }
-
-                            min = Integer.MAX_VALUE;
-                            max = Integer.MIN_VALUE;
-
-                            //PrintStream ps = new PrintStream(fos);
-                            int prev = -1;
                             TreeMap<Integer, ArrayList<Integer>> lowList = new TreeMap<Integer, ArrayList<Integer>>();
-                            int  MAX_SIZE = (4000);
                             for (int s = 0; s < sData.length; s++) {
-                                int pixel = sData[s];
-                                int lo = pixel & 255;
-                                int hi = (pixel >> 8) & 255;
-                                loMin = (lo < loMin) ? lo : loMin;
-                                loMax = (lo > loMax) ? lo : loMax;
-                                hiMin = (hi < hiMin) ? hi : hiMin;
-                                hiMax = (hi > hiMax) ? hi : hiMax;
-                                loCount[lo]++;
-                                hiCount[hi]++;
-                                int comp = sData[s] & 0xffff;
-                                min = (comp < min) ? comp : min;
-                                max = (comp > max) ? comp : max;
-                                if ((lowList.size() < MAX_SIZE) || (comp <= lowList.firstEntry().getKey())) {
-                                    int k = lowList.isEmpty() ? -1 : lowList.firstEntry().getKey();
-                                    ArrayList<Integer> entry = lowList.get(comp);
-                                    if (entry == null) {
-                                        entry = new ArrayList<Integer>();
-                                        lowList.put(comp, entry);
-                                    }
-                                    entry.add(s);
-                                    if (lowList.size() > MAX_SIZE) {
-                                        lowList.remove(lowList.lastKey());
-                                    }
+                                int pixel = sData[s] & 0xffff;
+                                min = (pixel < min) ? pixel : min;
+                                max = (pixel > max) ? pixel : max;
+
+                                ArrayList<Integer> entry = lowList.get(pixel);
+                                if (entry == null) {
+                                    entry = new ArrayList<Integer>();
+                                    lowList.put(pixel, entry);
                                 }
-                                int diff = (comp > prev) ? (comp-prev) : (prev-comp);
-                                //ps.println(s + " - " + hi + " " + lo + " : " + ((hi<<8) + lo) + "  diff: " + diff);
-                                prev = comp;
-                                if ((lo > 30) && (lo < 230))
-                                    hi = hi * 1;
-                                pixel = (pixel < 0) ? -pixel : pixel;
+                                entry.add(s);
                             }
 
-                            //ps.close();
-                            System.out.println("    lo: " + loMin + " - " + loMax);
-                            for (int s = 0; s < 256; s++) if (loCount[s] > 0) System.out.print("    " + s + ":" + loCount[s]); 
-                            System.out.println("\n");
-                            System.out.println("    hi: " + hiMin + " - " + hiMax);
-                            for (int s = 0; s < 256; s++) if (hiCount[s] > 0) System.out.print("    " + s + ":" + hiCount[s]);                            
-                            System.out.println("\n");
+                            double lTotal = 0;
+                            for (Integer l : lowList.keySet()) {
+                                lTotal += lowList.get(l).size();
+                                double pct = (lTotal / sData.length) * 100.0;
+                                if (pct > -1) {
+                                    System.out.println(String.format("  pct: %8.4f  %5d %5d", pct, l, lowList.get(l).size()));
+                                }
+                            }
+                            System.out.println();
+
                             System.out.println("min: " + min + "    max: " + max + "    range: " + ((max - min) + 1));
                             {
                                 long xTotal = 0;
@@ -1371,7 +1394,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                                 int row = attributeList.get(TagFromName.Rows).getIntegerValues()[0];
                                 int size = 0;
                                 System.out.println("----"); for (Integer k : lowList.keySet()) System.out.print("    " + k + "," + lowList.get(k).size()); System.out.println("\n----");
-                                int half = (int)((max - min) * .80) + min;
+                                int half = (int)((max - min) * .9) + min;
                                 System.out.println("min: " + min + "    half: " + half + "    max: " + max);
                                 for (Integer k : lowList.keySet()) {
                                     if (k <= half) {
@@ -1390,16 +1413,17 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                                 yTotal /= size;
                                 System.out.println("col: " + col + "    row: " + row + "    Center: " + xTotal + "  " + yTotal);
 
-                                for (int c = 0; c < col; c++) {
-                                    long x = (yTotal * col) + c;
-                                    sData[(int)x] = (short)(((c%2) == 1) ? min : max);
-                                }
+                                if (false) {
+                                    for (int c = 0; c < col; c++) {
+                                        long x = (yTotal * col) + c;
+                                        sData[(int)x] = (short)(((c%2) == 1) ? min : max-1);
+                                    }
 
-                                for (int r = 0; r < row; r++) {
-                                    long x = xTotal + (col * + r);
-                                    sData[(int)x] = (short)(((r%2) == 1) ? min : max);
+                                    for (int r = 0; r < row; r++) {
+                                        long x = xTotal + (col * + r);
+                                        sData[(int)x] = (short)(((r%2) == 1) ? min : max-8);
+                                    }
                                 }
-                                System.out.println("MAX_SIZE: " + MAX_SIZE + "    lowList.size(): " + lowList.size() + "    size: " + size);
                             }
 
                             owa.setValues(sData);

@@ -426,10 +426,11 @@ public class Help extends Alert {
      * @param showUploadHelp If true, show the upload help.
      */
     public Help(boolean showUploadHelp) {
-        super(getMessage(showUploadHelp), WINDOW_TITLE, new String[] { "About", "Close" }, PREFERRED_HELP_SIZE);
+        super(getMessage(showUploadHelp), WINDOW_TITLE, new String[] { "About", "Close" }, PREFERRED_HELP_SIZE, true);
+        int b = getSelectedButtonIndex(); // TODO remove
         switch (getSelectedButtonIndex()) {
             case 0:
-                new Alert(getAboutText(), "About DICOM Utility", null, PREFERRED_ABOUT_SIZE);
+                new Alert(getAboutText(), "About DICOM Utility", null, PREFERRED_ABOUT_SIZE, false);
                 break;
             default:
                 break;

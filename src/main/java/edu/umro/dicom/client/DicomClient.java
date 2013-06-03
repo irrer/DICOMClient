@@ -59,7 +59,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -79,15 +78,16 @@ import org.restlet.data.Protocol;
 import org.restlet.resource.ResourceException;
 import org.restlet.data.Status;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
-import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.TagFromName;
 
 import edu.umro.dicom.common.Anonymize;
+import edu.umro.dicom.common.PACS;
 import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 import edu.umro.util.OpSys;
@@ -161,7 +161,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private int fileCount = 0;
 
     /** List of available PACS, retrieved from the DICOM server. */
-    private ArrayList<String> pacsList = null;
+    private ArrayList<PACS> pacsList = null;
 
     /** Index of currently selected PACS. */
     private int currentPacs = -1;
@@ -171,7 +171,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     private JLabel uploadCountLabel = null;
     private long uploadCount = 0;
-    
+
     private JCheckBox koManifest = null;
 
     /** Selects next PACS choice above. */
@@ -284,9 +284,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** The accumulated (error) messages. */
     private volatile StringBuffer showMessageText = new StringBuffer();
 
-    /** AnonymizeGUI settings. */
-    private volatile AnonymizeGUI anonymizeGui = null;
-
     /** True if it is ok to make the previewer visible. */
     private volatile boolean previewEnableable = true;
 
@@ -345,14 +342,18 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * 
      * @return List of PACS AETitles.
      */
-    private ArrayList<String> parsePacsList(String xml) {
-        ArrayList<String> list = new ArrayList<String>();
+    private ArrayList<PACS> parsePacsList(String xml) {
+        ArrayList<PACS> list = new ArrayList<PACS>();
         try {
             Document document = XML.parseToDocument(xml.toString());
-            NodeList nodeList = XML.getMultipleNodes(document, "/PacsList/PACS/@AETitle");
+
+            NodeList nodeList = XML.getMultipleNodes(document, "/PacsList/PACS");
             for (int n = 0; n < nodeList.getLength(); n++) {
-                String  aeTitle = nodeList.item(n).getNodeValue();
-                list.add(aeTitle);
+                Node node = nodeList.item(n);
+                String aeTitle = XML.getAttributeValue(node, "AETitle");
+                String host = XML.getAttributeValue(node, "Host");
+                String portText = XML.getAttributeValue(node, "Port");
+                list.add(new PACS(aeTitle, host, Integer.parseInt(portText)));
             }
         }
         catch (UMROException ex) {
@@ -361,7 +362,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         catch (ResourceException ex) {
             showMessage("Error requesting list of PACS from DICOM ReST server at " + ClientConfig.getInstance().getServerBaseUrl() + " .  It may be down. : " + ex.getMessage());
         }
-        list.add(NO_PACS);
+        list.add(new PACS(NO_PACS, "none", 0));
         return list;
     }
 
@@ -372,7 +373,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @return The list of PACS.  If there is a problem, a message
      * is shown and an empty list is returned.
      */
-    private ArrayList<String> getPacsList() {
+    private ArrayList<PACS> getPacsList() {
         String baseUrl = ClientConfig.getInstance().getServerBaseUrl();
 
         String url = baseUrl + "/pacs?media_type=" + MediaType.TEXT_XML.getName() + "&user_id=" + loginNameTextField.getText().trim();
@@ -445,8 +446,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         FontMetrics metrics = graphics.getFontMetrics(FONT_HUGE);
         int height = metrics.getHeight();
         int width = metrics.stringWidth(".");
-        for (String aet : pacsList) {
-            int w = metrics.stringWidth(aet);
+        for (PACS pacs : pacsList) {
+            int w = metrics.stringWidth(pacs.aeTitle);
             width = (w > width) ? w : width;
         }
 
@@ -492,26 +493,26 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         JLabel uploadLabel = new JLabel("Upload DICOM files to");
         uploadLabel.setFont(FONT_TINY);
         uploadLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
+
         JPanel southPanel = new JPanel();
-        
+
         uploadCountLabel = new JLabel("Upload Count: 0");
         uploadCountLabel.setToolTipText("<html>Total number of<br>files uploaded.</html>");
-        
-        
+
+
         koManifest = new JCheckBox("Manifest");
         koManifest.setToolTipText("<html>If checked, then send a manfest in the form of a DICOM<br>KO preceeding each series to allow the completeness<br>of the series to be verified.</html>");
         koManifest.setSelected(ClientConfig.getInstance().getKoManifestDefault());
-        
+
         southPanel.add(koManifest);
         southPanel.add(new JLabel("    "));
         southPanel.add(uploadCountLabel);
-        
+
         outerPanel.add(uploadLabel);
         outerPanel.add(panel);
         outerPanel.add(southPanel);
 
-        
+
         outerPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
 
         return outerPanel;
@@ -964,7 +965,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 frame.setTitle(WINDOW_NAME + "          User: " + loginNameTextField.getText());
             }
             currentPacs = pacsList.size() - 1;
-            pacsLabel.setText(pacsList.get(currentPacs));
+            pacsLabel.setText(pacsList.get(currentPacs).aeTitle);
             setPacsLabelSize();
         }
         /*
@@ -1009,14 +1010,17 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
 
         if (source.equals(uploadAllButton)) {
-            if (ensureAnonymizeDirectoryExists()) processAll(getMainContainer());
+            Series.processOk = true;
+            if (ensureAnonymizeDirectoryExists()) { 
+                processAll(getMainContainer());
+            }
         }
 
         if (source.equals(pacsNorth) || source.equals(pacsSouth)) {
             if (pacsList.size() > 1) {
                 int increment = source.equals(pacsNorth) ? -1 : 1;
                 currentPacs = (currentPacs + pacsList.size() + increment) % pacsList.size();
-                String pacs = pacsList.get(currentPacs);
+                String pacs = pacsList.get(currentPacs).aeTitle;
                 pacsLabel.setText(pacs);
                 setProcessedStatus();
             }
@@ -1049,6 +1053,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     }
 
+    public PACS getCurrentPacs() {
+        return pacsList.get(currentPacs);
+    }
 
     /**
      * Determine if the user has authenticated with the server.
@@ -1126,8 +1133,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
 
-    public void incrementUploadCount() {
-        uploadCount++;
+    public synchronized void incrementUploadCount(int size) {
+        uploadCount += size;
         uploadCountLabel.setText("Upload Count: " + uploadCount);
         Container container = uploadCountLabel.getParent();
         Graphics graphics = container.getGraphics();
@@ -1388,7 +1395,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             }            
         }
-        SwingUtilities.invokeLater(new Add(fileList));
+        (new Thread(new Add(fileList))).start();
     }
 
 
@@ -1507,8 +1514,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public static boolean getAggressivelyAnonymize() {
         return aggressivelyAnonymize;
     }
-    
-    
+
+
     public boolean getKoManifestPolicy() {
         return koManifest.isSelected();
     }
@@ -1627,14 +1634,24 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
             DicomClient dicomClient = getInstance();
             dicomClient.setupTrustStore();
-            for (String fileName : args) {
-                dicomClient.addDicomFile(new File(fileName), true);
-            }
 
             // If in command line mode, then anonymize all files and exit happily
             if (inCommandLineMode()) {
+                for (String fileName : args) {
+                    dicomClient.addDicomFile(new File(fileName), true);
+                }
+                Series.processOk = true;
                 processAll(dicomClient.headlessPanel);
                 System.exit(0);
+            }
+            else {
+                File[] fileList = new File[args.length];
+                int f = 0;
+                for (String fileName : args) {
+                    fileList[f] = new File(fileName);
+                    f++;
+                }
+                dicomClient.filesDropped(fileList);
             }
         }
         catch (Exception ex) {

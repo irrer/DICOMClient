@@ -754,16 +754,5 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
 
         return attributeList;
     }
-    
-    private AnonymizeAttribute getAnonymizeAttribute(AttributeTag tag) {
-        for (Component component : anonPanel.getComponents()) {
-            if (component instanceof AnonymizeAttribute) {
-                AnonymizeAttribute aa = (AnonymizeAttribute)component;
-                if (aa.getTag().equals(tag)) {
-                    return aa;
-                }
-            }
-        }
-        return null;
-    }
+
 }
