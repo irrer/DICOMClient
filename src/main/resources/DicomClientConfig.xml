@@ -18,7 +18,7 @@
 -->
 
     <!-- URL for the service. -->
-    <DicomServiceUrl>https://rolxdeploy1:8091</DicomServiceUrl>
+    <DicomServiceUrl>https://172.20.125.41:8091</DicomServiceUrl>  <!-- rolxdeploy1 Never use the name, because DNS often fails. -->
     <!-- <DicomServiceUrl>https://rolxdev1:8091</DicomServiceUrl> -->
     <!--<DicomServiceUrl>https://localhost:8091</DicomServiceUrl>  -->
     <!-- <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl> -->    <!-- irrer desktop -->
