@@ -20,6 +20,8 @@ target/
 !target/generated-sources/protoc/java/edu/umro/da_service
 !target/generated-sources/protoc/resources/
 
+bin/
+
 # Eclipse stuff
 .classpath
 .project
