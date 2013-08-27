@@ -245,9 +245,6 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
     /** List of instances of text matching the searched text. */
     private ArrayList<TextMatch> matchList = new ArrayList<TextMatch>();
 
-    /** Default ID */
-    private static final long serialVersionUID = 1L;
-
     /** Title of screen. */
     private static final String WINDOW_TITLE = "Anonymize Options";
 

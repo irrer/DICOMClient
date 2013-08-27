@@ -108,9 +108,6 @@ import edu.umro.util.General;
  */
 public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener, DocumentListener {
 
-    /** Default ID. */
-    private static final long serialVersionUID = 1L;
-
     /** The portion of a DICOM file that must be read to get the metadata required to get generatl information about it. */
     private static final int DICOM_METADATA_LENGTH = 4 * 1024;
 
@@ -1229,6 +1226,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private AttributeList readDicomFile(String fileName) {
         AttributeList attributeList = new AttributeList(); 
 
+        FileInputStream fis = null;
         try {
             if (inCommandLineMode()) {
                 // this does not show any annoying messages in the log
@@ -1237,7 +1235,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             else {
                 // The following is faster than <code>attributeList.read(fileName);</code>, as it only reads the first part of every DICOM file, but
                 // it also produces a lot of error messages because of the 'ragged end' of each file.
-                FileInputStream fis = new FileInputStream(new File(fileName));
+                fis = new FileInputStream(new File(fileName));
                 byte[] buffer = new byte[DICOM_METADATA_LENGTH];
                 DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(buffer, 0, fis.read(buffer)));
                 attributeList.read(dis);
@@ -1248,6 +1246,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             //     1: If reading a partial file, there will always be an exception
             //     2: The content is checked anyway
             Log.get().severe("Error reading DICOM file " + fileName + " : " + e);
+        }
+        finally {
+            if (fis != null) try {
+                fis.close();
+            }
+            catch (Exception e) {
+                Log.get().warning("Unable to close stream for file " + fileName);
+            }
         }
         return attributeList;
     }

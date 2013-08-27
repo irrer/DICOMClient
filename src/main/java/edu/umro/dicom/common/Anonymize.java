@@ -348,26 +348,6 @@ public class Anonymize {
     }
 
 
-    // TODO remove.  For Martha's test case only.
-    /*
-    private static void justChangeImageOrientationPatient(AttributeList attributeList) {
-        try {
-            Attribute iop = AttributeFactory.newAttribute(TagFromName.ImageOrientationPatient);
-            iop.addValue(1);
-            iop.addValue(0);
-            iop.addValue(0);
-            iop.addValue(0);
-            iop.addValue(1);
-            iop.addValue(0);
-            attributeList.put(iop);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-    */
-
     /**
      * Anonymize the given DICOM object.  Values are replaced with corresponding values
      * in the replacement list.  All UIDs are replaced with newly constructed ones, and
@@ -382,13 +362,20 @@ public class Anonymize {
      * @param replacementAttributeList List of values to be written into the attributeList.
      */
     public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList) {
-        //if (attributeList == null) {
             HashMap<String,String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
             anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList);
-        //}
-        //else {
-        //    justChangeImageOrientationPatient(attributeList);
-        //}
+            if (System.out == null) {   // TODO temporary - remove all but one entry in StructureSetROISequence
+                Attribute attr = attributeList.get(TagFromName.StructureSetROISequence);
+                if (attr != null) {
+                    System.out.println("Removing StructureSetROISequence");
+                    SequenceAttribute sa = (SequenceAttribute)attr;
+                    SequenceItem si = sa.getItem(0);
+                    attributeList.remove(TagFromName.StructureSetROISequence);
+                    sa = new SequenceAttribute(TagFromName.StructureSetROISequence);
+                    attributeList.put(sa);
+                    sa.addItem(si);
+                }
+            }
     }
 
 

@@ -71,6 +71,7 @@ import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.OtherByteAttribute;
 import com.pixelmed.dicom.OtherFloatAttribute;
 import com.pixelmed.dicom.OtherWordAttribute;
+import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.ValueRepresentation;
@@ -89,11 +90,11 @@ import edu.umro.util.Log;
  */
 public class Preview implements ActionListener, ChangeListener, DocumentListener, KeyListener {
 
-    /** Default id. */
-    private static final long serialVersionUID = 1L;
-
     /** Maximum line length for attributes of uncertain qualities. */
     private static final int MAX_LINE_LENGTH = 2 * 1000;
+
+    /** When there are multiple values to be displayed for a single attribute, they are separated by this string followed by a blank. */
+    private static final String VALUE_SEPARATOR = " | ";
 
     /** List of value representations that can be displayed as strings in the text version of the preview. */ 
     private static final byte[][] TEXTUAL_VR = {
@@ -818,94 +819,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     private void showImage() {
         try {
             BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
-
-            /** /
-            if (this != null) { // TODO remove
-                Attribute pd = attributeList.get(TagFromName.PixelData);
-                if ((pd != null) && (pd instanceof OtherWordAttribute)) {
-                    short[] sData = pd.getShortValues();
-
-                    int min = Integer.MAX_VALUE;
-                    int max = Integer.MIN_VALUE;
-
-                    for (int s = 0; s < sData.length; s++) {
-                        int pixel = sData[s] & 0xffff;
-                        min = (pixel < min) ? pixel : min;
-                        max = (pixel > max) ? pixel : max;
-                    }
-
-                    int width = attributeList.get(TagFromName.Columns).getIntegerValues()[0];
-                    int height = attributeList.get(TagFromName.Rows).getIntegerValues()[0];
-                    image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-                    //double threshold = min + ((max-min) * .1);
-
-                    double background = min + ((max-min) * .8);
-                    double target = min + ((max-min) * .2);
-                    int loColor = 85;
-                    //double m = (threshold - min) / 255.0;
-                    for (int h = 0; h < height; h++) {
-                        for (int w = 0; w < width; w++) {
-                            int loc = (h * width) + w;
-                            int pixel = sData[loc] & 0xffff;
-                            
-                            if (pixel > background) {
-                                double scale = (255.0-loColor) / (max - background);
-                                int p = (int)((pixel - background) * scale);
-                                if (p < loColor) p = loColor;  if (p > 255) p = 255;
-                                pixel = 255<<16; //p << 16;
-                            }
-                            else {
-                                if (pixel < target) {
-                                    double scale = (255.0-loColor) / (target - min);
-                                    int p = (int)((pixel - min) * scale);
-                                    if (p < loColor) p = loColor;  if (p > 255) p = 255;
-                                    pixel = 255; //p;
-                                }
-                                else {
-                                    double scale = (255.0-loColor) / (background - target);
-                                    int p = (int)((pixel - target) * scale);
-                                    if (p < loColor) p = loColor;  if (p > 255) p = 255;
-                                    pixel = 255<<8; // p << 8;
-                                }
-                            }
-
-                            image.setRGB(w, h, pixel);
-                        }
-                    }
-                }
-            }
-            if (this == null) {
-                int width = 400;
-                int height = 400;
-                image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-                double[] xdata = { 50, 100, 150, 200, 250, 300, 350 };
-                double[] ydata = { 80, 100, 150, 155, 250, 300, 300 };
-                org.opensourcephysics.numerics.CubicSpline spline = new org.opensourcephysics.numerics.CubicSpline(xdata, ydata);
-                for (int h = 0; h < height; h++) {
-                    for (int w = 0; w < width; w++) {
-                        image.setRGB(w, h, 255);
-                    }
-                }
-                int white = 0xffffff;
-                int red = 0xff0000;
-                double h = 0;
-                for (int w = 0; w < width; w++) {
-                    h = Math.round(spline.evaluate((double)w));
-                    if (h < 0) h = 0;
-                    if (h >= height) h = height-1;
-                    image.setRGB(w, (int)h, white);
-                }
-                for (int p = 0; p < xdata.length; p++) {
-                    for (int x = -1; x < 2; x++) {
-                        for (int y = -1; y < 2; y++) {
-                            int xx = (int)xdata[p] + x;
-                            int yy = (int)ydata[p] + y;
-                            image.setRGB(xx, yy, red);
-                        }
-                    }
-                }
-            }
-            /**/
+            
             float contrast = (float)contrastSlider.getValue() / (float)10.0;
             float offset = (float)brightnessSlider.getValue();
             RescaleOp rescale = new RescaleOp(contrast, offset, null);
@@ -1090,10 +1004,16 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                     String[] valueList = attribute.getStringValues();
 
                     if ((valueList != null) && (valueList.length > 0)) {
+                        boolean first = true;
                         for (String value : valueList) {
+                            if (first) first = false;
+                            else line.append(VALUE_SEPARATOR);
                             line.append(" " + value);
                             if (line.length() > MAX_LINE_LENGTH) {
                                 break;
+                            }
+                            if ((ValueRepresentation.isUniqueIdentifierVR(vr)) && (SOPClassDescriptions.getDescriptionFromUID(value).length() > 0)) {
+                                line.append(" (" + SOPClassDescriptions.getDescriptionFromUID(value) + ")");
                             }
                         }
                     }
@@ -1131,7 +1051,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
                     if ((!ok) && ((ValueRepresentation.isOtherFloatVR(vr) || (attribute instanceof OtherFloatAttribute)))) {
                         float[] floatValues = ((OtherFloatAttribute)attribute).getFloatValues();
+                        boolean first = true;
                         for (float f : floatValues) {
+                            if (first) first = false;
+                            else line.append(VALUE_SEPARATOR);
                             line.append(" " + f);
                             if (line.length() > MAX_LINE_LENGTH) {
                                 break;
@@ -1334,108 +1257,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             attributeList = new AttributeList();
             try {
                 attributeList.read(fileName);
-                /* * /
-                { // TODO remove
-                    try {
-                        Attribute pd = attributeList.get(TagFromName.PixelData);
-                        if ((pd != null) && (pd instanceof OtherWordAttribute)) {
-                            OtherWordAttribute owa = (OtherWordAttribute)pd;
-                            short[] sData = pd.getShortValues();
-
-                            if (imageRadioButton.isSelected()) {
-                                Attribute rescaleIntercept = attributeList.get(TagFromName.RescaleIntercept);
-                                Attribute rescaleSlope = attributeList.get(TagFromName.RescaleSlope);
-
-                                rescaleIntercept.removeValues();
-                                rescaleIntercept.addValue("-32768");
-
-                                rescaleSlope.removeValues();
-                                rescaleSlope.addValue("1.0");
-                            }
-
-                            int min = Integer.MAX_VALUE;
-                            int max = Integer.MIN_VALUE;
-
-                            for (int s = 0; s < sData.length; s++) {
-                                int pixel = sData[s] & 0xffff;
-                                min = (pixel < min) ? pixel : min;
-                                max = (pixel > max) ? pixel : max;
-                            }
-
-                            TreeMap<Integer, ArrayList<Integer>> lowList = new TreeMap<Integer, ArrayList<Integer>>();
-                            for (int s = 0; s < sData.length; s++) {
-                                int pixel = sData[s] & 0xffff;
-                                min = (pixel < min) ? pixel : min;
-                                max = (pixel > max) ? pixel : max;
-
-                                ArrayList<Integer> entry = lowList.get(pixel);
-                                if (entry == null) {
-                                    entry = new ArrayList<Integer>();
-                                    lowList.put(pixel, entry);
-                                }
-                                entry.add(s);
-                            }
-
-                            double lTotal = 0;
-                            for (Integer l : lowList.keySet()) {
-                                lTotal += lowList.get(l).size();
-                                double pct = (lTotal / sData.length) * 100.0;
-                                if (pct > -1) {
-                                    System.out.println(String.format("  pct: %8.4f  %5d %5d", pct, l, lowList.get(l).size()));
-                                }
-                            }
-                            System.out.println();
-
-                            System.out.println("min: " + min + "    max: " + max + "    range: " + ((max - min) + 1));
-                            {
-                                long xTotal = 0;
-                                long yTotal = 0;
-                                int col = attributeList.get(TagFromName.Columns).getIntegerValues()[0];
-                                int row = attributeList.get(TagFromName.Rows).getIntegerValues()[0];
-                                int size = 0;
-                                System.out.println("----"); for (Integer k : lowList.keySet()) System.out.print("    " + k + "," + lowList.get(k).size()); System.out.println("\n----");
-                                int half = (int)((max - min) * .9) + min;
-                                System.out.println("min: " + min + "    half: " + half + "    max: " + max);
-                                for (Integer k : lowList.keySet()) {
-                                    if (k <= half) {
-                                        ArrayList<Integer> list = lowList.get(k);
-                                        for (int v : list) {
-                                            int y = v / col;
-                                            int x = v - (y*col);
-                                            xTotal += x;
-                                            yTotal += y;
-                                            //sData[v] = (short)max;
-                                            size++;
-                                        }
-                                    }
-                                }
-                                xTotal /= size;
-                                yTotal /= size;
-                                System.out.println("col: " + col + "    row: " + row + "    Center: " + xTotal + "  " + yTotal);
-
-                                if (false) {
-                                    for (int c = 0; c < col; c++) {
-                                        long x = (yTotal * col) + c;
-                                        sData[(int)x] = (short)(((c%2) == 1) ? min : max-1);
-                                    }
-
-                                    for (int r = 0; r < row; r++) {
-                                        long x = xTotal + (col * + r);
-                                        sData[(int)x] = (short)(((r%2) == 1) ? min : max-8);
-                                    }
-                                }
-                            }
-
-                            owa.setValues(sData);
-                            //fos.write(data);
-                            //fos.close();
-                            //System.out.println("Wrote " + data.length + " bytes to file " + file.getAbsolutePath());
-                        }
-                    }
-                    catch (Exception e) { e.printStackTrace(); }
-                }
-                /**/
-
                 AnonymizeGUI.getInstance().updateTagList(attributeList);
                 sliceSlider.setValue(sliceNumber);
                 showDicom();
