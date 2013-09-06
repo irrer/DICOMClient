@@ -719,7 +719,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
     private void saveTextAndXmlAndImageFiles(AttributeList attributeList, File file) {
         if (DicomClient.inCommandLineMode()) {
             StringBuffer text = new StringBuffer();
-            DicomClient.getInstance().getPreview().addTextAttributes(attributeList, text, 0);
+            DicomClient.getInstance().getPreview().addTextAttributes(attributeList, text, 0, null);
             String fileName = file.getName();
             String textFileName = null;
             String imageFileName = null;
@@ -1064,7 +1064,23 @@ public class Series extends JPanel implements ActionListener, Runnable {
     }
 
 
+    /**
+     * Get the title to be displayed on the preview window.
+     * 
+     * @param sliceNumber Current slice being displayed.
+     * 
+     * @return Orienting description of preview.
+     */
     public String getPreviewTitle(int sliceNumber) {
+        return getDescription() + "   " + sliceNumber + " / " + instanceList.size();
+    }
+    
+    /**
+     * Get a description of this series.
+     * 
+     * @return A description of this series.
+     */
+    public String getDescription() {
         StringBuffer title = new StringBuffer();
 
         title.append((patientID         == null) ? "" : "  " + patientID);
@@ -1072,7 +1088,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         title.append((seriesNumber      == null) ? "" : "  " + seriesNumber);
         title.append((modality          == null) ? "" : "  " + modality);
         title.append((seriesDescription == null) ? "" : "  " + seriesDescription);
-        title.append("   " + sliceNumber + " / " + instanceList.size());
         return title.toString();
     }
 

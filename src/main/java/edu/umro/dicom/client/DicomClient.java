@@ -129,6 +129,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public static final Font FONT_MEDIUM = new Font("SansSerif", Font.PLAIN, 12);
 
     /** Large font that makes things stand out. */
+    public static final Font FONT_LARGE = new Font("SansSerif", Font.PLAIN, 18);
+
+    /** Large font that makes things stand out. */
     public static final Font FONT_HUGE = new Font("SansSerif", Font.PLAIN, 30);
 
     /** Italicized version of huge font. */
@@ -1335,7 +1338,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
             // We have a valid DICOM file, so use its directory in determining where to put files.
             File parent = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
-            File anonymizedDirectory = new File(file.isDirectory() ? file : parent, "anonymized");
+            File anonymizedDirectory = new File(file.isDirectory() ? file : parent, "output");
 
             if (anonymizeDestination == null) {
                 anonymizeDestination = anonymizedDirectory;

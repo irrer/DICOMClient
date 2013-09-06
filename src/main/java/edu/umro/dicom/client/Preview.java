@@ -30,12 +30,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.concurrent.Semaphore;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -81,47 +85,32 @@ import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
 /**
- * Preview a DICOM file as either text or image, though only image type
- * files can be display as an image, and the previewer will automatically
- * switch to text mode for them.
+ * Preview a DICOM file as either text or image, though only image type files
+ * can be display as an image, and the previewer will automatically switch to
+ * text mode for them.
  * 
- * @author Jim Irrer  irrer@umich.edu 
- *
+ * @author Jim Irrer irrer@umich.edu
+ * 
  */
-public class Preview implements ActionListener, ChangeListener, DocumentListener, KeyListener {
+public class Preview implements ActionListener, ChangeListener, DocumentListener, KeyListener, MouseListener {
 
     /** Maximum line length for attributes of uncertain qualities. */
     private static final int MAX_LINE_LENGTH = 2 * 1000;
 
-    /** When there are multiple values to be displayed for a single attribute, they are separated by this string followed by a blank. */
+    /**
+     * When there are multiple values to be displayed for a single attribute,
+     * they are separated by this string followed by a blank.
+     */
     private static final String VALUE_SEPARATOR = " | ";
 
-    /** List of value representations that can be displayed as strings in the text version of the preview. */ 
-    private static final byte[][] TEXTUAL_VR = {
-        ValueRepresentation.AE,
-        ValueRepresentation.AS,
-        ValueRepresentation.CS,
-        ValueRepresentation.DA,
-        ValueRepresentation.DS,
-        ValueRepresentation.DT,
-        ValueRepresentation.FL,
-        ValueRepresentation.FD,
-        ValueRepresentation.IS,
-        ValueRepresentation.LO,
-        ValueRepresentation.LT,
-        ValueRepresentation.PN,
-        ValueRepresentation.SH,
-        ValueRepresentation.SL,
-        ValueRepresentation.SS,
-        ValueRepresentation.ST,
-        ValueRepresentation.TM,
-        ValueRepresentation.UI,
-        ValueRepresentation.UL,
-        ValueRepresentation.US,
-        ValueRepresentation.UT,
-        ValueRepresentation.XS,
-        ValueRepresentation.XO
-    };
+    /**
+     * List of value representations that can be displayed as strings in the
+     * text version of the preview.
+     */
+    private static final byte[][] TEXTUAL_VR = { ValueRepresentation.AE, ValueRepresentation.AS, ValueRepresentation.CS, ValueRepresentation.DA, ValueRepresentation.DS,
+            ValueRepresentation.DT, ValueRepresentation.FL, ValueRepresentation.FD, ValueRepresentation.IS, ValueRepresentation.LO, ValueRepresentation.LT, ValueRepresentation.PN,
+            ValueRepresentation.SH, ValueRepresentation.SL, ValueRepresentation.SS, ValueRepresentation.ST, ValueRepresentation.TM, ValueRepresentation.UI, ValueRepresentation.UL,
+            ValueRepresentation.US, ValueRepresentation.UT, ValueRepresentation.XS, ValueRepresentation.XO };
 
     /** A quickly searchable list of value representations. */
     private static HashSet<String> vrSet = new HashSet<String>();
@@ -131,20 +120,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-    /** List of value representations that may contain characters (such as null) that are invalid for XML. */ 
-    private static final byte[][] STRING_VR = {
-        ValueRepresentation.AS,
-        ValueRepresentation.CS,
-        ValueRepresentation.DS,
-        ValueRepresentation.IS,
-        ValueRepresentation.LO,
-        ValueRepresentation.LT,
-        ValueRepresentation.OF,
-        ValueRepresentation.OW,
-        ValueRepresentation.SH,
-        ValueRepresentation.ST,
-        ValueRepresentation.UT
-    };
+    /**
+     * List of value representations that may contain characters (such as null)
+     * that are invalid for XML.
+     */
+    private static final byte[][] STRING_VR = { ValueRepresentation.AS, ValueRepresentation.CS, ValueRepresentation.DS, ValueRepresentation.IS, ValueRepresentation.LO,
+            ValueRepresentation.LT, ValueRepresentation.OF, ValueRepresentation.OW, ValueRepresentation.SH, ValueRepresentation.ST, ValueRepresentation.UT };
 
     /** A quickly searchable list of value representations. */
     private static HashSet<String> stringSet = new HashSet<String>();
@@ -154,12 +135,14 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-
     /** Preferred size of screen. */
     private static final Dimension PREFERRED_SIZE = new Dimension(610, 830);
 
     /** Color to indicate text that matches search pattern. */
     private static final Color TEXT_MATCH_COLOR = new Color(255, 255, 150);
+
+    /** Color to indicate text being edited. */
+    private static final Color TEXT_EDIT_COLOR = new Color(210, 210, 210);
 
     /** Color to indicate text that matches search pattern. */
     private static final Color TEXT_CURRENT_MATCH_COLOR = new Color(255, 150, 50);
@@ -194,10 +177,13 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /** The series currently being displayed. */
     private Series series = null;
 
+    /** The full path name of the file being displayed. */
+    private String fileName = null;
+
     /** Panel that switches back and forth between image and text viewing modes. */
     private JPanel cardPanel = null;
 
-    /** Layout that switches back and forth between image and text viewing modes. */
+    /** Layout that switches back and forth between image and text viewing modes.*/
     private CardLayout cardLayout = null;
 
     /** Label at top of screen that shows the current file name. */
@@ -212,7 +198,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /** Contains the image describing the series. */
     private ScalableJLabel imagePreview = null;
 
-    /** Button to close the window.  The window is only made non-visible. */
+    /** Button to close the window. The window is only made non-visible. */
     private JButton closeButton = null;
 
     /** Scroll pane containing DICOM text. */
@@ -251,10 +237,19 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /** Button to reset the contrast and brightness controls. */
     private JButton resetButton = null;
 
+    /** Button to edit. */
+    private JButton editButton = null;
+
+    /** For editing files */
+    private EditGui editGui = null;
+    
     /** Label used to display the number of strings matching the search text. */
     private JLabel matchCountLabel = null;
 
-    /** Index indicating which matched string is currently displayed via the scroll bar. */
+    /**
+     * Index indicating which matched string is currently displayed via the
+     * scroll bar.
+     */
     private int matchIndex = 0;
 
     /** Number of lines of text in text display. */
@@ -266,49 +261,64 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /** Representation of currently selected series for viewing. */
     private AttributeList attributeList = null;
 
-    /** Previous value of contrast slider.  This is a small optimization to
-     * avoid redraws if the same value is given consecutively.
+    /**
+     * Previous value of contrast slider. This is a small optimization to avoid
+     * redraws if the same value is given consecutively.
      */
     private int prevContrastValue = Integer.MAX_VALUE;
 
-    /** Previous value of brightness slider.  This is a small optimization to
+    /**
+     * Previous value of brightness slider. This is a small optimization to
      * avoid redraws if the same value is given consecutively.
      */
     private int prevBrightnessValue = Integer.MAX_VALUE;
 
-    /** Previous value of zoom slider.  This is a small optimization to
-     * avoid redraws if the same value is given consecutively.
+    /**
+     * Previous value of zoom slider. This is a small optimization to avoid
+     * redraws if the same value is given consecutively.
      */
     private int prevZoomValue = Integer.MAX_VALUE;
 
-    /** True if the GUI components need packing.  Packing happens only once. */
+    /** True if the GUI components need packing. Packing happens only once. */
     private static boolean needsPacking = true;
 
+    /**
+     * Lock to prevent events from firing another showDicom operation while
+     * already doing a showDicom.
+     */
+    private Semaphore showDicomInProgress = new Semaphore(1);
+    
 
+    /** Attribute that user has selected to edit. */
+    private Attribute attributeBeingEdited = null;
+    
+    /** Text position at start of <code>attributeBeingEdited</code>. */
+    private int attributeBeingEditedStart = 0;
 
+    
     /**
      * Custom text highlighter.
      * 
-     * @author Jim Irrer  irrer@umich.edu 
-     *
+     * @author Jim Irrer irrer@umich.edu
+     * 
      */
     class MatchHighlightPainter extends DefaultHighlighter.DefaultHighlightPainter {
         /**
          * Construct with the given color.
          * 
-         * @param color Text background color.
+         * @param color
+         *            Text background color.
          */
         public MatchHighlightPainter(Color color) {
             super(color);
         }
     }
 
-
     /**
      * The position of text that matches the search text.
      * 
-     * @author Jim Irrer  irrer@umich.edu 
-     *
+     * @author Jim Irrer irrer@umich.edu
+     * 
      */
     class TextMatch {
 
@@ -327,7 +337,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-
     /**
      * Build the northern (upper) portion of the GUI.
      * 
@@ -344,10 +353,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         return panel;
     }
 
-
     /**
-     * Build the text previewer GUI and
-     * add it to the card panel.
+     * Build the text previewer GUI and add it to the card panel.
      */
     private void buildTextPreview() {
         JPanel panel = new JPanel();
@@ -358,8 +365,9 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         textPreview.setEditable(false);
         textPreview.setCaret(new DefaultCaret());
         textPreview.addKeyListener(this);
+        textPreview.addMouseListener(this);
         int gap = 10;
-        textPreview.setBorder(BorderFactory.createEmptyBorder(gap/2, gap, gap/2, gap));
+        textPreview.setBorder(BorderFactory.createEmptyBorder(gap / 2, gap, gap / 2, gap));
         scrollPaneText = new JScrollPane(textPreview);
         scrollPaneText.setBorder(BorderFactory.createEmptyBorder());
 
@@ -382,6 +390,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         searchNext.addActionListener(this);
         searchNext.setToolTipText("<html>Next<br>match</html>");
 
+        editButton = new JButton("Edit...");
+        editButton.addActionListener(this);
+        editButton.setToolTipText("<html>Edit a slice<br>or series</html>");
+
         JPanel subPanel = new JPanel();
         subPanel.add(showDetails);
         subPanel.add(searchLabel);
@@ -395,6 +407,11 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         matchCountLabel.setFont(DicomClient.FONT_MEDIUM);
 
         subPanel.add(matchCountLabel);
+        
+        if (this == null) {   // TODO change to true when support for editing is ready
+            subPanel.add(new JLabel("             "));
+            subPanel.add(editButton);
+        }
 
         panel.add(scrollPaneText, BorderLayout.CENTER);
         panel.add(subPanel, BorderLayout.SOUTH);
@@ -402,10 +419,9 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         cardPanel.add(panel, TEXT_VIEW);
     }
 
-
     /**
-     * Build the image previewer portion of the GUI and
-     * add it to the card panel.
+     * Build the image previewer portion of the GUI and add it to the card
+     * panel.
      */
     private void buildImagePreview() {
         int gap = 10;
@@ -461,7 +477,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         resetButton.setToolTipText("<html>Reset the Contrast, Brightness,<br>and Zoom controls to their<br>original neutral settings.</html>");
         resetButton.addActionListener(this);
         resetButton.setMinimumSize(new Dimension(30, 24));
-        //resetButton.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
+        // resetButton.setBorder(BorderFactory.createEmptyBorder(10, 30, 10,
+        // 30));
         JPanel resetPanel = new JPanel();
         resetPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 20));
         resetPanel.add(resetButton);
@@ -516,9 +533,9 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         cardPanel.add(outerImagePanel, IMAGE_VIEW);
     }
 
-
     /**
      * Build the center portion of the GUI.
+     * 
      * @return The center portion of the GUI.
      */
     private JComponent buildCenter() {
@@ -531,7 +548,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         return cardPanel;
     }
-
 
     private JComponent buildSliceSliderPanel() {
         JPanel panel = new JPanel();
@@ -557,7 +573,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         return panel;
     }
 
-
     /**
      * Build the southern (lower) portion of the GUI.
      * 
@@ -567,7 +582,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         JPanel panel = new JPanel();
         int gap = 20;
         panel.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));
-
 
         closeButton = new JButton("Close");
         closeButton.addActionListener(this);
@@ -593,7 +607,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         panel.add(textRadioButton);
         textRadioButton.setSelected(false);
 
-
         JPanel outerPanel = new JPanel();
         outerPanel.setLayout(new BorderLayout());
 
@@ -603,11 +616,11 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         return outerPanel;
     }
 
-
     /**
      * Set the currently selected text to the given matching entry.
      * 
-     * @param index Entry on list that should be shown as currently selected.
+     * @param index
+     *            Entry on list that should be shown as currently selected.
      */
     private void setCurrentlySelectedMatch(int oldIndex, int newIndex) {
         if (matchList.size() > 0) {
@@ -619,26 +632,25 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                     TextMatch currentTextMatch = matchList.get(oldIndex);
                     highlighter.removeHighlight(currentTextMatch.highlighter);
                     MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_MATCH_COLOR);
-                    currentTextMatch.highlighter = highlighter.addHighlight(currentTextMatch.position, currentTextMatch.position+length, matchHighlightPainter);
+                    currentTextMatch.highlighter = highlighter.addHighlight(currentTextMatch.position, currentTextMatch.position + length, matchHighlightPainter);
                 }
                 if ((newIndex >= 0) && (newIndex < matchList.size())) {
                     TextMatch textMatch = matchList.get(newIndex);
                     highlighter.removeHighlight(textMatch.highlighter);
                     MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_CURRENT_MATCH_COLOR);
-                    textMatch.highlighter = highlighter.addHighlight(textMatch.position, textMatch.position+length, matchHighlightPainter);
+                    textMatch.highlighter = highlighter.addHighlight(textMatch.position, textMatch.position + length, matchHighlightPainter);
                     textPreview.setCaretPosition(textMatch.position);
                 }
             }
             catch (BadLocationException e) {
                 ;
             }
-            matchCountLabel.setText("  " + (matchIndex+1) + " of " + matchList.size());
+            matchCountLabel.setText("  " + (matchIndex + 1) + " of " + matchList.size());
         }
         else {
             matchCountLabel.setText("  0 of 0");
         }
     }
-
 
     /**
      * Go to the previous matching text field.
@@ -662,7 +674,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-
     /**
      * Go to the next matching text field.
      */
@@ -684,7 +695,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             setCurrentlySelectedMatch(oldMatchIndex, matchIndex);
         }
     }
-
 
     @Override
     public void actionPerformed(ActionEvent ev) {
@@ -715,14 +725,17 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
 
         if (ev.getSource().equals(showDetails)) {
-            showText();
+            showText(null);
+        }
+
+        if (ev.getSource().equals(editButton)) {
+            editGui = new EditGui(this);
         }
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
     }
-
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -743,11 +756,34 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-
     @Override
     public void keyReleased(KeyEvent e) {
     }
 
+    @Override
+    public void mousePressed(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (editGui != null) {
+            AttributeLocation attributeLocation = new AttributeLocation(this.series, new File(this.fileName), this.attributeList, textPreview.getCaretPosition());
+            showText(attributeLocation);
+            editGui.setAttributeLocation(attributeLocation);
+        }
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
 
     @Override
     public void stateChanged(ChangeEvent ev) {
@@ -772,38 +808,44 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-
     @Override
     public void insertUpdate(DocumentEvent ev) {
-        showText();
+        showText(null);
     }
-
 
     @Override
     public void removeUpdate(DocumentEvent ev) {
-        showText();
+        showText(null);
     }
-
 
     @Override
     public void changedUpdate(DocumentEvent ev) {
-        showText();
+        showText(null);
     }
-
 
     /**
      * Set the series to be previewed.
      * 
-     * @param series Series to be previewed.
+     * @param series
+     *            Series to be previewed.
      */
     public void setSeries(Series series) {
         sliceSlider.setMaximum(series.getFileNameList().size());
         DicomClient.getInstance().setProcessedStatus();
     }
-
+    
+    /**
+     * Get the current slice number.
+     * 
+     * @return The current slice number.
+     */
+    public int getCurrentSlice() {
+        return sliceSlider.getValue();
+    }
 
     /**
      * Get the currently previewed series.
+     * 
      * @return
      */
     public Series getPreviewedSeries() {
@@ -812,16 +854,15 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         return series;
     }
 
-
     /**
      * Display the current DICOM file as an image to the user.
      */
     private void showImage() {
         try {
             BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
-            
-            float contrast = (float)contrastSlider.getValue() / (float)10.0;
-            float offset = (float)brightnessSlider.getValue();
+
+            float contrast = (float) contrastSlider.getValue() / (float) 10.0;
+            float offset = (float) brightnessSlider.getValue();
             RescaleOp rescale = new RescaleOp(contrast, offset, null);
             BufferedImage transformedImage = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
             transformedImage = rescale.filter(image, transformedImage);
@@ -830,7 +871,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             float zoomFactor = 1f;
             if (zoomValue != 0) {
                 if (zoomValue > 0) {
-                    zoomFactor = 1f + (zoomValue/4f);
+                    zoomFactor = 1f + (zoomValue / 4f);
                 }
                 else {
                     zoomFactor = 4f / ((-zoomValue) + 4f);
@@ -848,16 +889,16 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             dialog.update(dialog.getGraphics());
         }
         catch (DicomException ex) {
-            showText();
+            showText(null);
             return;
         }
     }
 
-
     /**
      * Determine the prefix for the given indent level.
      * 
-     * @param indentLevel Degree of indentation.
+     * @param indentLevel
+     *            Degree of indentation.
      * 
      * @return String to shift text to the right.
      */
@@ -869,22 +910,29 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
         return text.toString();
     }
-
+    
 
     /**
-     * Add a single line of text to the text view.  If the text
-     * matches the current search text, then add its location
-     * to the list of matches.
+     * Add a single line of text to the text view. If the text matches the
+     * current search text, then add its location to the list of matches.
      * 
-     * @param text Text so far.
+     * @param text
+     *            Text so far.
      * 
-     * @param line New line to add.
+     * @param line
+     *            New line to add.
      * 
-     * @param searchText Search text - null if none.
+     * @param searchText
+     *            Search text - null if none.
      * 
-     * @param indentLevel Degree of indentation.
+     * @param indentLevel
+     *            Degree of indentation.
      */
-    private void addLine(StringBuffer text, String line, String searchText, int indentLevel) {
+    private void addLine(StringBuffer text, String line, String searchText, int indentLevel, AttributeLocation attributeLocation, Attribute attribute) {
+        if ((attribute != null) && (attributeLocation != null) && (!attributeLocation.isLocated())) {
+            attributeBeingEdited = attribute;
+            attributeBeingEditedStart = text.length();
+        }
         int length = searchText.length();
         line = indent(indentLevel) + line;
         if (length > 0) {
@@ -892,11 +940,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             String lowerCase = line.toString().toLowerCase();
 
             while ((position = lowerCase.indexOf(searchText, position)) >= 0) {
-                matchList.add(new TextMatch(numLines, text.length()+position));
+                matchList.add(new TextMatch(numLines, text.length() + position));
                 position += length;
             }
         }
         text.append(line + "\n");
+        if (attributeLocation != null) attributeLocation.setAttribute(text.length(), attribute);
         numLines++;
     }
 
@@ -913,16 +962,16 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             if (vr == null) {
                 vr = new byte[] { '?', '?' };
             }
-            String prefix = group + "," + element + " " + (char)vr[0] + (char)vr[1] + "  ";
+            String prefix = group + "," + element + " " + (char) vr[0] + (char) vr[1] + "  ";
             line = prefix + line;
         }
         return line;
     }
 
-
     /**
-     * Show a byte value as humanly readable as possible.  If it is a displayable
-     * ASCII character, then show that, otherwise show the hex value (as in 0xfe).
+     * Show a byte value as humanly readable as possible. If it is a displayable
+     * ASCII character, then show that, otherwise show the hex value (as in
+     * 0xfe).
      * 
      * @param i
      * 
@@ -930,27 +979,27 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      */
     private static String byteToHuman(int i) {
         i = i & 255;
-        return ((i >= 32) && (i <= 126)) ? ("" + (char)i) : ("0x" + Integer.toHexString(i&255));
+        return ((i >= 32) && (i <= 126)) ? ("" + (char) i) : ("0x" + Integer.toHexString(i & 255));
     }
 
-
+    /*
     public static AttributeList replaceNullsWithBlanks(AttributeList attributeList) throws IOException, DicomException {
 
         attributeList = Util.cloneAttributeList(attributeList);
 
         Iterator<?> i = attributeList.values().iterator();
         while (i.hasNext()) {
-            Attribute attribute = (Attribute)i.next();
+            Attribute attribute = (Attribute) i.next();
             if (attribute instanceof SequenceAttribute) {
-                Iterator<?> si = ((SequenceAttribute)attribute).iterator();
+                Iterator<?> si = ((SequenceAttribute) attribute).iterator();
                 while (si.hasNext()) {
-                    SequenceItem item = (SequenceItem)si.next();
+                    SequenceItem item = (SequenceItem) si.next();
                     replaceNullsWithBlanks(item.getAttributeList());
                 }
             }
             else {
                 AttributeTag tag = attribute.getTag();
-                byte [] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
+                byte[] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
                 if ((vr != null) && stringSet.contains(new String(vr))) {
                     try {
                         String[] valueList = attribute.getStringValues();
@@ -978,15 +1027,13 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
         return attributeList;
     }
-
-
-
-
+    */
 
     /**
      * Convert a single non-sequence attribute to a human readable text format.
      * 
-     * @param attribute Attribute to format.
+     * @param attribute
+     *            Attribute to format.
      * 
      * @return String version of attribute.
      */
@@ -994,7 +1041,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         AttributeTag tag = attribute.getTag();
         StringBuffer line = new StringBuffer();
         boolean ok = false;
-        byte [] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
+        byte[] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
         if (vr == null) {
             vr = attribute.getVR();
         }
@@ -1006,8 +1053,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                     if ((valueList != null) && (valueList.length > 0)) {
                         boolean first = true;
                         for (String value : valueList) {
-                            if (first) first = false;
-                            else line.append(VALUE_SEPARATOR);
+                            if (first)
+                                first = false;
+                            else
+                                line.append(VALUE_SEPARATOR);
                             line.append(" " + value);
                             if (line.length() > MAX_LINE_LENGTH) {
                                 break;
@@ -1020,8 +1069,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                     ok = true;
                 }
                 else {
-                    if ((!ok) &&  (ValueRepresentation.isAttributeTagVR(vr))) {
-                        AttributeTag[] atList = ((AttributeTagAttribute)attribute).getAttributeTagValues();
+                    if ((!ok) && (ValueRepresentation.isAttributeTagVR(vr))) {
+                        AttributeTag[] atList = ((AttributeTagAttribute) attribute).getAttributeTagValues();
                         for (AttributeTag t : atList) {
                             line.append("  " + t);
                             if (CustomDictionary.getInstance().getNameFromTag(t) == null) {
@@ -1037,8 +1086,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                         ok = true;
                     }
 
-                    if ((!ok) &&  ((ValueRepresentation.isOtherByteVR(vr)) || (attribute instanceof OtherByteAttribute))) {
-                        byte[] outData = ((OtherByteAttribute)attribute).getByteValues();
+                    if ((!ok) && ((ValueRepresentation.isOtherByteVR(vr)) || (attribute instanceof OtherByteAttribute))) {
+                        byte[] outData = ((OtherByteAttribute) attribute).getByteValues();
 
                         for (int b = 0; b < outData.length; b++) {
                             line.append(" " + byteToHuman(outData[b]));
@@ -1050,11 +1099,13 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                     }
 
                     if ((!ok) && ((ValueRepresentation.isOtherFloatVR(vr) || (attribute instanceof OtherFloatAttribute)))) {
-                        float[] floatValues = ((OtherFloatAttribute)attribute).getFloatValues();
+                        float[] floatValues = ((OtherFloatAttribute) attribute).getFloatValues();
                         boolean first = true;
                         for (float f : floatValues) {
-                            if (first) first = false;
-                            else line.append(VALUE_SEPARATOR);
+                            if (first)
+                                first = false;
+                            else
+                                line.append(VALUE_SEPARATOR);
                             line.append(" " + f);
                             if (line.length() > MAX_LINE_LENGTH) {
                                 break;
@@ -1063,8 +1114,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                         ok = true;
                     }
 
-                    if ((!ok) &&  ((attribute instanceof OtherWordAttribute) || (ValueRepresentation.isOtherWordVR(vr)))) {
-                        short[] outData = ((OtherWordAttribute)attribute).getShortValues();
+                    if ((!ok) && ((attribute instanceof OtherWordAttribute) || (ValueRepresentation.isOtherWordVR(vr)))) {
+                        short[] outData = ((OtherWordAttribute) attribute).getShortValues();
 
                         for (int b = 0; b < outData.length; b++) {
                             line.append(" " + byteToHuman((outData[b] & 0xffff) >> 8) + " " + byteToHuman(outData[b] & 0xff));
@@ -1099,64 +1150,93 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         return addDetails(tag, vr, tagName + " :" + line.toString());
     }
 
-
     /**
-     * Add the list of attributes to the given text.  This method is called
+     * Add the list of attributes to the given text. This method is called
      * recursively to support DICOM attributes that are defined as a tree.
      * 
-     * @param attributeList List of attributes to add.
+     * @param attributeList
+     *            List of attributes to add.
      * 
-     * @param text Existing text to append to.
+     * @param text
+     *            Existing text to append to.
      * 
-     * @param dicomDictionary DICOM dictionary to use.
+     * @param dicomDictionary
+     *            DICOM dictionary to use.
      * 
-     * @param indentLevel Indicates the depth of recursion and drives the
-     * amount of whitespace prepended to each line.
+     * @param indentLevel
+     *            Indicates the depth of recursion and drives the amount of
+     *            whitespace prepended to each line.
      */
-    public void addTextAttributes(AttributeList attributeList, StringBuffer text, int indentLevel) {
+    public void addTextAttributes(AttributeList attributeList, StringBuffer text, int indentLevel, AttributeLocation attributeLocation) {
         String searchText = searchField.getText().toLowerCase();
 
         Iterator<?> i = attributeList.values().iterator();
         while (i.hasNext()) {
-            Attribute attribute = (Attribute)i.next();
+            Attribute attribute = (Attribute) i.next();
             if (attribute instanceof SequenceAttribute) {
                 AttributeTag tag = attribute.getTag();
                 String line = CustomDictionary.getInstance().getNameFromTag(tag) + " : ";
                 line = addDetails(tag, CustomDictionary.getInstance().getValueRepresentationFromTag(tag), line);
-                addLine(text, line, searchText, indentLevel);
+                addLine(text, line, searchText, indentLevel, attributeLocation, attribute);
                 numLines++;
-                Iterator<?> si = ((SequenceAttribute)attribute).iterator();
+                Iterator<?> si = ((SequenceAttribute) attribute).iterator();
                 int itemNumber = 1;
                 while (si.hasNext()) {
-                    SequenceItem item = (SequenceItem)si.next();
-                    addLine(text, "Item: " + itemNumber + " / " + ((SequenceAttribute)attribute).getNumberOfItems(), searchText, indentLevel+1);
-                    addTextAttributes(item.getAttributeList(), text, indentLevel+2);
+                    if ((attributeLocation != null) && (!attributeLocation.isLocated())) attributeLocation.addParent(attribute, itemNumber - 1);
+                    SequenceItem item = (SequenceItem) si.next();
+                    addLine(text, "Item: " + itemNumber + " / " + ((SequenceAttribute) attribute).getNumberOfItems(), searchText, indentLevel + 1, attributeLocation, null);
+                    addTextAttributes(item.getAttributeList(), text, indentLevel + 2, attributeLocation);
+                    if ((attributeLocation != null) && (!attributeLocation.isLocated())) attributeLocation.removeParent();
                     itemNumber++;
                 }
             }
             else {
-                addLine(text, getAttributeAsText(attribute), searchText, indentLevel);
+                addLine(text, getAttributeAsText(attribute), searchText, indentLevel, attributeLocation, attribute);
             }
         }
     }
+    
+    
+    /**
+     * Perform edits on attribute list if there are any edits.
+     * 
+     * @param attributeList Source list.
+     * 
+     * @return Modified list.
+     */
+    private AttributeList performEdits(AttributeList attributeList) {
+        AttributeList atList = attributeList;
+        if (editGui != null) {
+            try {
+                atList = Util.cloneAttributeList(attributeList);
+                editGui.performEdits(atList);
+            }
+            catch (Exception e) {
+                atList = attributeList;
+            }
+        }
 
+        return atList;
+    }
 
     /**
      * Display the current DICOM file as text to the user.
      */
-    private void showText() {
+    private void showText(AttributeLocation attributeLocation) {
         if (attributeList == null) return;
-        StringBuffer text = new StringBuffer();
         matchCountLabel.setText("  0 of 0");
         int oldMatchListSize = matchList.size();
         int oldMatchIndex = matchIndex;
         matchIndex = 0;
         matchList = new ArrayList<TextMatch>();
+        attributeBeingEdited = null;
         numLines = 0;
         int scrollPosition = scrollPaneText.getVerticalScrollBar().getValue();
         int caretPosition = textPreview.getCaretPosition();
 
-        addTextAttributes(attributeList, text, 0);
+        StringBuffer text = new StringBuffer();
+        addTextAttributes(performEdits(attributeList), text, 0, attributeLocation);
+        if (attributeLocation != null) Log.get().info("Selected for edit:\n" + attributeLocation.toString() + "\n");
         textPreview.setText(text.toString());
 
         if ((scrollPosition >= scrollPaneText.getVerticalScrollBar().getMinimum()) && (scrollPosition <= scrollPaneText.getVerticalScrollBar().getMaximum())) {
@@ -1181,11 +1261,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_MATCH_COLOR);
             try {
                 for (TextMatch textMatch : matchList) {
-                    textMatch.highlighter = highlighter.addHighlight(textMatch.position, textMatch.position+length, matchHighlightPainter);
+                    textMatch.highlighter = highlighter.addHighlight(textMatch.position, textMatch.position + length, matchHighlightPainter);
                 }
             }
             catch (BadLocationException e) {
-                ;
             }
 
             if (oldMatchListSize == matchList.size()) {
@@ -1196,8 +1275,18 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             }
             setCurrentlySelectedMatch(oldMatchIndex, matchIndex);
         }
+        // highlight the attribute being edited
+        if (attributeBeingEdited != null) {
+            MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_EDIT_COLOR);
+            try {
+                int len = textPreview.getText().substring(attributeBeingEditedStart).indexOf('\n');
+                highlighter.addHighlight(attributeBeingEditedStart, attributeBeingEditedStart + len, matchHighlightPainter);
+            }
+            catch (BadLocationException e) {
+            }
+        }
 
-        cardLayout.show(cardPanel, TEXT_VIEW);  
+        cardLayout.show(cardPanel, TEXT_VIEW);
     }
 
     /**
@@ -1217,17 +1306,16 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     }
 
     /**
-     * Show the current DICOM file to the user in either image
-     * or text mode, which ever was requested.  If image mode
-     * is requested but is not possible, then automatically
-     * switch to text mode.
+     * Show the current DICOM file to the user in either image or text mode,
+     * which ever was requested. If image mode is requested but is not possible,
+     * then automatically switch to text mode.
      */
-    private void showDicom() {
+    public void showDicom() {
         if (imageRadioButton.isSelected()) {
             showImage();
         }
         else {
-            showText();
+            showText(null);
         }
         if (needsPacking) {
             dialog.pack();
@@ -1238,39 +1326,47 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-
     /**
      * Select the given DICOM file and show it to the user.
      * 
-     * @param title Title for window.
+     * @param title
+     *            Title for window.
      * 
-     * @param fileName Name of DICOM file.
+     * @param fileName
+     *            Name of DICOM file.
      */
     public void showDicom(Series series, String title, int sliceNumber, int maxSlice, String fileName) {
         if (!DicomClient.inCommandLineMode()) {
-            this.series = series;
-            sliceSlider.setMaximum(maxSlice);
-            DicomClient.getInstance().setProcessedStatus();
+            if (showDicomInProgress.tryAcquire()) {
+                try {
+                    this.series = series;
+                    this.fileName = fileName;
+                    sliceSlider.setMaximum(maxSlice);
+                    DicomClient.getInstance().setProcessedStatus();
 
-            fileNameLabel.setText(fileName);
-            dialog.setTitle(TITLE_PREFIX + "  " + title);
-            attributeList = new AttributeList();
-            try {
-                attributeList.read(fileName);
-                AnonymizeGUI.getInstance().updateTagList(attributeList);
-                sliceSlider.setValue(sliceNumber);
-                showDicom();
+                    fileNameLabel.setText(fileName);
+                    dialog.setTitle(TITLE_PREFIX + "  " + title);
+                    attributeList = new AttributeList();
+                    try {
+                        attributeList.read(fileName);
+                        AnonymizeGUI.getInstance().updateTagList(attributeList);
+                        sliceSlider.setValue(sliceNumber);
+                        showDicom();
+                    }
+                    catch (DicomException ex) {
+                        DicomClient.getInstance().showMessage("Unable to interpret file " + fileName + " as DICOM: " + ex.getMessage());
+                    }
+                    catch (IOException ex) {
+                        DicomClient.getInstance().showMessage("Unable to read file " + fileName + " : " + ex.getMessage());
+                    }
+                    DicomClient.getInstance().setProcessedStatus();
+                }
+                finally {
+                    showDicomInProgress.release();
+                }
             }
-            catch (DicomException ex) {
-                DicomClient.getInstance().showMessage("Unable to interpret file " + fileName + " as DICOM: " + ex.getMessage());
-            }
-            catch (IOException ex) {
-                DicomClient.getInstance().showMessage("Unable to read file " + fileName + " : " + ex.getMessage());
-            }
-            DicomClient.getInstance().setProcessedStatus();
         }
     }
-
 
     /**
      * Build the GUI for previewing DICOM files.
@@ -1300,4 +1396,5 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             dialog.pack();
         }
     }
+
 }
