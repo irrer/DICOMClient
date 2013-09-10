@@ -362,23 +362,26 @@ public class Anonymize {
      * @param replacementAttributeList List of values to be written into the attributeList.
      */
     public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList) {
-            HashMap<String,String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
-            anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList);
-            if (System.out == null) {   // TODO temporary - remove all but one entry in StructureSetROISequence
-                Attribute attr = attributeList.get(TagFromName.StructureSetROISequence);
-                if (attr != null) {
-                    System.out.println("Removing StructureSetROISequence");
-                    SequenceAttribute sa = (SequenceAttribute)attr;
-                    SequenceItem si = sa.getItem(0);
-                    attributeList.remove(TagFromName.StructureSetROISequence);
-                    sa = new SequenceAttribute(TagFromName.StructureSetROISequence);
-                    attributeList.put(sa);
-                    sa.addItem(si);
-                }
+        HashMap<String, String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
+        anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList);
+
+        // TODO temporary - remove all but one entry in StructureSetROISequence
+        if (System.out == null) {
+            Attribute attr = attributeList.get(TagFromName.StructureSetROISequence);
+            if (attr != null) {
+                System.out.println("Removing StructureSetROISequence");
+                SequenceAttribute sa = (SequenceAttribute) attr;
+                SequenceItem si = sa.getItem(0);
+                attributeList.remove(TagFromName.StructureSetROISequence);
+                sa = new SequenceAttribute(TagFromName.StructureSetROISequence);
+                attributeList.put(sa);
+                sa.addItem(si);
             }
+        }
+
     }
 
-
+    
     /**
      * For testing only.
      * 

@@ -112,7 +112,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private static final int DICOM_METADATA_LENGTH = 4 * 1024;
 
     /** Name that appears in title bar of window. */
-    private static final String WINDOW_NAME = "DICOM Utility";
+    public static final String PROJECT_NAME = "DICOM+";
 
     /** String indicating that no PACS were available for uploading to.  If the DICOM service fails
      * to provide a list of PACS, then this is shown and the user is not permitted to upload files.
@@ -892,7 +892,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
         else {
             frame = new JFrame();
-            frame.setTitle(WINDOW_NAME);
+            frame.setTitle(PROJECT_NAME);
 
             if (OpSys.getOpSysId() == OpSys.OpSysId.WINDOWS) {
                 try {
@@ -962,7 +962,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         if (pacsList != null) {
             loginPacsCardLayout.show(loginPacsPanel, CARD_PACS);
             if (!inCommandLineMode()) {
-                frame.setTitle(WINDOW_NAME + "          User: " + loginNameTextField.getText());
+                frame.setTitle(PROJECT_NAME + "          User: " + loginNameTextField.getText());
             }
             currentPacs = pacsList.size() - 1;
             pacsLabel.setText(pacsList.get(currentPacs).aeTitle);
@@ -1003,6 +1003,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
             resetAnonymizeDestination();
             patientList = new TreeMap<String, Patient>();
+            messageTextArea.setText("");
         }
 
         if (source.equals(helpButton)) {

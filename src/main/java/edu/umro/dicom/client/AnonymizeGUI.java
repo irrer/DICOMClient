@@ -629,7 +629,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
      * @param attributeList List containing potentially new tags.
      */
     @SuppressWarnings("unchecked")
-    public void updateTagList(AttributeList attributeList) {
+    public synchronized void updateTagList(AttributeList attributeList) {
         AttributeList newAttributeList = new AttributeList();
 
         for (Object oAttr : attributeList.values()) {

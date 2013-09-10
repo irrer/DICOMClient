@@ -58,37 +58,36 @@ import edu.umro.util.Log;
 import edu.umro.util.UMROException;
 import edu.umro.util.Utility;
 import edu.umro.util.XML;
+
 /*
-import org.restlet.Client;
-import org.restlet.Request;
-import org.restlet.Response;
-import org.restlet.data.MediaType;
-import org.restlet.data.Method;
-import java.io.FileInputStream;
-import java.util.Set;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import org.restlet.data.Protocol;
-import org.restlet.data.Reference;
-import org.restlet.data.Status;
-import org.restlet.representation.InputRepresentation;
-import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import com.pixelmed.dicom.DicomInputStream;
-import com.pixelmed.dicom.TransferSyntax;
-import com.pixelmed.dicom.DicomOutputStream;
-import com.pixelmed.dicom.AttributeTag;
+ import org.restlet.Client;
+ import org.restlet.Request;
+ import org.restlet.Response;
+ import org.restlet.data.MediaType;
+ import org.restlet.data.Method;
+ import java.io.FileInputStream;
+ import java.util.Set;
+ import java.io.FileNotFoundException;
+ import java.io.InputStream;
+ import org.restlet.data.Protocol;
+ import org.restlet.data.Reference;
+ import org.restlet.data.Status;
+ import org.restlet.representation.InputRepresentation;
+ import org.restlet.representation.Representation;
+ import org.restlet.resource.ResourceException;
+ import java.io.ByteArrayInputStream;
+ import java.io.ByteArrayOutputStream;
+ import com.pixelmed.dicom.DicomInputStream;
+ import com.pixelmed.dicom.TransferSyntax;
+ import com.pixelmed.dicom.DicomOutputStream;
+ import com.pixelmed.dicom.AttributeTag;
  */
-
-
 
 /**
  * Represent a DICOM series.
  * 
- * @author Jim Irrer  irrer@umich.edu
- *
+ * @author Jim Irrer irrer@umich.edu
+ * 
  */
 
 public class Series extends JPanel implements ActionListener, Runnable {
@@ -138,13 +137,13 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     private static volatile Semaphore processLock = new Semaphore(1);
 
-    /** The next two sets of DICOM values are dates and times.  Frequently,
-     * a DICOM file is generated with one or another date or time field
-     * filled in, but others left vacant.  To get some date and time to
-     * show to the user, several are examined to see if they are present
-     * in the hope that at least one of them is.  This situation is not
-     * ideal (all DICOM files should always have a minimal set of values),
-     * but vendors will do what they will.
+    /**
+     * The next two sets of DICOM values are dates and times. Frequently, a
+     * DICOM file is generated with one or another date or time field filled in,
+     * but others left vacant. To get some date and time to show to the user,
+     * several are examined to see if they are present in the hope that at least
+     * one of them is. This situation is not ideal (all DICOM files should
+     * always have a minimal set of values), but vendors will do what they will.
      */
 
     /** DICOM value for series date for the series. */
@@ -176,13 +175,19 @@ public class Series extends JPanel implements ActionListener, Runnable {
     /** DICOM value for structure set time for the series. */
     private String seriesInstanceUID = null;
 
-    /** Short human readable description of series constructed from its DICOM values. */
+    /**
+     * Short human readable description of series constructed from its DICOM
+     * values.
+     */
     private JLabel summaryLabel = null;
 
     /** Button that user uses to initiate uploads and anonymization. */
     private JButton uploadAnonymizeButton = null;
 
-    /** Icon associated with upload button to indicate whether or not the series has been uploaded. */ 
+    /**
+     * Icon associated with upload button to indicate whether or not the series
+     * has been uploaded.
+     */
     private JLabel uploadButtonIcon = null;
 
     /** Shows preview. */
@@ -221,9 +226,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
         private HashSet<String> fileList = new HashSet<String>();
         private ArrayList<String> sortedList = null;
 
-
         /**
-         * Get the sortedList of file names in ascending order by instance number.
+         * Get the sortedList of file names in ascending order by instance
+         * number.
          * 
          * @return List of file names.
          */
@@ -238,16 +243,13 @@ public class Series extends JPanel implements ActionListener, Runnable {
             return sortedList;
         }
 
-
         public int size() {
             return instList.size();
         }
 
-
         public String getFileName(int i) {
             return instList.get(i).fileName;
         }
-
 
         public String put(String fileName, AttributeList attributeList) {
 
@@ -288,11 +290,11 @@ public class Series extends JPanel implements ActionListener, Runnable {
     /** List of PACS AE titles to which this series has been uploaded. */
     private HashSet<String> aeTitleUploadList = new HashSet<String>();
 
-
     /**
      * Find the first non-null value in a sortedList.
      * 
-     * @param textList List of values.
+     * @param textList
+     *            List of values.
      * 
      * @return the first non-null value, or null if all are null.
      */
@@ -305,7 +307,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         return null;
     }
 
-
     /**
      * Reset the summary label based on the current state of the series.
      */
@@ -314,18 +315,17 @@ public class Series extends JPanel implements ActionListener, Runnable {
         String time = firstNonNull(new String[] { seriesTime, contentTime, acquisitionTime, instanceCreationTime, rtPlanTime, structureSetTime });
 
         String seriesSummary = "         ";
-        seriesSummary += (seriesNumber == null     ) ? "" : " " + seriesNumber;
-        seriesSummary += (modality == null         ) ? " No modality" : " " + modality;
+        seriesSummary += (seriesNumber == null) ? "" : " " + seriesNumber;
+        seriesSummary += (modality == null) ? " No modality" : " " + modality;
         seriesSummary += (seriesDescription == null) ? "" : " " + seriesDescription;
-        seriesSummary += (date == null             ) ? "" : " " + date;
-        seriesSummary += (time == null             ) ? "" : " " + time;
+        seriesSummary += (date == null) ? "" : " " + date;
+        seriesSummary += (time == null) ? "" : " " + time;
 
         seriesSummary += "    Files: " + instanceList.size();
 
         seriesSummary += "   ";
         summaryLabel.setText(seriesSummary);
     }
-
 
     private JComponent buildPreviewButton() {
         previewButton = new JButton("Preview");
@@ -337,7 +337,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         previewButtonPanel.add(new JLabel(), BorderLayout.EAST);
         return previewButtonPanel;
     }
-
 
     private JComponent buildUploadAnonymizeButton() {
         uploadAnonymizeButton = new JButton("Upload");
@@ -351,14 +350,12 @@ public class Series extends JPanel implements ActionListener, Runnable {
         return uploadButtonPanel;
     }
 
-
     private JComponent buildButtonPanel() {
         JPanel panel = new JPanel();
         panel.add(buildPreviewButton());
         panel.add(buildUploadAnonymizeButton());
         return panel;
     }
-
 
     private JComponent buildProgressBar() {
         progressBar = new JProgressBar();
@@ -371,7 +368,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         return progressPanel;
     }
 
-
     private JComponent buildEast() {
         previewProgressPanel = new JPanel();
         previewProgressLayout = new CardLayout();
@@ -382,13 +378,11 @@ public class Series extends JPanel implements ActionListener, Runnable {
         return previewProgressPanel;
     }
 
-
     private JComponent buildSummaryLabel() {
         summaryLabel = new JLabel();
         summaryLabel.setFont(DicomClient.FONT_MEDIUM);
         return summaryLabel;
     }
-
 
     private void buildGui() {
         setLayout(new BorderLayout());
@@ -400,47 +394,76 @@ public class Series extends JPanel implements ActionListener, Runnable {
         setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, 0));
     }
 
-
     /**
-     * Build a GUI component that displays and controls the uploading of a single series.
+     * Build a GUI component that displays and controls the uploading of a
+     * single series.
      * 
-     * @param fileName Name of DICOM file from which the series originated.
+     * @param fileName
+     *            Name of DICOM file from which the series originated.
      * 
-     * @param attributeList Parsed version of DICOM file contents.
+     * @param attributeList
+     *            Parsed version of DICOM file contents.
      */
     public Series(String fileName, AttributeList attributeList) {
 
-        patientID             = Util.getAttributeValue(attributeList, TagFromName.PatientID);
-        patientID             = (patientID == null) ? "No patient id" : patientID;
-        patientName           = Util.getAttributeValue(attributeList, TagFromName.PatientName);
-        patientName           = (patientName == null) ? "No patient name" : patientName;
+        // For the first file of every series, read the entire attribute
+        // list and then update the anonymizing list.  This ensures that
+        // the anonymizing list contains a superset of all attributes used
+        // by the DICOM files that have been loaded.  The only problem that
+        // would arise is if a subsequent file in a series contained a
+        // new type of DICOM attribute that was not in the first file of
+        // the series (which is unlikely), and the user wanted to specify
+        // custom anonymization for that type (again, unlikely).  The user
+        // could get around this by previewing slice in the series, which
+        // will read each file in it's entirety and update the anonymizing
+        // list.  Correcting this error would make the initial loading of
+        // DICOM files much slower (~ 10x), and so would annoy users more than
+        // make them happy.  Possibly in the future a background thread will
+        // be started to read each file in its entirety while the user is
+        // staring at the screen, but there's not a big benefit to it.
+        try {
+            AttributeList al = new AttributeList();
+            al.read(fileName);
+            attributeList = al;
+        }
+        catch (Exception e) {
+            Log.get().warning("Error reading DICOM file " + fileName + " .  The file may not be processed properly. :  " + e);
+        }
+        
+        AnonymizeGUI.getInstance().updateTagList(attributeList);
 
-        modality              = Util.getAttributeValue(attributeList, TagFromName.Modality);
+        patientID = Util.getAttributeValue(attributeList, TagFromName.PatientID);
+        patientID = (patientID == null) ? "No patient id" : patientID;
+        patientName = Util.getAttributeValue(attributeList, TagFromName.PatientName);
+        patientName = (patientName == null) ? "No patient name" : patientName;
+
+        modality = Util.getAttributeValue(attributeList, TagFromName.Modality);
         if (modality == null) {
             modality = SOPClassDescriptions.getAbbreviationFromUID(Util.getAttributeValue(attributeList, TagFromName.MediaStorageSOPClassUID));
         }
-        modality              = (modality == null) ? "No modality" : modality;
-        seriesDescription     = Util.getAttributeValue(attributeList, TagFromName.SeriesDescription);
+        modality = (modality == null) ? "No modality" : modality;
+        seriesDescription = Util.getAttributeValue(attributeList, TagFromName.SeriesDescription);
 
-        // try lots of ways to get the date, because some machines fill in some dates and others fill in others.
-        seriesDate            = Util.getAttributeValue(attributeList, TagFromName.SeriesDate);
-        contentDate           = Util.getAttributeValue(attributeList, TagFromName.ContentDate);
-        acquisitionDate       = Util.getAttributeValue(attributeList, TagFromName.AcquisitionDate);
-        instanceCreationDate  = Util.getAttributeValue(attributeList, TagFromName.InstanceCreationDate);
-        rtPlanDate            = Util.getAttributeValue(attributeList, TagFromName.RTPlanDate);
-        structureSetDate      = Util.getAttributeValue(attributeList, TagFromName.StructureSetDate);
+        // try lots of ways to get the date, because some machines fill in some
+        // dates and others fill in others.
+        seriesDate = Util.getAttributeValue(attributeList, TagFromName.SeriesDate);
+        contentDate = Util.getAttributeValue(attributeList, TagFromName.ContentDate);
+        acquisitionDate = Util.getAttributeValue(attributeList, TagFromName.AcquisitionDate);
+        instanceCreationDate = Util.getAttributeValue(attributeList, TagFromName.InstanceCreationDate);
+        rtPlanDate = Util.getAttributeValue(attributeList, TagFromName.RTPlanDate);
+        structureSetDate = Util.getAttributeValue(attributeList, TagFromName.StructureSetDate);
 
         // try lots of times also.
-        seriesTime            = Util.getAttributeValue(attributeList, TagFromName.SeriesTime);
-        contentTime           = Util.getAttributeValue(attributeList, TagFromName.ContentTime);
-        acquisitionTime       = Util.getAttributeValue(attributeList, TagFromName.AcquisitionTime);
-        instanceCreationTime  = Util.getAttributeValue(attributeList, TagFromName.InstanceCreationTime);
-        rtPlanTime            = Util.getAttributeValue(attributeList, TagFromName.RTPlanTime);
-        structureSetTime      = Util.getAttributeValue(attributeList, TagFromName.StructureSetTime);
+        seriesTime = Util.getAttributeValue(attributeList, TagFromName.SeriesTime);
+        contentTime = Util.getAttributeValue(attributeList, TagFromName.ContentTime);
+        acquisitionTime = Util.getAttributeValue(attributeList, TagFromName.AcquisitionTime);
+        instanceCreationTime = Util.getAttributeValue(attributeList, TagFromName.InstanceCreationTime);
+        rtPlanTime = Util.getAttributeValue(attributeList, TagFromName.RTPlanTime);
+        structureSetTime = Util.getAttributeValue(attributeList, TagFromName.StructureSetTime);
 
-        instanceCreationDate  = Util.getAttributeValue(attributeList, TagFromName.InstanceCreationDate);
-        instanceCreationTime  = Util.getAttributeValue(attributeList, TagFromName.InstanceCreationTime);
-        seriesInstanceUID     = Util.getAttributeValue(attributeList, TagFromName.SeriesInstanceUID);
+        instanceCreationDate = Util.getAttributeValue(attributeList, TagFromName.InstanceCreationDate);
+        instanceCreationTime = Util.getAttributeValue(attributeList, TagFromName.InstanceCreationTime);
+        seriesInstanceUID = Util.getAttributeValue(attributeList, TagFromName.SeriesInstanceUID);
         seriesInstanceUID = (seriesInstanceUID == null) ? "" : seriesInstanceUID;
 
         buildGui();
@@ -450,7 +473,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         Log.get().info("Added series " + seriesSummary);
     }
 
-
     /**
      * Get the currently selected (by the user) AE title.
      * 
@@ -459,7 +481,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
     private String getSelectedAeTitle() {
         return DicomClient.getInstance().getSelectedAeTitle();
     }
-
 
     /**
      * Set the progress bar to zero.
@@ -471,7 +492,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
     /**
      * Set the progress bar to the given value.
      * 
-     * @param value Value to set the progress bar to.
+     * @param value
+     *            Value to set the progress bar to.
      */
     private void setProgress(int value) {
         previewProgressLayout.show(previewProgressPanel, CARD_PROGRESS);
@@ -480,10 +502,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
         previewProgressPanel.paintAll(graphics);
     }
 
-
     /**
-     * Set the icon to reflect whether this series has been anonymized or uploaded to
-     * the currently selected PACS.
+     * Set the icon to reflect whether this series has been anonymized or
+     * uploaded to the currently selected PACS.
      * 
      * @return True if it has been uploaded, false if not.
      */
@@ -511,13 +532,14 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
     }
 
-
     /**
      * Upload the given list of attribute lists to the current PACS.
      * 
-     * @param description Description of this series.
+     * @param description
+     *            Description of this series.
      * 
-     * @param attrListList Content to upload.
+     * @param attrListList
+     *            Content to upload.
      * 
      * @return True on success.
      */
@@ -545,53 +567,38 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
         processOk = false;
 
-
         /*
-        boolean ok = false;
-        Response response = null;
-        try {
-            Client client = new Client(Protocol.HTTPS);
-            Request request = new Request(Method.PUT, new Reference(urlText));
-            DicomClient.getInstance().setChallengeResponse(request);
-            Representation representation = new InputRepresentation(inputStream, MediaType.APPLICATION_OCTET_STREAM);
-            request.setEntity(representation);
-            request.setMethod(Method.PUT);
-            long start = System.currentTimeMillis();
-            response = client.handle(request);
-            representation.release();
-            Status status = response.getStatus();
-            long elapsed = System.currentTimeMillis() - start;
-            Log.get().info("Elapsed upload time in ms: " + elapsed);
-
-            if (status.equals(Status.SUCCESS_OK)) {
-                ok = true;
-            }
-            else {
-                String message =
-                    "Problem uploading series.  Remaining uploads for this series are being aborted.\n" +
-                    "    Server status: " + status + " : " + response.getEntityAsText();
-                DicomClient.getInstance().showMessage(message);
-            }
-        }
-        catch (ResourceException ex) {
-            String message =
-                "Problem uploading series to " + urlText + " .  Remaining uploads for this series are being aborted. : " + ex;
-            if (response != null) {
-                message += "\n    Server status: " + response.getStatus() + " : " + response.getEntityAsText();
-            }
-            DicomClient.getInstance().showMessage(message);
-            Log.get().severe(message);
-        }
-        catch (Exception e) {
-            String message =
-                "Unexpected problem while uploading series to " + urlText + ".  Remaining uploads for this series are being aborted." + e;
-            if (response != null) {
-                message += "\n    Server status: " + response.getStatus() + " : " + response.getEntityAsText();
-            }
-            DicomClient.getInstance().showMessage(message);
-            Log.get().severe(message);
-        }
-        return ok;
+         * boolean ok = false; Response response = null; try { Client client =
+         * new Client(Protocol.HTTPS); Request request = new Request(Method.PUT,
+         * new Reference(urlText));
+         * DicomClient.getInstance().setChallengeResponse(request);
+         * Representation representation = new InputRepresentation(inputStream,
+         * MediaType.APPLICATION_OCTET_STREAM);
+         * request.setEntity(representation); request.setMethod(Method.PUT);
+         * long start = System.currentTimeMillis(); response =
+         * client.handle(request); representation.release(); Status status =
+         * response.getStatus(); long elapsed = System.currentTimeMillis() -
+         * start; Log.get().info("Elapsed upload time in ms: " + elapsed);
+         * 
+         * if (status.equals(Status.SUCCESS_OK)) { ok = true; } else { String
+         * message =
+         * "Problem uploading series.  Remaining uploads for this series are being aborted.\n"
+         * + "    Server status: " + status + " : " +
+         * response.getEntityAsText();
+         * DicomClient.getInstance().showMessage(message); } } catch
+         * (ResourceException ex) { String message =
+         * "Problem uploading series to " + urlText +
+         * " .  Remaining uploads for this series are being aborted. : " + ex;
+         * if (response != null) { message += "\n    Server status: " +
+         * response.getStatus() + " : " + response.getEntityAsText(); }
+         * DicomClient.getInstance().showMessage(message);
+         * Log.get().severe(message); } catch (Exception e) { String message =
+         * "Unexpected problem while uploading series to " + urlText +
+         * ".  Remaining uploads for this series are being aborted." + e; if
+         * (response != null) { message += "\n    Server status: " +
+         * response.getStatus() + " : " + response.getEntityAsText(); }
+         * DicomClient.getInstance().showMessage(message);
+         * Log.get().severe(message); } return ok;
          */
     }
 
@@ -606,22 +613,19 @@ public class Series extends JPanel implements ActionListener, Runnable {
     }
 
     /**
-     * Perform either anonymization or upload on this series depending on the mode.
+     * Perform either anonymization or upload on this series depending on the
+     * mode.
      */
     public void processSeries() {
         if (!processOk) return;
         Thread thread = new Thread(this);
         thread.start();
         /*
-        try {
-            thread.join();
-        }
-        catch (InterruptedException e) {
-            Log.get().warning("Unexpected error from background processing thread: " + e);
-        }
+         * try { thread.join(); } catch (InterruptedException e) {
+         * Log.get().warning
+         * ("Unexpected error from background processing thread: " + e); }
          */
     }
-
 
     /**
      * Get the patient object containing this series.
@@ -633,16 +637,16 @@ public class Series extends JPanel implements ActionListener, Runnable {
         while (!(pat instanceof Patient)) {
             pat = pat.getParent();
         }
-        return (Patient)pat;
+        return (Patient) pat;
     }
-
 
     /**
      * Get the sortedList of anonymization values for this series.
      * 
      * @return The sortedList of anonymization values for this series.
      * 
-     * @throws DicomException On invalid PatientID or PatientName
+     * @throws DicomException
+     *             On invalid PatientID or PatientName
      */
     private synchronized AttributeList getAnonymizingReplacementList() throws DicomException {
         AttributeList replacementAttributeList = AnonymizeGUI.getInstance().getAttributeList();
@@ -657,7 +661,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
         return replacementAttributeList;
     }
-
 
     /**
      * Get an anonymized name for the file.
@@ -677,9 +680,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
             }
         }
 
-        String patientIdText      = Util.getAttributeValue(attributeList, TagFromName.PatientID);
-        String modalityText       = Util.getAttributeValue(attributeList, TagFromName.Modality);
-        String seriesNumberText   = Util.getAttributeValue(attributeList, TagFromName.SeriesNumber);
+        String patientIdText = Util.getAttributeValue(attributeList, TagFromName.PatientID);
+        String modalityText = Util.getAttributeValue(attributeList, TagFromName.Modality);
+        String seriesNumberText = Util.getAttributeValue(attributeList, TagFromName.SeriesNumber);
         String instanceNumberText = Util.getAttributeValue(attributeList, TagFromName.InstanceNumber);
 
         while ((instanceNumberText != null) && (instanceNumberText.length() < 4)) {
@@ -687,9 +690,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
 
         String name = "";
-        name += (patientIdText      == null) ? "" : patientIdText;
-        name += (modalityText       == null) ? "" : ("_" + modalityText);
-        name += (seriesNumberText   == null) ? "" : ("_" + seriesNumberText);
+        name += (patientIdText == null) ? "" : patientIdText;
+        name += (modalityText == null) ? "" : ("_" + modalityText);
+        name += (seriesNumberText == null) ? "" : ("_" + seriesNumberText);
         name += (instanceNumberText == null) ? "" : ("_" + instanceNumberText);
 
         name = name.replace(' ', '_');
@@ -707,14 +710,15 @@ public class Series extends JPanel implements ActionListener, Runnable {
         return file;
     }
 
-
     /**
      * If in command line mode, save the anonymized DICOM as text and, if
      * possible, as an image.
      * 
-     * @param attributeList Anonymized DICOM.
+     * @param attributeList
+     *            Anonymized DICOM.
      * 
-     * @param file File where anonymized DICOM is to be written.
+     * @param file
+     *            File where anonymized DICOM is to be written.
      */
     private void saveTextAndXmlAndImageFiles(AttributeList attributeList, File file) {
         if (DicomClient.inCommandLineMode()) {
@@ -767,7 +771,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 // Ignore exception because this was not an image file.
             }
 
-
             try {
                 Document document = new XMLRepresentationOfDicomObjectFactory().getDocument(attributeList);
                 if (DicomClient.getReplaceControlCharacters()) {
@@ -788,7 +791,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
     }
 
-
     /**
      * AnonymizeGUI this series and write the results to new files.
      */
@@ -808,7 +810,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     CustomAttributeList attributeList = new CustomAttributeList();
                     attributeList.read(fileName);
 
-                    //DicomClient.getInstance().getAnonymize().anonymizeAttributeList(attributeList);
+                    AnonymizeGUI.getInstance().updateTagList(attributeList);
+
                     Anonymize.anonymize(attributeList, getAnonymizingReplacementList());
                     FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, "DICOMService");
 
@@ -817,6 +820,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     File parent = (newFile.getParentFile() == null) ? new File(".") : newFile.getParentFile();
                     parent.mkdirs();
                     attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
+
                     saveTextAndXmlAndImageFiles(attributeList, newFile);
                     count++;
                     setProgress(count);
@@ -840,10 +844,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 Log.get().severe(msg);
                 // If there was an IO exception, then
                 if (tries == 1) { // only tell user once per series
-                    String ioMsg =
-                        "<html>Unable to write file\n\n    " + newFile.getAbsolutePath() +
-                        "\n<p><br><p>It is possible that you do not have permission to write to this directory." +
-                        "\n<p><br><p>Technical details:<br>" + e + "\n</html>";
+                    String ioMsg = "<html>Unable to write file\n\n    " + newFile.getAbsolutePath()
+                            + "\n<p><br><p>It is possible that you do not have permission to write to this directory." + "\n<p><br><p>Technical details:<br>" + e + "\n</html>";
                     new Alert(ioMsg, "Unable to write file");
                 }
                 if (DicomClient.inCommandLineMode()) {
@@ -868,13 +870,12 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
     }
 
-
     private boolean uploadKoFile() {
         if (DicomClient.getInstance().getKoManifestPolicy()) {
             try {
                 Log.get().info("Sending KO file for series " + seriesSummary);
                 KeyObject keyObject = new KeyObject(seriesSummary, instanceList.values());
-                pushDicom(new AttributeList[]{keyObject});
+                pushDicom(new AttributeList[] { keyObject });
                 if (!processOk) {
                     String msg = "Could not upload Key Object file for series";
                     Log.get().info(msg);
@@ -895,18 +896,19 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     private String getSeriesSummary() {
         String seriesSum = "";
-        seriesSummary += (patientID         == null) ? "" : " " + patientID;
-        seriesSummary += (patientName       == null) ? "" : " " + patientName;
-        seriesSummary += (seriesNumber      == null) ? "" : " " + seriesNumber;
-        seriesSummary += (modality          == null) ? "" : " " + modality;
+        seriesSummary += (patientID == null) ? "" : " " + patientID;
+        seriesSummary += (patientName == null) ? "" : " " + patientName;
+        seriesSummary += (seriesNumber == null) ? "" : " " + seriesNumber;
+        seriesSummary += (modality == null) ? "" : " " + modality;
         seriesSummary += (seriesDescription == null) ? "" : " " + seriesDescription;
         return seriesSum;
     }
 
     /**
-     * Upload the entire series to the currently selected PACS.  If any of the files
-     * in the series have a problem uploading, then fail with a message to the user.
-     * If the entire upload succeeds, then mark the series as uploaded.
+     * Upload the entire series to the currently selected PACS. If any of the
+     * files in the series have a problem uploading, then fail with a message to
+     * the user. If the entire upload succeeds, then mark the series as
+     * uploaded.
      */
     private void uploadSeries() {
         if (!processOk) return;
@@ -925,7 +927,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             if (!uploadKoFile()) return;
 
             AttributeList[] tempList = new AttributeList[instanceList.size()];
-            while ((fileIndex < instanceList.size()) && (processOk)) {                    
+            while ((fileIndex < instanceList.size()) && (processOk)) {
                 int f = 0;
                 while ((fileIndex < instanceList.size()) && processOk && (f < UPLOAD_BUFFER_SIZE)) {
                     String fileName = instanceList.getFileName(fileIndex);
@@ -946,10 +948,12 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     fileIndex++;
                 }
                 AttributeList[] attrListList = null;
-                if (tempList.length == f) attrListList = tempList;
+                if (tempList.length == f)
+                    attrListList = tempList;
                 else {
                     attrListList = new AttributeList[f];
-                    for (int ff = 0; ff < f; ff++) attrListList[ff] = tempList[ff];
+                    for (int ff = 0; ff < f; ff++)
+                        attrListList[ff] = tempList[ff];
                 }
 
                 pushDicom(attrListList);
@@ -977,26 +981,25 @@ public class Series extends JPanel implements ActionListener, Runnable {
     }
 
     /*
-    @SuppressWarnings("unchecked")
-    private void addAnonymousAttributes(AttributeList attributeList) {
-        AttributeList anonList = ClientConfig.getInstance().getAnonymizingReplacementList();
-        AttributeList newAttrs = new AttributeList();
-
-        for (AttributeTag tag : (Set<AttributeTag>)attributeList.keySet()) {
-            if ((anonList.get(tag) != null) && (newAttrs.get(tag) == null)) {
-                newAttrs.put(anonList.get(tag));
-            }
-        }
-        AnonymizeGUI.getInstance().updateTagList(newAttrs);
-    }
+     * @SuppressWarnings("unchecked") private void
+     * addAnonymousAttributes(AttributeList attributeList) { AttributeList
+     * anonList = ClientConfig.getInstance().getAnonymizingReplacementList();
+     * AttributeList newAttrs = new AttributeList();
+     * 
+     * for (AttributeTag tag : (Set<AttributeTag>)attributeList.keySet()) { if
+     * ((anonList.get(tag) != null) && (newAttrs.get(tag) == null)) {
+     * newAttrs.put(anonList.get(tag)); } }
+     * AnonymizeGUI.getInstance().updateTagList(newAttrs); }
      */
 
     /**
      * Add the given file to this series.
      * 
-     * @param fileName The file to add.
+     * @param fileName
+     *            The file to add.
      * 
-     * @param attributeList Parsed version of the DICOM file contents.
+     * @param attributeList
+     *            Parsed version of the DICOM file contents.
      */
     public void addFile(String fileName, AttributeList attributeList) {
         AnonymizeGUI.getInstance().updateTagList(attributeList);
@@ -1015,7 +1018,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
     }
 
-
     /**
      * Get the series instance UID.
      * 
@@ -1025,17 +1027,16 @@ public class Series extends JPanel implements ActionListener, Runnable {
         return seriesInstanceUID;
     }
 
-
     /**
-     * Determine if this series is equal to another.  Two series are
-     * considered equal if they have the same series instance UID.
+     * Determine if this series is equal to another. Two series are considered
+     * equal if they have the same series instance UID.
      */
     public boolean equals(Object other) {
-        return (other instanceof Series) && seriesInstanceUID.equals(((Series)other).seriesInstanceUID);
+        return (other instanceof Series) && seriesInstanceUID.equals(((Series) other).seriesInstanceUID);
     }
 
-
     public static volatile boolean processOk = true;
+
     @Override
     public void actionPerformed(ActionEvent ev) {
         processOk = true;
@@ -1057,24 +1058,23 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
     }
 
-
     @Override
     public String toString() {
         return summaryLabel.getText();
     }
 
-
     /**
      * Get the title to be displayed on the preview window.
      * 
-     * @param sliceNumber Current slice being displayed.
+     * @param sliceNumber
+     *            Current slice being displayed.
      * 
      * @return Orienting description of preview.
      */
     public String getPreviewTitle(int sliceNumber) {
         return getDescription() + "   " + sliceNumber + " / " + instanceList.size();
     }
-    
+
     /**
      * Get a description of this series.
      * 
@@ -1083,10 +1083,10 @@ public class Series extends JPanel implements ActionListener, Runnable {
     public String getDescription() {
         StringBuffer title = new StringBuffer();
 
-        title.append((patientID         == null) ? "" : "  " + patientID);
-        title.append((patientName       == null) ? "" : "  " + patientName);
-        title.append((seriesNumber      == null) ? "" : "  " + seriesNumber);
-        title.append((modality          == null) ? "" : "  " + modality);
+        title.append((patientID == null) ? "" : "  " + patientID);
+        title.append((patientName == null) ? "" : "  " + patientName);
+        title.append((seriesNumber == null) ? "" : "  " + seriesNumber);
+        title.append((modality == null) ? "" : "  " + modality);
         title.append((seriesDescription == null) ? "" : "  " + seriesDescription);
         return title.toString();
     }
@@ -1096,10 +1096,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
      */
     public synchronized void showPreview(int sliceNumber) {
         Preview preview = DicomClient.getInstance().getPreview();
-        String fileName = instanceList.values().get(sliceNumber-1);
+        String fileName = instanceList.values().get(sliceNumber - 1);
         preview.showDicom(this, getPreviewTitle(sliceNumber), sliceNumber, getFileNameList().size(), fileName);
     }
-
 
     /**
      * Get the sortedList of file names.

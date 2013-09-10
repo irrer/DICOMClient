@@ -13,10 +13,10 @@ import edu.umro.util.Log;
 public class AttributeLocation {
 
     private class AttributeParent {
-        Attribute parent = null;
+        SequenceAttribute parent = null;
         int index = -1;
 
-        public AttributeParent(Attribute parent, int index) {
+        public AttributeParent(SequenceAttribute parent, int index) {
             this.parent = parent;
             this.index = index;
         }
@@ -27,7 +27,11 @@ public class AttributeLocation {
     private File file = null;
 
     public Attribute attribute = null;
+    private int sequenceItemIndex = -1;
+    private boolean located = false;
     private AttributeList attributeList = null;
+    private int startOfText = -1;
+    private int endOfText = -1;
 
     private int textPosition = Integer.MAX_VALUE;
 
@@ -45,20 +49,49 @@ public class AttributeLocation {
     }
 
     public boolean isLocated() {
-        return this.attribute != null;
+        return located;
     }
 
-    public void addParent(Attribute attribute, int index) {
+    public int getStartOfText() {
+        return startOfText;
+    }
+
+    public int getEndOfText() {
+        return endOfText;
+    }
+
+    public int getSequenceItemIndex() {
+        return sequenceItemIndex;
+    }
+
+    public void addParent(SequenceAttribute attribute, int index) {
         ancestry.add(new AttributeParent(attribute, index));
     }
 
     public void removeParent() {
         if (ancestry.size() > 0) ancestry.remove(ancestry.size() - 1);
     }
+    
+    public SequenceAttribute getParentAttribute() {
+        return ancestry.get(ancestry.size()-1).parent;
+    }
+    
+    public AttributeList getGrandParentAttributeList() {
+        if (ancestry.size() > 1) {
+            AttributeParent gp = ancestry.get(ancestry.size() - 2);
+            int index = ancestry.get(ancestry.size() - 1).index;
+            return gp.parent.getItem(index).getAttributeList();
+        }
+        else return attributeList;
+    }
 
-    public boolean setAttribute(int length, Attribute attribute) {
+    public boolean setAttribute(int length, int sequenceItemIndex, Attribute attribute, int startOfText, int endOfText) {
         if ((!isLocated()) && (length > textPosition)) {
             this.attribute = attribute;
+            this.sequenceItemIndex = sequenceItemIndex;
+            this.startOfText = startOfText;
+            this.endOfText = endOfText;
+            located = true;
         }
         return isLocated();
     }
@@ -81,7 +114,9 @@ public class AttributeLocation {
             text.append(indent + CustomDictionary.getInstance().getNameFromTag(ap.parent.getTag()) + " : " + ap.index + "\n");
             indent += "  ";
         }
-        text.append(indent + CustomDictionary.getInstance().getNameFromTag(attribute.getTag()) + "\n");
+        text.append(indent);
+        if (attribute == null) text.append("Index: " + (sequenceItemIndex + 1));
+        else text.append(indent + CustomDictionary.getInstance().getNameFromTag(attribute.getTag()) + "\n");
         return text.toString();
     }
 }

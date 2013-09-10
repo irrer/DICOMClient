@@ -288,14 +288,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      */
     private Semaphore showDicomInProgress = new Semaphore(1);
     
-
-    /** Attribute that user has selected to edit. */
-    private Attribute attributeBeingEdited = null;
-    
-    /** Text position at start of <code>attributeBeingEdited</code>. */
-    private int attributeBeingEditedStart = 0;
-
-    
     /**
      * Custom text highlighter.
      * 
@@ -408,7 +400,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         subPanel.add(matchCountLabel);
         
-        if (this == null) {   // TODO change to true when support for editing is ready
+        if (edu.umro.util.OpSys.getHostIPAddress().equals("141.214.125.68")) {  // TODO remove 'if' when support for editing is ready
+            System.out.println("Enbabling DICOM editing...");
             subPanel.add(new JLabel("             "));
             subPanel.add(editButton);
         }
@@ -928,11 +921,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * @param indentLevel
      *            Degree of indentation.
      */
-    private void addLine(StringBuffer text, String line, String searchText, int indentLevel, AttributeLocation attributeLocation, Attribute attribute) {
-        if ((attribute != null) && (attributeLocation != null) && (!attributeLocation.isLocated())) {
-            attributeBeingEdited = attribute;
-            attributeBeingEditedStart = text.length();
-        }
+    private void addLine(StringBuffer text, String line, String searchText, int indentLevel, AttributeLocation attributeLocation, int sequenceItemIndex, Attribute attribute) {
+        int textStart = text.length();
         int length = searchText.length();
         line = indent(indentLevel) + line;
         if (length > 0) {
@@ -945,7 +935,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             }
         }
         text.append(line + "\n");
-        if (attributeLocation != null) attributeLocation.setAttribute(text.length(), attribute);
+        int textEnd = text.length();
+        if (attributeLocation != null) attributeLocation.setAttribute(text.length(), 0, attribute, textStart, textEnd);
         numLines++;
     }
 
@@ -1177,21 +1168,21 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                 AttributeTag tag = attribute.getTag();
                 String line = CustomDictionary.getInstance().getNameFromTag(tag) + " : ";
                 line = addDetails(tag, CustomDictionary.getInstance().getValueRepresentationFromTag(tag), line);
-                addLine(text, line, searchText, indentLevel, attributeLocation, attribute);
+                addLine(text, line, searchText, indentLevel, attributeLocation, 0, attribute);
                 numLines++;
                 Iterator<?> si = ((SequenceAttribute) attribute).iterator();
                 int itemNumber = 1;
                 while (si.hasNext()) {
-                    if ((attributeLocation != null) && (!attributeLocation.isLocated())) attributeLocation.addParent(attribute, itemNumber - 1);
+                    if ((attributeLocation != null) && (!attributeLocation.isLocated())) attributeLocation.addParent((SequenceAttribute)attribute, itemNumber - 1);
                     SequenceItem item = (SequenceItem) si.next();
-                    addLine(text, "Item: " + itemNumber + " / " + ((SequenceAttribute) attribute).getNumberOfItems(), searchText, indentLevel + 1, attributeLocation, null);
+                    addLine(text, "Item: " + itemNumber + " / " + ((SequenceAttribute) attribute).getNumberOfItems(), searchText, indentLevel + 1, attributeLocation, itemNumber-1, null);
                     addTextAttributes(item.getAttributeList(), text, indentLevel + 2, attributeLocation);
                     if ((attributeLocation != null) && (!attributeLocation.isLocated())) attributeLocation.removeParent();
                     itemNumber++;
                 }
             }
             else {
-                addLine(text, getAttributeAsText(attribute), searchText, indentLevel, attributeLocation, attribute);
+                addLine(text, getAttributeAsText(attribute), searchText, indentLevel, attributeLocation, 0, attribute);
             }
         }
     }
@@ -1229,7 +1220,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         int oldMatchIndex = matchIndex;
         matchIndex = 0;
         matchList = new ArrayList<TextMatch>();
-        attributeBeingEdited = null;
         numLines = 0;
         int scrollPosition = scrollPaneText.getVerticalScrollBar().getValue();
         int caretPosition = textPreview.getCaretPosition();
@@ -1276,11 +1266,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             setCurrentlySelectedMatch(oldMatchIndex, matchIndex);
         }
         // highlight the attribute being edited
-        if (attributeBeingEdited != null) {
+        if (attributeLocation != null) {
             MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_EDIT_COLOR);
             try {
-                int len = textPreview.getText().substring(attributeBeingEditedStart).indexOf('\n');
-                highlighter.addHighlight(attributeBeingEditedStart, attributeBeingEditedStart + len, matchHighlightPainter);
+                highlighter.addHighlight(attributeLocation.getStartOfText(), attributeLocation.getEndOfText(), matchHighlightPainter);
             }
             catch (BadLocationException e) {
             }
