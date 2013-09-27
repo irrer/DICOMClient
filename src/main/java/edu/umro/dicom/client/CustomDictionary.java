@@ -20,6 +20,9 @@ import java.lang.NumberFormatException;
 
 import java.util.Date;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.restlet.engine.io.IoUtils;
 
 import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.TagFromName;
@@ -39,6 +42,8 @@ public class CustomDictionary extends DicomDictionary {
 
     private volatile static CustomDictionary instance = null;
 
+    private volatile static HashMap<AttributeTag, Multiplicity> valueMultiplicity = new HashMap<AttributeTag, CustomDictionary.Multiplicity>();
+    
     /** List of extensions provided by this dictionary. */
     private volatile static ArrayList<PrivateTag> extensions = null;
 
@@ -529,6 +534,523 @@ public class CustomDictionary extends DicomDictionary {
 
     }
 
+
+    /**
+     * The following enum is used to enforce DICOM attribute value multiplicity.
+     * The names are encoded to reflect how many values may be specified for an
+     * attribute. The first number is the minimum number of values, the second
+     * number is the maximum number of values, and the third number is the
+     * increment to be used in changing the number of values. For example the
+     * name M_2_8_2 would indicate that the attribute must have at least two
+     * values, a maximum of 8 values, and when values are added, they must be
+     * done so two at a time.
+     * 
+     * The leading M is to satisfy Java naming requirements and is otherwise
+     * ignored.
+     * 
+     * @author irrer
+     * 
+     */
+    public enum Multiplicity {
+        M1,
+        M1_2,
+        M1_3,
+        M1_32,
+        M16,
+        M1_8,
+        M1_99,
+        M1_N,
+        M2,
+        M2_2N,
+        M2_N,
+        M3,
+        M3_3N,
+        M3_N,
+        M4,
+        M6,
+        M6_N,
+        M9;
+
+        public final int min;
+        public final int max;
+        public final int incr;
+
+        private int getMax(int min, String[] fields) {
+            if (fields.length == 1) {
+                return min;
+            }
+            if ((fields.length == 2) && (fields[1].indexOf("N") == -1)) {
+                return Integer.parseInt(fields[1]);
+            }
+            return Integer.MAX_VALUE;
+        }
+
+        private int getIncr(int min, int max, String[] fields) {
+            if (min == max) return 0;
+            if ((fields.length == 2) && (fields[1].indexOf("N") != -1) && (fields[1].length() > 1)) {
+                return Integer.parseInt(fields[1].substring(0, fields[1].length()-1));
+            }
+            return 1;
+        }
+
+        private Multiplicity() {
+            String[] fields = name().substring(1).split("_");  // Ignore the M and split
+            min = Integer.parseInt(fields[0]);   // first value is always minimum
+            max = getMax(min, fields);
+            incr = getIncr(min, max, fields);
+        }
+
+        @Override
+        public String toString() {
+            return this.name() + "  min:" + min + "  max:" + ((max == Integer.MAX_VALUE) ? "N" : (""+max)) + "  incr:" + incr;
+        }
+
+    };
+
+
+    /**
+     * Initialize the value multiplicity table for the dictionary.  The value multiplicity determines how many
+     * values a single attribute is allowed to have.
+     * 
+     * See the DICOM standard section 3.6 for details.
+     */
+    private void initValueMultiplicity() {
+        valueMultiplicity.put(TagFromName.SpecificCharacterSet, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ImageType, Multiplicity.M2_N);
+        valueMultiplicity.put(TagFromName.RelatedGeneralSOPClassUID, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.RetrieveAETitle, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FailedSOPInstanceUIDList, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ModalitiesInStudy, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SOPClassesInStudy, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ReferringPhysicianTelephoneNumbers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PhysiciansOfRecord, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PerformingPhysicianName, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.NameOfPhysiciansReadingStudy, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.OperatorsName, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.AdmittingDiagnosesDescription, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SOPClassesSupported, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ReferencedFrameNumber, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SimpleFrameList, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CalculatedFrameList, Multiplicity.M3_3N);
+        valueMultiplicity.put(TagFromName.TimeRange, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.EventElapsedTimes, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.EventTimerNames, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FrameType, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.OtherPatientIDs, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.OtherPatientNames, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.InsurancePlanIdentification, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.MedicalAlerts, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.Allergies, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PatientTelephoneNumbers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DeidentificationMethod, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CADFileFormat, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ComponentReferenceSystem, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ComponentManufacturingProcedure, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ComponentManufacturer, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.MaterialThickness, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.MaterialPipeDiameter, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.MaterialIsolationDiameter, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.MaterialGrade, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.MaterialPropertiesFileID, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.MaterialPropertiesFileFormat, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.IndicationType, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TransformOrderOfAxes, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CoordinateSystemTransformRotationAndScaleMatrix, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CoordinateSystemTransformTranslationMatrix, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DACGainPoints, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DACTimePoints, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DACAmplitude, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CalibrationTime, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CalibrationDate, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ScanningSequence, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SequenceVariant, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ScanOptions, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.Radionuclide, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.EnergyWindowTotalWidth, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.EchoNumbers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SecondaryCaptureDeviceSoftwareVersions, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.HardcopyDeviceSoftwareVersion, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SoftwareVersions, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ContrastFlowRate, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ContrastFlowDuration, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FrameTimeVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SynchronizationChannel, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.TableVerticalIncrement, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TableLateralIncrement, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TableLongitudinalIncrement, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.RadialPosition, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.RotationOffset, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FieldOfViewDimensions, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.TypeOfFilters, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ImagerPixelSpacing, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.Grid, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FocalDistance, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.XFocusCenter, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.YFocusCenter, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.FocalSpots, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DateOfLastCalibration, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TimeOfLastCalibration, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ConvolutionKernel, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.UpperLowerPixelValues, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.WholeBodyTechnique, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.AcquisitionMatrix, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.PositionerPrimaryAngleIncrement, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PositionerSecondaryAngleIncrement, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ShutterShape, Multiplicity.M1_3);
+        valueMultiplicity.put(TagFromName.CenterOfCircularShutter, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.VerticesOfThePolygonalShutter, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.ShutterPresentationColorCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.CollimatorShape, Multiplicity.M1_3);
+        valueMultiplicity.put(TagFromName.CenterOfCircularCollimator, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.VerticesOfThePolygonalCollimator, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.PageNumberVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FrameLabelVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FramePrimaryAngleVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FrameSecondaryAngleVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SliceLocationVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DisplayWindowLabelVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.NominalScannedPixelSpacing, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.LesionNumber, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.OutputPower, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TransducerData, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ImageTransformationMatrix, Multiplicity.M6);
+        valueMultiplicity.put(TagFromName.ImageTranslationVector, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.TableOfXBreakPoints, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TableOfYBreakPoints, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TableOfPixelValues, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TableOfParameterValues, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.RWaveTimeVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DetectorBinning, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.DetectorElementPhysicalSize, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.DetectorElementSpacing, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.DetectorActiveDimensions, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.DetectorActiveOrigin, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.FieldOfViewOrigin, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.PixelDataAreaOriginRelativeToFOV, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.GridAspectRatio, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.FilterMaterial, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FilterThicknessMinimum, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FilterThicknessMaximum, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FilterBeamPathLengthMinimum, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FilterBeamPathLengthMaximum, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SpectralWidth, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.ChemicalShiftReference, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.DecoupledNucleus, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.DecouplingFrequency, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.DecouplingChemicalShiftReference, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.TimeDomainFiltering, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.NumberOfZeroFills, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.InversionTimes, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DiffusionGradientOrientation, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.VelocityEncodingDirection, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.TransmitterFrequency, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.ResonantNucleus, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.SlabOrientation, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.MidSlabPosition, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ASLSlabOrientation, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ASLMidSlabPosition, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.DataCollectionCenterPatient, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ReconstructionFieldOfView, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ReconstructionTargetCenterPatient, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ReconstructionPixelSpacing, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.CalciumScoringMassFactorDevice, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ObjectPixelSpacingInCenterOfBeam, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.IntensifierActiveDimensions, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.PhysicalDetectorSize, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.PositionOfIsocenterProjection, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.CenterOfCircularExposureControlSensingRegion, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.VerticesOfThePolygonalExposureControlSensingRegion, Multiplicity.M2_N);
+        valueMultiplicity.put(TagFromName.FieldOfViewDimensionsInFloat, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.DepthsOfFocus, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PatientOrientation, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ImagePosition, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ImagePositionPatient, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ImageOrientation, Multiplicity.M6);
+        valueMultiplicity.put(TagFromName.ImageOrientationPatient, Multiplicity.M6);
+        valueMultiplicity.put(TagFromName.MaskingImage, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.Reference, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.OtherStudyNumbers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.OriginalImageIdentification, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.OriginalImageIdentificationNomenclature, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DimensionIndexValues, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ImagePositionVolume, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ImageOrientationVolume, Multiplicity.M6);
+        valueMultiplicity.put(TagFromName.ApexPosition, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.VolumeToTransducerMappingMatrix, Multiplicity.M16);
+        valueMultiplicity.put(TagFromName.VolumeToTableMappingMatrix, Multiplicity.M16);
+        valueMultiplicity.put(TagFromName.AcquisitionIndex, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.LightPathFilterPassBand, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ImagePathFilterPassBand, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ReferenceCoordinates, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.FrameIncrementPointer, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FrameDimensionPointer, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PixelSpacing, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ZoomFactor, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ZoomCenter, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.PixelAspectRatio, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ManipulatedImage, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CorrectedImage, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CompressionSequence, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CompressionStepPointers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PerimeterTable, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PredictorConstants, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SequenceOfCompressedData, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DetailsOfCoefficients, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CoefficientCoding, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CoefficientCodingPointers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DataBlockDescription, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DataBlock, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ZonalMapLocation, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CodeLabel, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CodeTableLocation, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ImageDataLocation, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.WindowCenter, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.WindowWidth, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.WindowCenterWidthExplanation, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.GrayLookupTableDescriptor, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.RedPaletteColorLookupTableDescriptor, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.GreenPaletteColorLookupTableDescriptor, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.BluePaletteColorLookupTableDescriptor, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.AlphaPaletteColorLookupTableDescriptor, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.LargeRedPaletteColorLookupTableDescriptor, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.LargeGreenPaletteColorLookupTableDescriptor, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.LargeBluePaletteColorLookupTableDescriptor, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.GrayLookupTableData, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.BlendingLookupTableDescriptor, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.LossyImageCompressionRatio, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.LossyImageCompressionMethod, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.LUTDescriptor, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.LUTData, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FrameNumbersOfInterest, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FrameOfInterestDescription, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.FrameOfInterestType, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.MaskPointers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.RWavePointer, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ApplicableFrameRange, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.MaskFrameNumbers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.MaskSubPixelShift, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ImageProcessingApplied, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.VerticesOfTheRegion, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.PixelShiftFrameRange, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.LUTFrameRange, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.ImageToEquipmentMappingMatrix, Multiplicity.M16);
+        valueMultiplicity.put(TagFromName.ScheduledStudyLocationAETitle, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ChannelStatus, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.WaveformDisplayBackgroundCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ChannelRecommendedDisplayCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ScheduledStationAETitle, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ScheduledStationName, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ExposedArea, Multiplicity.M1_2);
+        valueMultiplicity.put(TagFromName.NamesOfIntendedRecipientsOfResults, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PersonTelephoneNumbers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.RealWorldValueLUTData, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.UrgencyOrPriorityAlertsTrial, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ReferencedWaveformChannels, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.ReportStatusIDTrial, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ReferencedSamplePositions, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ReferencedFrameNumbers, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ReferencedTimeOffsets, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ReferencedDateTime, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PixelCoordinatesSetTrial, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.NumericValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ReferencedContentItemIdentifier, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ListOfMIMETypes, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ProductName, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.VisualAcuityModifiers, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.RecommendedAbsentPixelCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ImageOrientationSlide, Multiplicity.M6);
+        valueMultiplicity.put(TagFromName.TopLeftHandCornerOfLocalizerArea, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.BottomRightHandCornerOfLocalizerArea, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.EnergyWindowVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DetectorVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PhaseVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.RotationVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.RRIntervalVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TimeSlotVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SliceVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.AngularViewVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TimeSliceVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TriggerVector, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SeriesType, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.AxialMash, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.DetectorElementSize, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.SecondaryCountsType, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SecondaryCountsAccumulated, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CountsIncluded, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.HistogramData, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ReferencedSegmentNumber, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.RecommendedDisplayCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.GridDimensions, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.GridResolution, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.PointPositionAccuracy, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.PointsBoundingBoxCoordinates, Multiplicity.M6);
+        valueMultiplicity.put(TagFromName.AxisOfRotation, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.CenterOfRotation, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.VectorAccuracy, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ViewOrientationModifier, Multiplicity.M9);
+        valueMultiplicity.put(TagFromName.RecommendedRotationPoint, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.BoundingRectangle, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.ImplantTemplate3DModelSurfaceNumber, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TwoDMatingPoint, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.TwoDMatingAxes, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.ThreeDDegreeOfFreedomAxis, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.RangeOfFreedom, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ThreeDMatingPoint, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ThreeDMatingAxes, Multiplicity.M9);
+        valueMultiplicity.put(TagFromName.TwoDDegreeOfFreedomAxis, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.TwoDPointCoordinates, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ThreeDPointCoordinates, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.TwoDLineCoordinates, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.ThreeDLineCoordinates, Multiplicity.M6);
+        valueMultiplicity.put(TagFromName.TwoDPlaneIntersection, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.ThreeDPlaneOrigin, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ThreeDPlaneNormal, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.BoundingBoxTopLeftHandCorner, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.BoundingBoxBottomRightHandCorner, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.AnchorPoint, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.GraphicData, Multiplicity.M2_N);
+        valueMultiplicity.put(TagFromName.DisplayedAreaTopLeftHandCornerTrial, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.DisplayedAreaBottomRightHandCornerTrial, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.DisplayedAreaTopLeftHandCorner, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.DisplayedAreaBottomRightHandCorner, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.GraphicLayerRecommendedDisplayRGBValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.PresentationPixelSpacing, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.PresentationPixelAspectRatio, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.TextColorCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ShadowColorCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.PatternOnColorCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.PatternOffColorCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.RotationPoint, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.GraphicLayerRecommendedDisplayCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.RelativeTime, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.AbstractPriorValue, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.SelectorSequencePointer, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorSequencePointerPrivateCreator, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorATValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorCSValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorISValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorLOValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorPNValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorSHValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorDSValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorFDValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorFLValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorULValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorUSValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorSLValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.SelectorSSValue, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DisplayEnvironmentSpatialPosition, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.DisplaySetScrollingGroup, Multiplicity.M2_N);
+        valueMultiplicity.put(TagFromName.ReferenceDisplaySets, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.StructuredDisplayBackgroundCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.EmptyImageBoxCIELabValue, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.SynchronizedImageBoxList, Multiplicity.M2_N);
+        valueMultiplicity.put(TagFromName.ThreeDRenderingType, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DisplaySetPatientOrientation, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.DoubleExposureFieldDeltaTrial, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.SelectorSequencePointerItems, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DoubleExposureFieldDelta, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.ThreeDImplantTemplateGroupMemberMatchingPoint, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ThreeDImplantTemplateGroupMemberMatchingAxes, Multiplicity.M9);
+        valueMultiplicity.put(TagFromName.TwoDImplantTemplateGroupMemberMatchingPoint, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.TwoDImplantTemplateGroupMemberMatchingAxes, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.TopicKeywords, Multiplicity.M1_32);
+        valueMultiplicity.put(TagFromName.DataElementsSigned, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.OtherMagnificationTypesAvailable, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.OtherSmoothingTypesAvailable, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.PrinterPixelSpacing, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ReferencedOverlayPlaneGroups, Multiplicity.M1_99);
+        valueMultiplicity.put(TagFromName.FailureAttributes, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.XRayImageReceptorTranslation, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.RTImageOrientation, Multiplicity.M6);
+        valueMultiplicity.put(TagFromName.ImagePlanePixelSpacing, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.RTImagePosition, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.DiaphragmPosition, Multiplicity.M4);
+        valueMultiplicity.put(TagFromName.NormalizationPoint, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.GridFrameOffsetVector, Multiplicity.M2_N);
+        valueMultiplicity.put(TagFromName.TissueHeterogeneityCorrection, Multiplicity.M1_3);
+        valueMultiplicity.put(TagFromName.DVHNormalizationPoint, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.DVHData, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.ROIDisplayColor, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ContourOffsetVector, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.AttachedContours, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ContourData, Multiplicity.M3_3N);
+        valueMultiplicity.put(TagFromName.FrameOfReferenceTransformationMatrix, Multiplicity.M16);
+        valueMultiplicity.put(TagFromName.ScanSpotMetersetsDelivered, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TreatmentProtocols, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.TreatmentSites, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.DoseReferencePointCoordinates, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.BeamDoseSpecificationPoint, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.BrachyApplicationSetupDoseSpecificationPoint, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.LeafPositionBoundaries, Multiplicity.M3_N);
+        valueMultiplicity.put(TagFromName.ImagingDeviceSpecificAcquisitionParameters, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CompensatorPixelSpacing, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.CompensatorPosition, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.CompensatorTransmissionData, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.CompensatorThicknessData, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.BlockData, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.LeafJawPositions, Multiplicity.M2_2N);
+        valueMultiplicity.put(TagFromName.IsocenterPosition, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.SurfaceEntryPoint, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ControlPoint3DPosition, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.SourceToCompensatorDistance, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.IsocenterToCompensatorDistances, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.VirtualSourceAxisDistances, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ScanSpotPositionMap, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ScanSpotMetersetWeights, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ScanningSpotSize, Multiplicity.M2);
+        valueMultiplicity.put(TagFromName.ControlPointOrientation, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ThreatROIBase, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.ThreatROIExtents, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.CenterOfMass, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.CenterOfPTO, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.BoundingPolygon, Multiplicity.M6_N);
+        valueMultiplicity.put(TagFromName.AbortReason, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ThreatDetectionAlgorithmandVersion, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.OOISize, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.SourceOrientation, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.SourcePosition, Multiplicity.M3);
+        valueMultiplicity.put(TagFromName.FileSetDescriptorFileID, Multiplicity.M1_8);
+        valueMultiplicity.put(TagFromName.ReferencedFileID, Multiplicity.M1_8);
+        valueMultiplicity.put(TagFromName.ReferencedRelatedGeneralSOPClassUIDInFile, Multiplicity.M1_N);
+
+        int g;
+        int e;
+
+        for (e = 0x3100; e <= 0x31ff; e++) valueMultiplicity.put(new AttributeTag(0x0020, e), Multiplicity.M1_N);  // SourceImageIDs
+
+        for (e = 0; e <= 0xfff; e++) {
+            valueMultiplicity.put(new AttributeTag(0x1000, (e<<4) + 0), Multiplicity.M3);  // EscapeTriplet
+            valueMultiplicity.put(new AttributeTag(0x1000, (e<<4) + 1), Multiplicity.M3);  // RunLengthTriplet
+            valueMultiplicity.put(new AttributeTag(0x1000, (e<<4) + 3), Multiplicity.M3);  // HuffmanTableTriplet
+            valueMultiplicity.put(new AttributeTag(0x1000, (e<<4) + 5), Multiplicity.M3);  // ShiftTableTriplet
+        }
+        for (e = 0x1010; e <= 0xffff; e++) valueMultiplicity.put(new AttributeTag(0x0020, e), Multiplicity.M1_N);  // ZonalMap
+
+        for (g = 5000; g <= 0x50ff; g++) {
+            valueMultiplicity.put(new AttributeTag(g, 0x0030), Multiplicity.M1_N);    // AxisUnits,
+            valueMultiplicity.put(new AttributeTag(g, 0x0040), Multiplicity.M1_N);    // AxisLabels,
+            valueMultiplicity.put(new AttributeTag(g, 0x0104), Multiplicity.M1_N);    // MinimumCoordinateValue,
+            valueMultiplicity.put(new AttributeTag(g, 0x0105), Multiplicity.M1_N);    // MaximumCoordinateValue,
+            valueMultiplicity.put(new AttributeTag(g, 0x0106), Multiplicity.M1_N);    // CurveRange,
+            valueMultiplicity.put(new AttributeTag(g, 0x0110), Multiplicity.M1_N);    // CurveDataDescriptor,
+            valueMultiplicity.put(new AttributeTag(g, 0x0112), Multiplicity.M1_N);    // CoordinateStartValue,
+            valueMultiplicity.put(new AttributeTag(g, 0x0114), Multiplicity.M1_N);    // CoordinateStepValue,
+        }
+
+        for (g = 5000; g <= 0x50ff; g++) {
+            valueMultiplicity.put(new AttributeTag(g, 0x0050), Multiplicity.M2);     // OverlayOrigin        
+            valueMultiplicity.put(new AttributeTag(g, 0x0066), Multiplicity.M1_N);   // OverlayCompressionStepPointers
+            valueMultiplicity.put(new AttributeTag(g, 0x0800), Multiplicity.M1_N);   // OverlayCodeLabel
+            valueMultiplicity.put(new AttributeTag(g, 0x0803), Multiplicity.M1_N);   // OverlayCodeTableLocation
+            valueMultiplicity.put(new AttributeTag(g, 0x1200), Multiplicity.M1_N);   // OverlaysGray
+            valueMultiplicity.put(new AttributeTag(g, 0x1201), Multiplicity.M1_N);   // OverlaysRed
+            valueMultiplicity.put(new AttributeTag(g, 0x1202), Multiplicity.M1_N);   // OverlaysGreen
+            valueMultiplicity.put(new AttributeTag(g, 0x1203), Multiplicity.M1_N);   // OverlaysBlue
+        }
+
+    }
+
     /**
      * Format an integer as a hex number with leading zeroes
      * padded to the indicated length.
@@ -641,6 +1163,7 @@ public class CustomDictionary extends DicomDictionary {
             if (DicomClient.getRestrictXmlTagsToLength32()) {
                 useShortenedAttributeNames();
             }
+            initValueMultiplicity();
         }
     }
 
@@ -677,10 +1200,10 @@ public class CustomDictionary extends DicomDictionary {
         text.append("<CustomDictionary>\n");
         text.append("<CustomDictionaryGenerationTimeAndDate>" +
                 now +
-        "</CustomDictionaryGenerationTimeAndDate>\n");
+                "</CustomDictionaryGenerationTimeAndDate>\n");
         text.append("<CustomDictionaryVersionTimeStamp>" +
                 now.getTime() +
-        "</CustomDictionaryVersionTimeStamp>\n");
+                "</CustomDictionaryVersionTimeStamp>\n");
         for (Object oTag : tagList) {
             AttributeTag tag = (AttributeTag)(oTag);
             // out.write(getNameFromTag(tag) + " : " + tag);
@@ -688,19 +1211,34 @@ public class CustomDictionary extends DicomDictionary {
             String subText = "<" + getNameFromTag(tag);
 
             subText +=
-                " element='" + intToHex(tag.getElement(), 4) + "'" +
-                " group='" + intToHex(tag.getGroup(), 4) + "'" +
-                " vr='" + ValueRepresentation.getAsString(getValueRepresentationFromTag(tag)) + "'" +
-                "></" + getNameFromTag(tag) + ">\n";
+                    " element='" + intToHex(tag.getElement(), 4) + "'" +
+                            " group='" + intToHex(tag.getGroup(), 4) + "'" +
+                            " vr='" + ValueRepresentation.getAsString(getValueRepresentationFromTag(tag)) + "'" +
+                            "></" + getNameFromTag(tag) + ">\n";
             text.append(subText);
         }
         text.append("</CustomDictionary>\n");
         return text.toString().replaceAll("\n", System.getProperty("line.separator"));
     }
 
+    public Multiplicity getValueMultiplicity(AttributeTag tag) {
+        Multiplicity m = valueMultiplicity.get(tag);
+        return (m == null) ? Multiplicity.M1 : m;
+    }
 
     public static void main(String[] args) {
         CustomDictionary cd = new CustomDictionary();
+
+        AttributeTag[] tagList = {
+                TagFromName.PatientID,
+                TagFromName.VerticesOfThePolygonalCollimator,
+                new AttributeTag(0x1000, (23<<4) + 1)
+        };
+        for (AttributeTag tag : tagList) {
+            Multiplicity m = cd.getValueMultiplicity(tag);
+            System.out.println("Tag: " + tag + "    Name: " + cd.getNameFromTag(tag) + "    Multiplicity: " + m);
+        }
+
         System.out.println("varian tag: " + cd.getNameFromTag(new AttributeTag(0x3249, 0x0010)));
     }
 

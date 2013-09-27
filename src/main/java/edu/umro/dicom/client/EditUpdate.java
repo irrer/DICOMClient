@@ -5,20 +5,25 @@ import com.pixelmed.dicom.AttributeList;
 
 class EditUpdate extends Edit {
 
-    Attribute newAttribute = null;
+    private Attribute newAttribute = null;
 
     @Override
     public void doEdit(AttributeList attributeList) {
+        AttributeList al = attributeLocation.getAttributeList(attributeList);
+        al.put(newAttribute);
     }
 
-    public EditUpdate(AttributeLocation attributeLocation) {
+    public EditUpdate(AttributeLocation attributeLocation, Attribute attribute) {
         super(attributeLocation);
+        newAttribute = attribute;
     }
 
     @Override
     public String description() {
         try {
-            return "Change value of " + CustomDictionary.getInstance().getFullNameFromTag(attributeLocation.attribute.getTag()) + " to " + newAttribute.getStringValues();
+            StringBuffer text = new StringBuffer();
+            for (String value : newAttribute.getStringValues()) text.append((text.length() == 0) ? value : (" \\ " + value));
+            return "Update " + CustomDictionary.getInstance().getNameFromTag(attributeLocation.attribute.getTag()) + " to " + text.toString();
         }
         catch (Exception e) {
             return "Changed value";

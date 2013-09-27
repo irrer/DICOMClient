@@ -2,6 +2,13 @@ package edu.umro.dicom.client;
 
 import com.pixelmed.dicom.AttributeList;
 
+/**
+ * An edit operation.
+ * 
+ * @author irrer
+ *
+ */
+
 public abstract class Edit {
 
     AttributeLocation attributeLocation = null;

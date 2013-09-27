@@ -83,6 +83,7 @@ import org.w3c.dom.NodeList;
 
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
+import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.TagFromName;
 
@@ -1242,7 +1243,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 fis = new FileInputStream(new File(fileName));
                 byte[] buffer = new byte[DICOM_METADATA_LENGTH];
                 DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(buffer, 0, fis.read(buffer)));
-                attributeList.read(dis);
+                attributeList.read(dis); // TODO change read to only get what is needed
+                // attributeList.read(dis, TagFromName.InstanceNumber); This
+                // (0x0020,0x0013) : InstanceNumber
+                // does not get:
+                //     (0x3006,0x0008) : StructureSetDate
+                //     (0x3006,0x0009) : StructureSetTime
+                //     (0x300a,0x0006) : RTPlanDate
+                //     (0x300a,0x0007) : RTPlanTime
             }
         }
         catch (Exception e) {

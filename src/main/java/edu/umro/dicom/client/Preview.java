@@ -39,6 +39,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 
 import javax.swing.BorderFactory;
@@ -78,6 +80,7 @@ import com.pixelmed.dicom.OtherWordAttribute;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
+import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
@@ -101,7 +104,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * When there are multiple values to be displayed for a single attribute,
      * they are separated by this string followed by a blank.
      */
-    private static final String VALUE_SEPARATOR = " | ";
+    private static final String VALUE_SEPARATOR = " \\ ";
 
     /**
      * List of value representations that can be displayed as strings in the
@@ -722,6 +725,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
 
         if (ev.getSource().equals(editButton)) {
+            editButton.setEnabled(false);
             editGui = new EditGui(this);
         }
     }
@@ -764,7 +768,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     @Override
     public void mouseReleased(MouseEvent e) {
         if (editGui != null) {
-            AttributeLocation attributeLocation = new AttributeLocation(this.series, new File(this.fileName), this.attributeList, textPreview.getCaretPosition());
+            AttributeLocation attributeLocation = new AttributeLocation(this.attributeList, textPreview.getCaretPosition());
             showText(attributeLocation);
             editGui.setAttributeLocation(attributeLocation);
         }
@@ -816,6 +820,14 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         showText(null);
     }
 
+    /**
+     * Terminate editing session.
+     */
+    public void terminateEditing() {
+        editGui = null;
+        editButton.setEnabled(true);
+        showDicom();
+    }
     /**
      * Set the series to be previewed.
      * 
@@ -1215,6 +1227,15 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      */
     private void showText(AttributeLocation attributeLocation) {
         if (attributeList == null) return;
+        if (false){   // TODO remove.  For debug only
+            System.out.println("VM List");
+            Iterator it = attributeList.values().iterator();
+            while (it.hasNext()) {
+                Attribute a = (Attribute)it.next();
+                System.out.println("    " + CustomDictionary.getInstance().getFullNameFromTag(a.getTag()) + " : " + a.getVM());
+                
+            }
+        }
         matchCountLabel.setText("  0 of 0");
         int oldMatchListSize = matchList.size();
         int oldMatchIndex = matchIndex;
