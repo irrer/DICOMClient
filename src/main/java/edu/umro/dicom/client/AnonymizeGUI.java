@@ -666,7 +666,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             for (Object attrO : newAttributeList.entrySet()) {
                 Map.Entry<AttributeTag, Attribute> mapEntry = (Map.Entry<AttributeTag, Attribute>)attrO;
                 Attribute attr = mapEntry.getValue();
-                String name = CustomDictionary.getInstance().getNameFromTag(attr.getTag());
+                String name = CustomDictionary.getName(attr);
                 if ((name != null) && (name.length() > 0) && (!tagListSorted.contains(name))) {
                     tagListSorted.add(name);
                 }

@@ -24,6 +24,7 @@ import java.util.HashMap;
 
 import org.restlet.engine.io.IoUtils;
 
+import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.ValueRepresentation;
@@ -530,7 +531,7 @@ public class CustomDictionary extends DicomDictionary {
         extensions.add(new PrivateTag(TagFromName.ReferencedLateralSpreadingDeviceNumber, "ReferencedLatSpreadingDevcNumber"));
         extensions.add(new PrivateTag(TagFromName.InterpretationDiagnosisDescription, "InterpDiagnosisDescription"));
         extensions.add(new PrivateTag(TagFromName.InterpretationDiagnosisCodeSequence, "InterpDiagnosisCodeSequence"));
-        extensions.add(new PrivateTag(TagFromName.ThreatDetectionAlgorithmandVersion, "ThreatDetectionAlgandVersion"));
+        extensions.add(new PrivateTag(TagFromName.ThreatDetectionAlgorithmAndVersion, "ThreatDetectionAlgandVersion"));
 
     }
 
@@ -651,8 +652,8 @@ public class CustomDictionary extends DicomDictionary {
         valueMultiplicity.put(TagFromName.MaterialPipeDiameter, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.MaterialIsolationDiameter, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.MaterialGrade, Multiplicity.M1_N);
-        valueMultiplicity.put(TagFromName.MaterialPropertiesFileID, Multiplicity.M1_N);
-        valueMultiplicity.put(TagFromName.MaterialPropertiesFileFormat, Multiplicity.M1_N);
+        //valueMultiplicity.put(TagFromName.MaterialPropertiesFileID, Multiplicity.M1_N);
+        //valueMultiplicity.put(TagFromName.MaterialPropertiesFileFormat, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.IndicationType, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.TransformOrderOfAxes, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.CoordinateSystemTransformRotationAndScaleMatrix, Multiplicity.M1_N);
@@ -1006,7 +1007,7 @@ public class CustomDictionary extends DicomDictionary {
         valueMultiplicity.put(TagFromName.CenterOfPTO, Multiplicity.M3);
         valueMultiplicity.put(TagFromName.BoundingPolygon, Multiplicity.M6_N);
         valueMultiplicity.put(TagFromName.AbortReason, Multiplicity.M1_N);
-        valueMultiplicity.put(TagFromName.ThreatDetectionAlgorithmandVersion, Multiplicity.M1_N);
+        valueMultiplicity.put(TagFromName.ThreatDetectionAlgorithmAndVersion, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.OOISize, Multiplicity.M3);
         valueMultiplicity.put(TagFromName.SourceOrientation, Multiplicity.M3);
         valueMultiplicity.put(TagFromName.SourcePosition, Multiplicity.M3);
@@ -1224,6 +1225,22 @@ public class CustomDictionary extends DicomDictionary {
     public Multiplicity getValueMultiplicity(AttributeTag tag) {
         Multiplicity m = valueMultiplicity.get(tag);
         return (m == null) ? Multiplicity.M1 : m;
+    }
+    
+    public static Multiplicity getVM(Attribute attribute) {
+        return getInstance().getValueMultiplicity(attribute.getTag());
+    }
+
+    public static Multiplicity getVM(AttributeLocation attributeLocation) {
+        return getInstance().getValueMultiplicity(attributeLocation.getAttribute().getTag());
+    }
+
+    public static String getName(Attribute attribute) {
+        return getInstance().getNameFromTag(attribute.getTag());
+    }
+
+    public static String getName(AttributeLocation attributeLocation) {
+        return getInstance().getNameFromTag(attributeLocation.getAttribute().getTag());
     }
 
     public static void main(String[] args) {

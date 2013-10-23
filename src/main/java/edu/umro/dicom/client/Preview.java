@@ -32,6 +32,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
 import java.io.File;
@@ -95,7 +97,7 @@ import edu.umro.util.Log;
  * @author Jim Irrer irrer@umich.edu
  * 
  */
-public class Preview implements ActionListener, ChangeListener, DocumentListener, KeyListener, MouseListener {
+public class Preview implements ActionListener, ChangeListener, DocumentListener, KeyListener, MouseListener, WindowListener {
 
     /** Maximum line length for attributes of uncertain qualities. */
     private static final int MAX_LINE_LENGTH = 2 * 1000;
@@ -696,6 +698,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     public void actionPerformed(ActionEvent ev) {
         if (ev.getSource().equals(closeButton)) {
             setVisible(false);
+            editGui.setVisible(false);
+            editGui = null;
         }
 
         if (ev.getSource().equals(imageRadioButton) || ev.getSource().equals(textRadioButton)) {
@@ -725,8 +729,9 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
 
         if (ev.getSource().equals(editButton)) {
-            editButton.setEnabled(false);
             editGui = new EditGui(this);
+            editGui.setVisible(true);
+            showText(null);
         }
     }
 
@@ -767,7 +772,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (editGui != null) {
+        if ((editGui != null) && (editGui.isVisible())) {
             AttributeLocation attributeLocation = new AttributeLocation(this.attributeList, textPreview.getCaretPosition());
             showText(attributeLocation);
             editGui.setAttributeLocation(attributeLocation);
@@ -820,14 +825,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         showText(null);
     }
 
-    /**
-     * Terminate editing session.
-     */
-    public void terminateEditing() {
-        editGui = null;
-        editButton.setEnabled(true);
-        showDicom();
-    }
+
     /**
      * Set the series to be previewed.
      * 
@@ -953,7 +951,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     }
 
     private String addDetails(AttributeTag tag, byte[] vr, String line) {
-        if (showDetails.isSelected()) {
+        if (showDetails.isSelected() || (DicomClient.inCommandLineMode() && DicomClient.showDetails)) {
             String element = Integer.toHexString(tag.getElement()).toUpperCase();
             while (element.length() < 4) {
                 element = "0" + element;
@@ -1209,7 +1207,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      */
     private AttributeList performEdits(AttributeList attributeList) {
         AttributeList atList = attributeList;
-        if (editGui != null) {
+        if ((editGui != null) && (editGui.isVisible())) {
             try {
                 atList = Util.cloneAttributeList(attributeList);
                 editGui.performEdits(atList);
@@ -1227,15 +1225,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      */
     private void showText(AttributeLocation attributeLocation) {
         if (attributeList == null) return;
-        if (false){   // TODO remove.  For debug only
-            System.out.println("VM List");
-            Iterator it = attributeList.values().iterator();
-            while (it.hasNext()) {
-                Attribute a = (Attribute)it.next();
-                System.out.println("    " + CustomDictionary.getInstance().getFullNameFromTag(a.getTag()) + " : " + a.getVM());
-                
-            }
-        }
         matchCountLabel.setText("  0 of 0");
         int oldMatchListSize = matchList.size();
         int oldMatchIndex = matchIndex;
@@ -1385,6 +1374,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         mainContainer = new Container();
         if (!DicomClient.inCommandLineMode()) {
             dialog = new JDialog(DicomClient.getInstance().getFrame(), false);
+            dialog.addWindowListener(this);
             dialog.setTitle(TITLE_PREFIX);
         }
 
@@ -1405,6 +1395,50 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             dialog.getContentPane().add(panel);
             dialog.pack();
         }
+    }
+
+    @Override
+    public void windowOpened(WindowEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void windowClosing(WindowEvent e) {
+        if (editGui != null) {
+            editGui.setVisible(false);
+        }
+        
+    }
+
+    @Override
+    public void windowClosed(WindowEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void windowIconified(WindowEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void windowDeiconified(WindowEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void windowActivated(WindowEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void windowDeactivated(WindowEvent e) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

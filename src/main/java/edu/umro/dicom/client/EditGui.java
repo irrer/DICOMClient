@@ -21,9 +21,18 @@ import java.awt.CardLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.TreeMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -36,8 +45,10 @@ import javax.swing.JPanel;
 import javax.swing.border.Border;
 
 import com.pixelmed.dicom.AttributeList;
+import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
 
+import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
 /**
@@ -46,7 +57,7 @@ import edu.umro.util.Log;
  * @author irrer
  *
  */
-public class EditGui implements ActionListener {
+public class EditGui implements ActionListener, WindowListener {
 
     /** Preferred size of screen. */
     private static final Dimension PREFERRED_SIZE = new Dimension(600, 700);
@@ -58,9 +69,23 @@ public class EditGui implements ActionListener {
     /** Ordered list of edits made by the user. */
     private LinkedList<Edit> editHistory = new LinkedList<Edit>();
 
-    /** Ordered list of undo's made by the user. */
-    private LinkedList<Edit> undoHistory = new LinkedList<Edit>();
+    /** Ordered list of redo's available to the user. */
+    private LinkedList<Edit> redoHistory = new LinkedList<Edit>();
+    
+    /** List of edited DICOM files that have been saved.  This list is kept so that
+     * if a user saves the same file multiple times over the course of editing, a
+     * new instance of the file will not be created every time. */
+    private HashMap<String, File> savedFileList = new HashMap<String, File>();
+    
+    /** True if DICOM series has been modified since last save. */
+    private boolean modified = false;
 
+    /** Reflects current state of EditGui. */
+    private String currentCard;
+            
+    /** Last attribute to be selected for editing. */
+    private AttributeLocation attributeLocation = null;
+    
     private JDialog dialog = null;
     private Container mainContainer = null;
     private Preview preview = null;
@@ -70,6 +95,7 @@ public class EditGui implements ActionListener {
 
     private JButton cancelButton = null;
     private JButton saveButton = null;
+    private JButton saveCloseButton = null;
     private JButton undoButton = null;
     private JButton redoButton = null;
     private JCheckBox applyToAllSlices = null;
@@ -88,21 +114,15 @@ public class EditGui implements ActionListener {
     private UpdateGui updateGui; 
     private CreateGui createGui; 
     
-    private String currentCard;
-            
-    /** Last attribute to be selected for editing. */
-    private AttributeLocation attributeLocation = null;
-
     /**
      * Layout that switches back and forth between image and text viewing modes.
      */
     private CardLayout cardLayout = null;
 
     private JComponent buildButtonPanelCenter() {
-        JPanel boxPanel = new JPanel();
-        BoxLayout layout = new BoxLayout(boxPanel, BoxLayout.Y_AXIS);
-        // FlowLayout layout = new FlowLayout(FlowLayout.CENTER);
-        boxPanel.setLayout(layout);
+        JPanel innerPanel = new JPanel();
+        GridLayout layout = new GridLayout(2, 2);
+        innerPanel.setLayout(layout);
 
         createButton = new JButton("Create");
 
@@ -125,46 +145,62 @@ public class EditGui implements ActionListener {
             button.setFont(DicomClient.FONT_LARGE);
             p.setBorder(borderLarge);
             p.add(button);
-            boxPanel.add(p);
+            innerPanel.add(p);
         }
 
         JPanel panel = new JPanel();
         panel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        panel.add(boxPanel);
+        panel.add(innerPanel);
         panel.setBorder(borderLarge);
         return panel;
     }
 
     private JComponent buildButtonPanelSouth() {
-        JPanel panel = new JPanel();
-        FlowLayout layout = new FlowLayout(FlowLayout.CENTER);
+        JPanel lowerPanel = new JPanel();
+        FlowLayout layout = new FlowLayout(FlowLayout.RIGHT);
         layout.setHgap(30);
         layout.setVgap(30);
-        panel.setLayout(layout);
+        lowerPanel.setLayout(layout);
+
+        
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
         applyToAllSlices = new JCheckBox("All");
         applyToAllSlices.addActionListener(this);
         applyToAllSlices.setToolTipText("<html>Apply changes to all<br>slices in this series.<br>If not checked, only<br>change the current slice.</html>");
-        panel.add(applyToAllSlices);
+        lowerPanel.add(applyToAllSlices);
 
         undoButton = new JButton("Undo");
         undoButton.addActionListener(this);
-        panel.add(undoButton);
+        JPanel undoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        undoPanel.add(undoButton);
+        panel.add(undoPanel);
+        
+        panel.add(new JLabel(" "));  // spacer
 
         redoButton = new JButton("Redo");
         redoButton.addActionListener(this);
-        panel.add(redoButton);
+        JPanel redoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        redoPanel.add(redoButton);
+        panel.add(redoPanel);
 
         cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(this);
         cancelButton.setToolTipText("<html>Discard all edits without<br>saving anything.</html>");
-        panel.add(cancelButton);
+        lowerPanel.add(cancelButton);
 
         saveButton = new JButton("Save");
         saveButton.addActionListener(this);
-        saveButton.setToolTipText("<html>Write new version<br>of file(s).</html>");
-        panel.add(saveButton);
+        saveButton.setToolTipText("<html>Save to<br>file(s).</html>");
+        lowerPanel.add(saveButton);
 
+        saveCloseButton = new JButton("Save+Close");
+        saveCloseButton.addActionListener(this);
+        saveCloseButton.setToolTipText("<html>Save to file(s) and<br>close window.</html>");
+        lowerPanel.add(saveCloseButton);
+
+        panel.add(lowerPanel);
         return panel;
     }
 
@@ -200,13 +236,33 @@ public class EditGui implements ActionListener {
 
     private JComponent buildSouth() {
         JPanel panel = new JPanel();
-
         return panel;
     }
 
     private void setTitle() {
-        String title = "Editing " + preview.getPreviewedSeries().getDescription();
+        Series series = preview.getPreviewedSeries();
+        String title = (series == null) ? "Editor" :  "Editing " + preview.getPreviewedSeries().getDescription();
         dialog.setTitle(title);
+    }
+    
+    public void setVisible(boolean visible) {
+        if (!visible) {
+            cancel();
+            editHistory = new LinkedList<Edit>();
+            redoHistory = new LinkedList<Edit>();
+            savedFileList.clear();
+            setModified(false);
+            attributeLocation = null;
+            setCard(CARD_MAIN);
+            resetDoButtons();
+        }
+
+        dialog.setVisible(visible);
+        DicomClient.getInstance().setEnabled(!visible);
+    }
+
+    public boolean isVisible() {
+        return dialog.isVisible();
     }
 
     public EditGui(Preview preview) {
@@ -214,6 +270,7 @@ public class EditGui implements ActionListener {
         mainContainer = new Container();
         if (!DicomClient.inCommandLineMode()) {
             dialog = new JDialog(DicomClient.getInstance().getFrame(), false);
+            dialog.addWindowListener(this);
             setTitle();
         }
         JPanel panel = new JPanel();
@@ -233,8 +290,8 @@ public class EditGui implements ActionListener {
             dialog.setPreferredSize(PREFERRED_SIZE);
             dialog.getContentPane().add(panel);
             dialog.pack();
-            dialog.setVisible(true);
         }
+        setModified(false);
         setAttributeLocation(null);
     }
     
@@ -257,6 +314,8 @@ public class EditGui implements ActionListener {
 
         if (ev.getSource().equals(saveButton)) save();
 
+        if (ev.getSource().equals(saveCloseButton)) saveAndClose();
+
         if (ev.getSource().equals(undoButton)) undo();
 
         if (ev.getSource().equals(redoButton)) redo();
@@ -278,33 +337,50 @@ public class EditGui implements ActionListener {
             undoButton.setText("Undo " + editHistory.getLast().description());
         }
         
-        if (undoHistory.isEmpty()) {
+        if (redoHistory.isEmpty()) {
             redoButton.setEnabled(false);
             redoButton.setText("Redo");
         }
         else {
             redoButton.setEnabled(true);
-            redoButton.setText("Redo " + undoHistory.getFirst().description());
+            redoButton.setText("Redo " + redoHistory.getFirst().description());
         }
+    }
+    
+    private void setModified(boolean modified) {
+        this.modified = modified;
+        saveButton.setEnabled(modified);
+        saveCloseButton.setEnabled(modified);
     }
     
     private void undo() {
         if (!editHistory.isEmpty()) {
+            setModified(true);
             Edit e = editHistory.removeLast();
-            undoHistory.push(e);
+            redoHistory.push(e);
             resetDoButtons();
             preview.showDicom();
         }
     }
     
     private void redo() {
-        if (!undoHistory.isEmpty()) {
-            Edit e = undoHistory.removeFirst();
+        if (!redoHistory.isEmpty()) {
+            setModified(true);
+            Edit e = redoHistory.removeFirst();
             editHistory.add(e);
             resetDoButtons();
             preview.showDicom();
         }
 
+    }
+    
+    /**
+     * Determine if there are one or more unsaved edits.
+     * 
+     * @return True if there are unsaved edits.
+     */
+    public boolean getModified() {
+        return modified;
     }
     
     private void cancel() {
@@ -316,37 +392,105 @@ public class EditGui implements ActionListener {
             Alert alert = new Alert(msg, title, buttonNameList, new Dimension(400, 300), true);
             switch (alert.selectedButton) {
             case 0:
-                save();
-                dialog.setVisible(false);
+                saveAndClose();
                 break;
             case 1:
                 Log.get().info("Discarding " + editHistory.size() + " edits.");
-                preview.terminateEditing();
-                dialog.setVisible(false);
+                setVisible(false);
+                preview.showDicom();
                 break;
             case 2:
                 break;
             }
         }
         else {
-            dialog.setVisible(false);
-            preview.terminateEditing();
+            setVisible(false);
+            preview.showDicom();
+        }
+    }
+    
+    private String saveOneFile(String fileName) {
+        File destFile;
+        AttributeList attributeList = new AttributeList();
+        try {
+            attributeList.read(fileName);
+        }
+        catch (DicomException e) {
+            return "DICOM error while reading file " + fileName + " : " + e.toString();
+        }
+        catch (IOException e) {
+            return "Unable to read file " + fileName + " : " + e.toString();
+        }
+        performEdits(attributeList);
+        if (savedFileList.containsKey(fileName)) {
+            destFile = savedFileList.get(fileName);
+        }
+        else {
+            destFile = Series.getNewFile(attributeList);
+            savedFileList.put(fileName, destFile);
+        }
+        destFile.delete();
+        try {
+            attributeList.write(destFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
+            return null;
+        }
+        catch (IOException e) {
+            return "Unable to write file " + destFile + " : " + e.toString();
+        }
+        catch (DicomException e) {
+            return "DICOM error while writing file " + destFile + " : " + e.toString();
         }
     }
         
-    private void save() {
-        System.out.println("Save not yet supported");  // TODO
-        dialog.setVisible(false);
-        preview.terminateEditing();
+    private boolean save() {
+        Series series = preview.getPreviewedSeries();
+        if (series != null) {
+            if (applyToAllSlices.isSelected()) {
+                for (String fileName : series.getFileNameList()) {
+                    String msg = saveOneFile(fileName);
+                    if (msg != null) {
+                        Log.get().severe(msg);
+                        new Alert(msg, "Error Saving Edited File");
+                        return false;
+                    }
+                }
+            }
+            else {
+                String fileName = (String)(series.getFileNameList().toArray()[preview.getCurrentSlice()-1]);
+                saveOneFile(fileName);
+            }
+            setModified(false);
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Save the DICOM file(s), close the dialog, and discard edit history.  If the save is not successful, then
+     * leave the dialog open and keep the edit history.
+     * 
+     */
+    private void saveAndClose() {
+        if (save()) {
+            redoHistory.clear();
+            editHistory.clear();
+            setVisible(false);
+        }
     }
 
     private void copy() {
         System.out.println("Copy not yet implemented.");   // TODO
     }
     
+    /**
+     * Push a new edit action onto the <code>editHistory</code> stack.
+     * 
+     * @param edit
+     */
     public void addNewEdit(Edit edit) {
+        setModified(true);
         editHistory.add(edit);
-        undoHistory.clear();
+        redoHistory.clear();
         setCard(CARD_MAIN);
         setAttributeLocation(null);
         resetDoButtons();
@@ -367,10 +511,47 @@ public class EditGui implements ActionListener {
         }
     }
     
+    private boolean editInProgress() {
+        if (attributeLocation != null) {
+            if (currentCard.equals(CARD_UPDATE) && updateGui.isModified()) {
+                return true;
+            }
+            if (currentCard.equals(CARD_CREATE) && createGui.isModified()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public void setAttributeLocation(AttributeLocation attributeLocation) {
+        
+        if (editInProgress()) {
+            String modeName = currentCard.equals(CARD_UPDATE) ? "Update" : "Create";
+            String[] buttonNameList = { "Resume", "Save", "Discard" };
+            String msg = "<html>" + modeName + " has not been saved<br><p><br>" +
+                    "&nbsp; &nbsp; &nbsp; &nbsp; <b>Resume</b> : Resume current editing<br><p><br>" +
+                    "&nbsp; &nbsp; &nbsp; &nbsp; <b>Save</b> : Save change and continue<br><p><br>" +
+                    "&nbsp; &nbsp; &nbsp; &nbsp; <b>Discard</b> : Discard change and continue</html>";
+                    
+            Alert alert = new Alert(msg, modeName + " Not Saved", buttonNameList, new Dimension(400, 300), true);
+            switch (alert.selectedButton) {
+            case 0: // Resume
+                return;
+            case 1: // Save and continue
+                if (currentCard.equals(CARD_UPDATE)) updateGui.save();
+                if (currentCard.equals(CARD_CREATE)) createGui.save();
+                return;
+            case 2: // discard
+                Log.get().info("Discarding change to " + CustomDictionary.getName(this.attributeLocation.getAttribute()));
+                break;
+            }
+        }
+        
         this.attributeLocation = attributeLocation;
+        
         deleteButton.setEnabled(attributeLocation != null);
         updateButton.setEnabled((attributeLocation != null) && (attributeLocation.attribute != null) && (!(attributeLocation.attribute instanceof SequenceAttribute)));
+        copyButton.setEnabled((attributeLocation != null) && (attributeLocation.attribute == null));
         
         if (attributeLocation == null) {
             String tip = "<html>Select an entry in<br>the preview window</html>";
@@ -384,15 +565,55 @@ public class EditGui implements ActionListener {
                 desc = "Item " + item + " of " + CustomDictionary.getInstance().getNameFromTag(attributeLocation.getParentTag());
             }
             else {
-                desc = CustomDictionary.getInstance().getNameFromTag(attributeLocation.attribute.getTag());
+                desc = CustomDictionary.getName(attributeLocation);
             }
                         
             deleteButton.setToolTipText("Delete " + desc);
             updateButton.setToolTipText("Update " + desc);
             
-            if (currentCard.equals(CARD_UPDATE)) updateGui.setAttributeLocation(attributeLocation);
+            if (currentCard.equals(CARD_UPDATE)) {
+                if (UpdateGui.isUpdateable(attributeLocation)) updateGui.setAttributeLocation(attributeLocation);
+                else setCard(CARD_MAIN);
+            }
             if (currentCard.equals(CARD_CREATE)) createGui.setAttributeLocation(attributeLocation);
         }
+    }
+
+    @Override
+    public void windowOpened(WindowEvent e) {
+    }
+
+    @Override
+    public void windowClosing(WindowEvent e) {
+        cancel();
+    }
+
+    @Override
+    public void windowClosed(WindowEvent e) {
+        System.out.println("windowClosed"); // TODO remove
+    }
+
+    @Override
+    public void windowIconified(WindowEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void windowDeiconified(WindowEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void windowActivated(WindowEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void windowDeactivated(WindowEvent e) {
+        System.out.println("windowDeactivated"); // TODO remove
     }
     
 }

@@ -49,7 +49,7 @@ class EditDelete extends Edit {
             return "Delete item " + (attributeLocation.getSequenceItemIndex() + 1);
         }
         else {
-            return "Delete " + CustomDictionary.getInstance().getNameFromTag(attributeLocation.attribute.getTag());
+            return "Delete " + CustomDictionary.getName(attributeLocation);
         }
     }
 }

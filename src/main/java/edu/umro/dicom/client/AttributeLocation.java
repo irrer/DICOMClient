@@ -140,7 +140,7 @@ public class AttributeLocation {
         if (attribute == null)
             text.append("Index: " + (sequenceItemIndex + 1));
         else
-            text.append(indent + CustomDictionary.getInstance().getNameFromTag(attribute.getTag()) + "\n");
+            text.append(indent + CustomDictionary.getName(attribute) + "\n");
         return text.toString();
     }
 }

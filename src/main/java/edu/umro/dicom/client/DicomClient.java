@@ -82,9 +82,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.pixelmed.dicom.Attribute;
+import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomInputStream;
+import com.pixelmed.dicom.ReadStrategy;
 import com.pixelmed.dicom.TagFromName;
 
 import edu.umro.dicom.common.Anonymize;
@@ -248,6 +250,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** True if the application is in command line mode (no GUI) */
     private static boolean commandLineMode = false;
+
+    /** If the application is in command line mode (no GUI) then this is the flag indicating that
+     * AttributeTag details should be shown in the text dump. */
+    public static boolean showDetails = false;
 
     /** The default patient ID to use. */
     private static String defaultPatientId = null;
@@ -1228,6 +1234,58 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * 
      * @return The contents of the file
      */
+    private AttributeList readDicomFileX(String fileName) {
+        AttributeList attributeList = new AttributeList();
+
+        FileInputStream fis = null;
+        try {
+            if (inCommandLineMode()) {
+                // this does not show any annoying messages in the log
+                attributeList.read(fileName);
+            }
+            else {
+                // The following is faster than
+                // <code>attributeList.read(fileName);</code>, as it only reads
+                // the first part of every DICOM file, but
+                // it also produces a lot of error messages because of the
+                // 'ragged end' of each file.
+                // fis = new FileInputStream(new File(fileName));
+                // DicomInputStream dis = new DicomInputStream(fis);
+
+                // attributeList.read(dis,DicomClientReadStrategy.dicomClientReadStrategy);
+                // attributeList.read(dis);
+                attributeList.read(new File(fileName));
+                { // TODO remove
+                    String sopUID = attributeList.get(TagFromName.SOPInstanceUID).getSingleStringValueOrEmptyString();
+                    System.out.println("Read file: " + fileName + " SOPInstanceUID: " + sopUID);
+                }
+            }
+        }
+        catch (Exception e) {
+            // Exceptions do not matter because
+            // 1: If reading a partial file, there will always be an exception
+            // 2: The content is checked anyway
+            Log.get().severe("Error reading DICOM file " + fileName + " : " + e);
+        }
+        finally {
+            if (fis != null) try {
+                fis.close();
+            }
+            catch (Exception e) {
+                Log.get().warning("Unable to close stream for file " + fileName);
+            }
+        }
+        return attributeList;
+    }
+
+    /**
+     * Read at a minimum the first portion of the given DICOM file.  The
+     * 'portion' is defined to be long enough to get the basic meta-data.
+     * 
+     * @param fileName
+     * 
+     * @return The contents of the file
+     */
     private AttributeList readDicomFile(String fileName) {
         AttributeList attributeList = new AttributeList(); 
 
@@ -1508,12 +1566,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         String usage =
             "Usage:\n\n" +
             "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 ...\n" + 
-            "        -c Run without GUI in command line mode\n" +
+            "        -c Run in command line mode (without GUI)\n" +
             "        -P Specify new patient ID for anonymization\n" +
             "        -o Specify output file for anonymization\n" +
-            "        -3 Restrict generated XML to 32 character tag names, as required by SAS\n" +
+            "        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package\n" +
+            "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
             "        -z Replace each control character in DICOM attributes with a blank.  Required by SAS\n" +
-            "        -g Perform aggressive anonymization.\n";
+            "        -g Perform aggressive anonymization - anonymize fields that are not marked for\n" +
+            "           anonymization but contain strings found in fields that are marked for anonymization.\n";
         System.err.println(usage);
         System.exit(1);
     }
@@ -1552,33 +1612,39 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         a++;
                         outputFile = new File(args[a]);
                     }
-                    else { 
+                    else {
                         if (args[a].equals("-c")) {
                             commandLineMode = true;
                         }
-                        else { 
-                            if (args[a].equals("-3")) {
-                                restrictXmlTagsToLength32 = true;
+                        else {
+                            if (args[a].equals("-t")) {
+                                showDetails = true;
                             }
-                            else { 
-                                if (args[a].equals("-z")) {
-                                    replaceControlCharacters = true;
+
+                            else {
+                                if (args[a].equals("-3")) {
+                                    restrictXmlTagsToLength32 = true;
                                 }
                                 else {
-                                    if (args[a].equals("-g")) {
-                                        aggressivelyAnonymize = true;
+                                    if (args[a].equals("-z")) {
+                                        replaceControlCharacters = true;
                                     }
                                     else {
-                                        if (args[a].startsWith("-")) {
-                                            usage("Invalid argument: " + args[a]);
-                                            System.exit(1);
+                                        if (args[a].equals("-g")) {
+                                            aggressivelyAnonymize = true;
                                         }
                                         else {
-                                            fileList = new String[args.length - a];
-                                            int f = 0;
-                                            for (; a < args.length; a++) {
-                                                fileList[f] = args[a];
-                                                f++;
+                                            if (args[a].startsWith("-")) {
+                                                usage("Invalid argument: " + args[a]);
+                                                System.exit(1);
+                                            }
+                                            else {
+                                                fileList = new String[args.length - a];
+                                                int f = 0;
+                                                for (; a < args.length; a++) {
+                                                    fileList[f] = args[a];
+                                                    f++;
+                                                }
                                             }
                                         }
                                     }
@@ -1636,6 +1702,34 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public static void main(String[] args) {
         try {
             logPrelude();
+            
+            if (false){ // TODO remove. For testing only.
+
+                AttributeTag[] atList = { TagFromName.PatientID, TagFromName.PatientName, TagFromName.Modality, TagFromName.MediaStorageSOPClassUID, TagFromName.SeriesDescription,
+                        TagFromName.SeriesDate, TagFromName.ContentDate, TagFromName.AcquisitionDate, TagFromName.InstanceCreationDate, TagFromName.RTPlanDate,
+                        TagFromName.StructureSetDate, TagFromName.SeriesTime, TagFromName.ContentTime, TagFromName.AcquisitionTime, TagFromName.InstanceCreationTime,
+                        TagFromName.RTPlanTime, TagFromName.StructureSetTime, TagFromName.InstanceCreationDate, TagFromName.InstanceCreationTime, TagFromName.SeriesInstanceUID };
+
+                for (AttributeTag at : atList) {
+                    System.out.println(at.toString()+ "    name: " + CustomDictionary.getInstance().getNameFromTag(at));
+                }
+                System.exit(99);
+                
+                class RS implements ReadStrategy {
+                    @Override
+                    public boolean terminate(AttributeList attributeList, Attribute attribute, long bytesRead) {
+                        System.out.println("bytesRead: " + bytesRead + "   attribute: " + CustomDictionary.getName(attribute));
+                        return attribute.getTag().equals(TagFromName.PatientID);
+                    }
+                }
+
+                File file = new File("D:\\pf\\Conquest\\dicomserver1417\\data\\99999999\\output\\99999999_RTPLAN.DCM");
+                DicomInputStream dis = new DicomInputStream(file);
+                AttributeList al = new AttributeList();
+                al.read(dis, new RS());
+                System.out.println("got it");
+                System.exit(99);
+            }
             args = parseArguments(args);
 
             // This disables the host name verification for certificate authentication.
@@ -1726,6 +1820,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     @Override
     public void changedUpdate(DocumentEvent e) {
         updateDestination();
+    }
+    
+    /**
+     * Set the enabled state of the main dialog.
+     * 
+     * @param enabled True to enable, false to disable.
+     */
+    public void setEnabled(boolean enabled) {
+        frame.getContentPane().setEnabled(enabled);
+        //frame.setEnabled(enabled);
     }
 
 }

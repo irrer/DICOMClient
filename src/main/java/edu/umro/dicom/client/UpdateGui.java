@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -20,6 +21,7 @@ import javax.swing.SpringLayout;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.DicomException;
+import com.pixelmed.dicom.ValueRepresentation;
 
 import edu.umro.dicom.client.CustomDictionary.Multiplicity;
 import edu.umro.util.Log;
@@ -31,9 +33,11 @@ public class UpdateGui extends JPanel implements ActionListener {
 
     private static final String CARD_SINGLE = "single";
     private static final String CARD_MULTIPLE = "multiple";
-    
+
     /** Scroll bar increment. */
     private static final int SCROLL_INCREMENT = 12;
+
+    public static final int TEXT_FIELD_COLUMNS = 40;
 
     private EditGui editGui;
 
@@ -46,35 +50,34 @@ public class UpdateGui extends JPanel implements ActionListener {
     private JButton cancelButton = null;
 
     private JLabel singleValueLabel;
-    private JTextField singleValueText; // TODO remove
+    private JTextField singleValueText;
 
     private JLabel multipleValueLabel;
-    private ArrayList<JTextField> multipleValueText;
 
     MultipleValueGui multipleValueGui;
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(cancelButton)) editGui.setToMainMode();
-        if ((e.getSource().equals(updateButton) || e.getSource().equals(singleValueText)) && modified()) {
+        if ((e.getSource().equals(updateButton) || e.getSource().equals(singleValueText)) && isModified()) {
             save();
         }
         else
             editGui.setToMainMode();
-
     }
 
     /**
      * Save the user's changes to the edit stack (not saved to disk).
      */
-    private void save() {
+    public void save() {
         try {
-            Attribute attribute = AttributeFactory.newAttribute(attributeLocation.getAttribute().getTag());
-            if (singleMultiplicity())
+            Attribute attribute = null;
+        
+            if (singleMultiplicity()) {
+                attribute = AttributeFactory.newAttribute(attributeLocation.getAttribute().getTag());
                 attribute.addValue(singleValueText.getText());
-            else
-                for (JTextField textField : multipleValueText)
-                    attribute.addValue(textField.getText());
+            }
+            else attribute = multipleValueGui.getUpdatedAttribute();
             editGui.addNewEdit(new EditUpdate(attributeLocation, attribute));
             attributeLocation = null;
         }
@@ -85,32 +88,50 @@ public class UpdateGui extends JPanel implements ActionListener {
 
     private boolean singleMultiplicity() {
         return (attributeLocation == null) || (attributeLocation.getAttribute() == null)
-                || (CustomDictionary.getInstance().getValueMultiplicity(attributeLocation.getAttribute().getTag()) == Multiplicity.M1);
+                || (CustomDictionary.getVM(attributeLocation) == Multiplicity.M1);
     }
 
-    private boolean modified() {
+    /**
+     * Determine if attribute has been modified.
+     * 
+     * @return True if modified.
+     */
+    public boolean isModified() {
         if ((attributeLocation == null) || (attributeLocation.getAttribute() == null)) return false;
+
         if (singleMultiplicity()) {
             return !(attributeLocation.getAttribute().getSingleStringValueOrEmptyString().equals(singleValueText.getText()));
         }
         else {
-
-            if (multipleValueText == null) return false;
-            if (attributeLocation.getAttribute().getVL() != multipleValueText.size()) return false;
-            try {
-                String[] valueList = attributeLocation.getAttribute().getStringValues();
-                for (int i = 0; i < multipleValueText.size(); i++) {
-                    if (!multipleValueText.get(i).getText().equals(valueList[i])) return true;
-                }
-            }
-            catch (DicomException e) {
-            }
-            return false;
+            return multipleValueGui.isModified();
         }
     }
 
     private String getAttrName() {
-        return CustomDictionary.getInstance().getNameFromTag(attributeLocation.getAttribute().getTag());
+        return CustomDictionary.getName(attributeLocation);
+    }
+    
+    /**
+     * Determine if the given attribute can be updated by this GUI.
+     * 
+     * @param attribute
+     *            Attribute to be tested.
+     * 
+     * @return True if it can be edited.
+     */
+    public static boolean isUpdateable(Attribute attribute) {
+        if (attribute == null) return false;
+        byte[] vr = attribute.getVR();
+        if (ValueRepresentation.isSequenceVR(vr)) return false;
+        if (ValueRepresentation.isOtherByteOrWordVR(vr)) return false;
+        if (ValueRepresentation.isOtherUnspecifiedVR(vr)) return false;
+        if (ValueRepresentation.isUnknownVR(vr)) return false;
+        return true;
+    }
+    
+    public static boolean isUpdateable(AttributeLocation attributeLocation) {
+        if (attributeLocation == null) return false;
+        return isUpdateable(attributeLocation.getAttribute());
     }
 
     private void setSingleMode(AttributeLocation attributeLocation) {
@@ -127,27 +148,23 @@ public class UpdateGui extends JPanel implements ActionListener {
         cardLayout.show(cardPanel, CARD_MULTIPLE);
         multipleValueGui.setAttributeLocation(attributeLocation);
     }
-
+    
     public void setAttributeLocation(AttributeLocation attributeLocation) {
-        if (modified()) {
-            String[] buttonNameList = { "Save", "Don't save" };
-            Alert alert = new Alert("Update has not been saved", "Update Not Saved", buttonNameList, new Dimension(400, 300), true);
-            switch (alert.selectedButton) {
-            case 0:
-                save();
-                break;
-            case 1:
-                Log.get().info("Discarding update to " + getAttrName());
-                break;
-            }
-        }
-        this.attributeLocation = attributeLocation;
+        System.out.println("UpdateGui.setAttributeLocation: " + attributeLocation);
+        
+        this.attributeLocation = isUpdateable(attributeLocation) ? attributeLocation : null;
 
-        Attribute attribute = attributeLocation.getAttribute();
-        if (CustomDictionary.getInstance().getValueMultiplicity(attribute.getTag()) == Multiplicity.M1)
-            setSingleMode(attributeLocation);
-        else
-            setMultipleMode(attributeLocation);
+        Attribute attribute = this.attributeLocation.getAttribute();
+        if (isUpdateable(attribute)) {
+            if (CustomDictionary.getVM(attribute) == Multiplicity.M1)
+                setSingleMode(this.attributeLocation);
+            else
+                setMultipleMode(this.attributeLocation);
+        }
+        else {
+            multipleValueGui.setAttributeLocation(null);
+            editGui.setToMainMode();
+        }
     }
 
     /**
@@ -177,60 +194,89 @@ public class UpdateGui extends JPanel implements ActionListener {
         return panel;
     }
 
-    private JPanel buildSinglePanel() {
+    private JPanel wrapInCenteredFlow(JComponent component) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panel.add(component);
+        return panel;
+    }
+
+    private JPanel buildSingleValuePanel() {
         JPanel panel = new JPanel();
 
-        FlowLayout layout = new FlowLayout(FlowLayout.CENTER);
-        layout.setHgap(30);
-        layout.setVgap(30);
+        BoxLayout layout = new BoxLayout(panel, BoxLayout.Y_AXIS);
         panel.setLayout(layout);
 
-        singleValueLabel = new JLabel();
-        panel.add(singleValueLabel);
+        singleValueLabel = new JLabel("", JLabel.CENTER);
+        panel.add(wrapInCenteredFlow(singleValueLabel));
 
-        singleValueText = new JTextField(20);
-        panel.add(singleValueText);
+        singleValueText = new JTextField(TEXT_FIELD_COLUMNS);
+        panel.add(wrapInCenteredFlow(singleValueText));
 
         singleValueText.addActionListener(this);
 
+        return wrapInCenteredFlow(panel);
+    }
+
+    private JPanel buildMVLabelPanel() {
+        multipleValueLabel = new JLabel("", JLabel.CENTER);
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panel.add(multipleValueLabel, BorderLayout.NORTH);
         return panel;
     }
-    
+
+    private JPanel buildMVGuiFlowPanel() {
+        JPanel flowPanel = new JPanel();
+        flowPanel.add(multipleValueGui = new MultipleValueGui(this, attributeLocation));
+        return flowPanel;
+    }
+
+    private JPanel buildMVGuiBoxPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(multipleValueGui = new MultipleValueGui(this, attributeLocation));
+        return panel;
+    }
+
     private JPanel buildMultiValueGuiSpringPanel() {
-        JPanel mvgPanel = new JPanel();
+        JPanel panel = new JPanel();
         SpringLayout springLayout = new SpringLayout();
-        mvgPanel.setLayout(springLayout);
-        mvgPanel.add(multipleValueGui = new MultipleValueGui(attributeLocation));
+        panel.setLayout(springLayout);
+        panel.add(multipleValueGui = new MultipleValueGui(this, attributeLocation));
         int gap = 15;
-        springLayout.putConstraint(SpringLayout.EAST, multipleValueGui, gap, SpringLayout.EAST, mvgPanel);
-        springLayout.putConstraint(SpringLayout.WEST, multipleValueGui, gap, SpringLayout.WEST, mvgPanel);
-        //springLayout.putConstraint(SpringLayout.NORTH, multipleValueGui, gap, SpringLayout.NORTH, mvgPanel);
-        //springLayout.putConstraint(SpringLayout.SOUTH, multipleValueGui, -gap, SpringLayout.SOUTH, mvgPanel);
-        
-        return mvgPanel;
+        springLayout.putConstraint(SpringLayout.EAST, multipleValueGui, -gap, SpringLayout.EAST, panel);
+        springLayout.putConstraint(SpringLayout.WEST, multipleValueGui, gap, SpringLayout.WEST, panel);
+        springLayout.putConstraint(SpringLayout.NORTH, multipleValueGui, gap, SpringLayout.NORTH, panel);
+        // springLayout.putConstraint(SpringLayout.SOUTH, multipleValueGui,
+        // -gap, SpringLayout.SOUTH, mvgPanel);
+
+        return panel;
+    }
+
+    private JPanel buildMVGuiBorderPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(multipleValueGui = new MultipleValueGui(this, attributeLocation), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JScrollPane wrapInScrollPane(JPanel panel) {
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
+        return scrollPane;
     }
 
     private JPanel buildMultiplePanel() {
         JPanel panel = new JPanel();
+
         panel.setLayout(new BorderLayout());
-        // panel.setLayout(new FlowLayout());
+        panel.add(buildMVLabelPanel(), BorderLayout.NORTH);
+        panel.add(wrapInScrollPane(buildMVGuiFlowPanel()), BorderLayout.CENTER);
+        // panel.add(wrapInScrollPane(buildMultiValueGuiSpringPanel()),
+        // BorderLayout.CENTER);
+        // panel.add(wrapInScrollPane(buildMVGuiBorderPanel()),
+        // BorderLayout.CENTER);
+        // panel.add(wrapInScrollPane(buildMVGuiBoxPanel()),
+        // BorderLayout.CENTER);
 
-        multipleValueLabel = new JLabel("", JLabel.CENTER);
-        JPanel mvlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        mvlPanel.add(multipleValueLabel, BorderLayout.NORTH);
-        // mvlPanel.add(multipleValueLabel);
-
-        JPanel flowPanel = new JPanel();
-        flowPanel.add(multipleValueGui = new MultipleValueGui(attributeLocation));
-        
-        JScrollPane scrollPane = new JScrollPane(flowPanel);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
-        // scrollPane.add(buildMultiValueGuiSpringPanel());
-
-        // multipleValueGui.setPreferredSize(new Dimension(200, 200));
-
-        panel.add(scrollPane, BorderLayout.CENTER);
-        // panel.add(scrollPane);
         return panel;
     }
 
@@ -239,7 +285,7 @@ public class UpdateGui extends JPanel implements ActionListener {
         cardLayout = new CardLayout();
         cardPanel.setLayout(cardLayout);
 
-        cardPanel.add(buildSinglePanel(), CARD_SINGLE);
+        cardPanel.add(buildSingleValuePanel(), CARD_SINGLE);
         cardPanel.add(buildMultiplePanel(), CARD_MULTIPLE);
 
         return cardPanel;

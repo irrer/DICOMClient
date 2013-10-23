@@ -17,7 +17,7 @@ public class EditCreate extends Edit {
 
     @Override
     public String description() {
-        return "Created attribute " + CustomDictionary.getInstance().getNameFromTag(newAttribute.getTag());
+        return "Created attribute " + CustomDictionary.getName(newAttribute);
     }
 }
 

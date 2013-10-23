@@ -45,8 +45,11 @@ import org.w3c.dom.Document;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
+import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.FileMetaInformation;
+import com.pixelmed.dicom.ReadStrategy;
+import com.pixelmed.dicom.SOPClass;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.XMLRepresentationOfDicomObjectFactory;
@@ -618,8 +621,13 @@ public class Series extends JPanel implements ActionListener, Runnable {
      */
     public void processSeries() {
         if (!processOk) return;
-        Thread thread = new Thread(this);
-        thread.start();
+        if (DicomClient.inCommandLineMode()) {
+            run();
+        }
+        else {
+            Thread thread = new Thread(this);
+            thread.start();
+        }
         /*
          * try { thread.join(); } catch (InterruptedException e) {
          * Log.get().warning
@@ -663,13 +671,16 @@ public class Series extends JPanel implements ActionListener, Runnable {
     }
 
     /**
-     * Get an anonymized name for the file.
+     * Get a new the file to be written to.  The file should not already
+     * exist, and it should represent the content of the attribute list.
+     * Make any directories as required.
      * 
-     * @param attributeList
+     * @param attributeList Content that will be written.
      * 
      * @return
      */
-    private File getNewFileName(File dir, AttributeList attributeList) {
+    static public File getNewFile(AttributeList attributeList) {
+        File dir = DicomClient.getInstance().getDestination();
 
         if ((DicomClient.inCommandLineMode()) && (DicomClient.getOutputFile() != null)) {
             if (DicomClient.getInstance().getFileCount() > 1) {
@@ -757,18 +768,21 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 e.printStackTrace();
             }
 
-            try {
-                BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
-                File imageFile = new File(dir, imageFileName);
+            if (SOPClass.isImageStorage(Attribute.getSingleStringValueOrEmptyString(attributeList,TagFromName.SOPClassUID))) {
                 try {
-                    ImageIO.write(image, "png", imageFile);
+                    BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
+                    File imageFile = new File(dir, imageFileName);
+                    try {
+                        ImageIO.write(image, "png", imageFile);
+                        Log.get().info("Created image file " + imageFile.getAbsolutePath());
+                    }
+                    catch (IOException e) {
+                        Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath() + " : " + e);
+                    }
                 }
-                catch (IOException e) {
-                    Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath());
+                catch (Exception e) {
+                    Log.get().info("Unable to convert to image file: " + e);
                 }
-            }
-            catch (DicomException e) {
-                // Ignore exception because this was not an image file.
             }
 
             try {
@@ -798,7 +812,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         try {
             processLock.acquireUninterruptibly();
             if (!processOk) return;
-            File newDir = DicomClient.getInstance().getDestination();
             File newFile = null;
             int count = 0;
             int tries = 0;
@@ -816,7 +829,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, "DICOMService");
 
                     // set up to put file in new directory
-                    newFile = getNewFileName(newDir, attributeList);
+                    newFile = getNewFile(attributeList);
                     File parent = (newFile.getParentFile() == null) ? new File(".") : newFile.getParentFile();
                     parent.mkdirs();
                     attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);

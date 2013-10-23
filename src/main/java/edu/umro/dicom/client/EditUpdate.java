@@ -5,6 +5,7 @@ import com.pixelmed.dicom.AttributeList;
 
 class EditUpdate extends Edit {
 
+    private static final int MAX_DESCRIPTION_LENGTH = 80;
     private Attribute newAttribute = null;
 
     @Override
@@ -23,7 +24,9 @@ class EditUpdate extends Edit {
         try {
             StringBuffer text = new StringBuffer();
             for (String value : newAttribute.getStringValues()) text.append((text.length() == 0) ? value : (" \\ " + value));
-            return "Update " + CustomDictionary.getInstance().getNameFromTag(attributeLocation.attribute.getTag()) + " to " + text.toString();
+            String desc = "Update " + CustomDictionary.getName(attributeLocation) + " to " + text.toString();
+            if (desc.length() > MAX_DESCRIPTION_LENGTH) desc = desc.substring(0, MAX_DESCRIPTION_LENGTH) + " ...";
+            return desc;
         }
         catch (Exception e) {
             return "Changed value";

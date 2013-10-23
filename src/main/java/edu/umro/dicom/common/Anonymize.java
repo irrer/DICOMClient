@@ -31,6 +31,7 @@ import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
+import com.pixelmed.dicom.SOPClass;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.TagFromName;
@@ -302,7 +303,7 @@ public class Anonymize {
                                 attribute.addValue(value);
                             } catch (Exception e) {
                                 attribute.setValues(value.getBytes());
-                                String name = CustomDictionary.getInstance().getNameFromTag(attribute.getTag());
+                                String name = CustomDictionary.getName(attribute);
                                 if (name == null) name = attribute.toString();
                                 Log.get().info("Value for attribute " + name + " removed entirely due to aggressive anonymization.");
                             }
@@ -365,17 +366,47 @@ public class Anonymize {
         HashMap<String, String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
         anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList);
 
-        // TODO temporary - remove all but one entry in StructureSetROISequence
+        // TODO temporary hack for fixing special case of damaged DICOM files
         if (System.out == null) {
-            Attribute attr = attributeList.get(TagFromName.StructureSetROISequence);
-            if (attr != null) {
-                System.out.println("Removing StructureSetROISequence");
-                SequenceAttribute sa = (SequenceAttribute) attr;
-                SequenceItem si = sa.getItem(0);
-                attributeList.remove(TagFromName.StructureSetROISequence);
-                sa = new SequenceAttribute(TagFromName.StructureSetROISequence);
-                attributeList.put(sa);
-                sa.addItem(si);
+            try {
+                Attribute sopCls = attributeList.get(TagFromName.SOPClassUID);
+                if ((sopCls != null) && (sopCls.getSingleStringValueOrEmptyString().equals(SOPClass.RTImageStorage))) {
+                    {
+                        Attribute patPos = attributeList.get(TagFromName.PatientPosition);
+                        if (patPos == null) {
+                            patPos = AttributeFactory.newAttribute(TagFromName.PatientPosition);
+                            patPos.addValue("HFS");
+                            attributeList.put(patPos);
+                        }
+                    }
+                    {
+                        Attribute crDate = attributeList.get(TagFromName.CreationDate);
+                        if (crDate == null) {
+                            crDate = AttributeFactory.newAttribute(TagFromName.CreationDate);
+                            crDate.addValue("20131022");
+                            attributeList.put(crDate);
+                        }
+                    }
+                }
+                {
+                    Attribute birthDate = attributeList.get(TagFromName.PatientBirthDate);
+                    if (birthDate == null) {
+                        birthDate = AttributeFactory.newAttribute(TagFromName.PatientBirthDate);
+                        birthDate.addValue("18000101");
+                        attributeList.put(sopCls);
+                    }
+                }
+                if (System.out == null) {
+                    String siUid = System.getenv("SOPInstanceUID");
+                    if ((siUid != null) && (siUid.length() > 4)) {
+                        Attribute siuAttr = AttributeFactory.newAttribute(TagFromName.SOPInstanceUID);
+                        siuAttr.addValue(siUid);
+                        attributeList.put(sopCls);
+                    }
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Badness: " + e);
             }
         }
 
