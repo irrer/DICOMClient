@@ -182,8 +182,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /** The series currently being displayed. */
     private Series series = null;
 
-    /** The full path name of the file being displayed. */
-    private String fileName = null;
+    /** The file being displayed. */
+    private File file = null;
 
     /** Panel that switches back and forth between image and text viewing modes. */
     private JPanel cardPanel = null;
@@ -833,7 +833,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      *            Series to be previewed.
      */
     public void setSeries(Series series) {
-        sliceSlider.setMaximum(series.getFileNameList().size());
+        sliceSlider.setMaximum(series.getFileList().size());
         DicomClient.getInstance().setProcessedStatus();
     }
     
@@ -1331,32 +1331,32 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * @param title
      *            Title for window.
      * 
-     * @param fileName
+     * @param file
      *            Name of DICOM file.
      */
-    public void showDicom(Series series, String title, int sliceNumber, int maxSlice, String fileName) {
+    public void showDicom(Series series, String title, int sliceNumber, int maxSlice, File file) {
         if (!DicomClient.inCommandLineMode()) {
             if (showDicomInProgress.tryAcquire()) {
                 try {
                     this.series = series;
-                    this.fileName = fileName;
+                    this.file = file;
                     sliceSlider.setMaximum(maxSlice);
                     DicomClient.getInstance().setProcessedStatus();
 
-                    fileNameLabel.setText(fileName);
+                    fileNameLabel.setText(file.getAbsolutePath());
                     dialog.setTitle(TITLE_PREFIX + "  " + title);
                     attributeList = new AttributeList();
                     try {
-                        attributeList.read(fileName);
+                        attributeList.read(file);
                         AnonymizeGUI.getInstance().updateTagList(attributeList);
                         sliceSlider.setValue(sliceNumber);
                         showDicom();
                     }
                     catch (DicomException ex) {
-                        DicomClient.getInstance().showMessage("Unable to interpret file " + fileName + " as DICOM: " + ex.getMessage());
+                        DicomClient.getInstance().showMessage("Unable to interpret file " + file + " as DICOM: " + ex.getMessage());
                     }
                     catch (IOException ex) {
-                        DicomClient.getInstance().showMessage("Unable to read file " + fileName + " : " + ex.getMessage());
+                        DicomClient.getInstance().showMessage("Unable to read file " + file + " : " + ex.getMessage());
                     }
                     DicomClient.getInstance().setProcessedStatus();
                 }

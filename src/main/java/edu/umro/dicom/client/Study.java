@@ -18,6 +18,8 @@ package edu.umro.dicom.client;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.io.File;
+import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -25,6 +27,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
+import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.TagFromName;
 
@@ -60,7 +63,7 @@ public class Study extends JPanel {
     }
 
 
-    public Study(String fileName, AttributeList attributeList) {
+    public Study(File file, AttributeList attributeList) {
 
         studyInstanceUid = Util.getAttributeValue(attributeList, TagFromName.StudyInstanceUID);
         studyInstanceUid = (studyInstanceUid == null) ? "" : studyInstanceUid;
@@ -88,7 +91,7 @@ public class Study extends JPanel {
         BoxLayout seriesListLayout = new BoxLayout(seriesListPanel, BoxLayout.Y_AXIS);
         seriesListPanel.setLayout(seriesListLayout);
 
-        seriesListPanel.add(new Series(fileName, attributeList));
+        seriesListPanel.add(new Series(file, attributeList));
         add(seriesListPanel, BorderLayout.CENTER);
 
         int gap = 8;
@@ -96,20 +99,64 @@ public class Study extends JPanel {
         setBorder(emptyBorder);
     }
 
-
-    public void addSeries(String fileName, AttributeList attributeList) {
-        String seriesInstanceUid = Util.getAttributeValue(attributeList, TagFromName.SeriesInstanceUID);
-        seriesInstanceUid = (seriesInstanceUid == null) ? "" : seriesInstanceUid;
+    
+    
+    
+    private ArrayList<Series> findMatchingSeriesUID(AttributeList attributeList) {
+        Attribute attr = attributeList.get(TagFromName.SeriesInstanceUID);
+        
+        ArrayList<Series> list = new ArrayList<Series>();
+        String seriesInstanceUID = (attr == null) ? null : attr.getSingleStringValueOrEmptyString();
         for (Component component : seriesListPanel.getComponents()) {
             if (component instanceof Series) {
-                Series series = (Series)component;
-                if (series.getSeriesInstanceUID().equals(seriesInstanceUid)) {
-                    series.addFile(fileName, attributeList);
+                Series series = (Series) component;
+                if (series.getSeriesInstanceUID().equals(seriesInstanceUID)) {
+                    list.add(series);
+                }
+            }
+        }
+        return list;
+    }
+    
+
+    /**
+     * Add an instance (slice of a series)
+     * 
+     * @param file The DICOM file.
+     * 
+     * @param attributeList The first parameters of the DICOM file.
+     */
+    public void addInstance(File file, AttributeList attributeList) {
+        String seriesInstanceUid = Util.getAttributeValue(attributeList, TagFromName.SeriesInstanceUID);
+        seriesInstanceUid = (seriesInstanceUid == null) ? "" : seriesInstanceUid;
+        ArrayList<Series> existingSeriesList = findMatchingSeriesUID(attributeList);
+
+        String sopInstanceUID = attributeList.get(TagFromName.SOPInstanceUID).getSingleStringValueOrEmptyString();
+        for (Series existingSeries : existingSeriesList) {
+            if (existingSeries.getDirectory().equals(file.getParentFile())) {
+                if (existingSeries.containsFile(file)) {
+                    DicomClient.getInstance().showMessage("File " + file.getAbsolutePath() + " has already been loaded and is being ignored.");
+                    return;
+                }
+                if (existingSeries.containsSOPInstanceUID(sopInstanceUID)) {
+                    DicomClient.getInstance().showMessage(
+                            "File " + file.getAbsolutePath() + " has the same SOPInstanceUID as a file " +
+                                    "already in the same directory is being ignored.  If you want load " +
+                                    "two or more files with the same SOPInstanceUID, they must be in different directories (folders).");
+                    return;
+                }
+                else {
+                    existingSeries.addFile(file, attributeList);
                     return;
                 }
             }
         }
-        seriesListPanel.add(new Series(fileName, attributeList));
+
+        // If we got here, it means that a new series should be created. This
+        // can either be because it is a totally new series or
+        // has the same series UID as an existing series but comes from a
+        // different directory.
+        seriesListPanel.add(new Series(file, attributeList));
     }
 
 

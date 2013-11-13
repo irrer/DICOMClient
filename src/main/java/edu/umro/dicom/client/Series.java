@@ -62,30 +62,6 @@ import edu.umro.util.UMROException;
 import edu.umro.util.Utility;
 import edu.umro.util.XML;
 
-/*
- import org.restlet.Client;
- import org.restlet.Request;
- import org.restlet.Response;
- import org.restlet.data.MediaType;
- import org.restlet.data.Method;
- import java.io.FileInputStream;
- import java.util.Set;
- import java.io.FileNotFoundException;
- import java.io.InputStream;
- import org.restlet.data.Protocol;
- import org.restlet.data.Reference;
- import org.restlet.data.Status;
- import org.restlet.representation.InputRepresentation;
- import org.restlet.representation.Representation;
- import org.restlet.resource.ResourceException;
- import java.io.ByteArrayInputStream;
- import java.io.ByteArrayOutputStream;
- import com.pixelmed.dicom.DicomInputStream;
- import com.pixelmed.dicom.TransferSyntax;
- import com.pixelmed.dicom.DicomOutputStream;
- import com.pixelmed.dicom.AttributeTag;
- */
-
 /**
  * Represent a DICOM series.
  * 
@@ -206,15 +182,17 @@ public class Series extends JPanel implements ActionListener, Runnable {
     private CardLayout previewProgressLayout = null;
 
     private class InstanceList {
-        private class Instance implements Comparable<Instance> {
+        class Instance implements Comparable<Instance> {
             public final int instanceNumber;
             public String sopInstanceUID;
-            public String fileName;
+            public File file;
+            AttributeList attributeList;
 
-            public Instance(int instanceNumber, String sopInstanceUID, String fileName) {
+            public Instance(int instanceNumber, String sopInstanceUID, File file, AttributeList attributeList) {
                 this.instanceNumber = instanceNumber;
                 this.sopInstanceUID = sopInstanceUID;
-                this.fileName = fileName;
+                this.file = file;
+                this.attributeList = attributeList;
             }
 
             @Override
@@ -226,8 +204,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
         private ArrayList<Instance> instList = new ArrayList<Instance>();
 
         private HashSet<String> sopList = new HashSet<String>();
-        private HashSet<String> fileList = new HashSet<String>();
-        private ArrayList<String> sortedList = null;
+        private HashSet<File> fileList = new HashSet<File>();
+        private ArrayList<File> sortedList = null;
 
         /**
          * Get the sortedList of file names in ascending order by instance
@@ -235,41 +213,46 @@ public class Series extends JPanel implements ActionListener, Runnable {
          * 
          * @return List of file names.
          */
-        public ArrayList<String> values() {
+        public ArrayList<File> values() {
             if (sortedList == null) {
                 Collections.sort(instList);
-                sortedList = new ArrayList<String>();
+                sortedList = new ArrayList<File>();
                 for (Instance inst : instList) {
-                    sortedList.add(inst.fileName);
+                    sortedList.add(inst.file);
                 }
             }
             return sortedList;
+        }
+
+        public ArrayList<Instance> getList() {
+            Collections.sort(instList);
+            return instList;
         }
 
         public int size() {
             return instList.size();
         }
 
-        public String getFileName(int i) {
-            return instList.get(i).fileName;
+        public File getFile(int i) {
+            return instList.get(i).file;
         }
 
-        public String put(String fileName, AttributeList attributeList) {
+        private String put(File file, AttributeList attributeList) {
 
-            if (fileList.contains(fileName)) {
-                return "The file " + fileName + " has already been loaded.";
+            if (fileList.contains(file)) {
+                return "The file " + file + " has already been loaded.";
             }
 
             String sopInstanceUID = attributeList.get(TagFromName.SOPInstanceUID).getSingleStringValueOrEmptyString();
             if (sopList.contains(sopInstanceUID)) {
-                String oldFile = "";
+                File oldFile = null;
                 for (Instance instance : instList) {
                     if (instance.sopInstanceUID == sopInstanceUID) {
-                        oldFile = instance.fileName;
+                        oldFile = instance.file;
                         break;
                     }
                 }
-                return "The SOP Instance UID " + sopInstanceUID + " was already loaded with from file " + oldFile + ", so ignoring file " + fileName;
+                return "The SOP Instance UID " + sopInstanceUID + " was already loaded with from file " + oldFile + ", so ignoring file " + file.getAbsolutePath();
             }
 
             Attribute instanceNumberAttr = attributeList.get(TagFromName.InstanceNumber);
@@ -278,9 +261,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 instanceNumber = instanceNumberAttr.getSingleIntegerValueOrDefault(0);
             }
 
-            instList.add(new Instance(instanceNumber, sopInstanceUID, fileName));
+            instList.add(new Instance(instanceNumber, sopInstanceUID, file, attributeList));
             sopList.add(sopInstanceUID);
-            fileList.add(fileName);
+            fileList.add(file);
             sortedList = null;
 
             return null;
@@ -292,6 +275,29 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     /** List of PACS AE titles to which this series has been uploaded. */
     private HashSet<String> aeTitleUploadList = new HashSet<String>();
+
+    /**
+     * Indicate whether or not the file is already in this series.
+     * 
+     * @param fileName
+     *            Full path name of file to test.
+     * 
+     * @return True if file is in list.
+     */
+    public boolean containsFile(File file) {
+        return instanceList.fileList.contains(file);
+    }
+
+    /**
+     * Indicate whether or not the file is already in this series.
+     * 
+     * @param sopInstanceUID SOP instance UID to search for
+     * 
+     * @return True if instance is in list.
+     */
+    public boolean containsSOPInstanceUID(String sopInstanceUID) {
+        return instanceList.sopList.contains(sopInstanceUID);
+    }
 
     /**
      * Find the first non-null value in a sortedList.
@@ -407,32 +413,37 @@ public class Series extends JPanel implements ActionListener, Runnable {
      * @param attributeList
      *            Parsed version of DICOM file contents.
      */
-    public Series(String fileName, AttributeList attributeList) {
+    public Series(File file, AttributeList attributeList) {
 
         // For the first file of every series, read the entire attribute
-        // list and then update the anonymizing list.  This ensures that
+        // list and then update the anonymizing list. This ensures that
         // the anonymizing list contains a superset of all attributes used
-        // by the DICOM files that have been loaded.  The only problem that
+        // by the DICOM files that have been loaded. The only problem that
         // would arise is if a subsequent file in a series contained a
         // new type of DICOM attribute that was not in the first file of
         // the series (which is unlikely), and the user wanted to specify
-        // custom anonymization for that type (again, unlikely).  The user
+        // custom anonymization for that type (again, unlikely). The user
         // could get around this by previewing slice in the series, which
         // will read each file in it's entirety and update the anonymizing
-        // list.  Correcting this error would make the initial loading of
+        // list. Correcting this error would make the initial loading of
         // DICOM files much slower (~ 10x), and so would annoy users more than
-        // make them happy.  Possibly in the future a background thread will
+        // make them happy. Possibly in the future a background thread will
         // be started to read each file in its entirety while the user is
         // staring at the screen, but there's not a big benefit to it.
         try {
             AttributeList al = new AttributeList();
-            al.read(fileName);
+            al.read(file);
+
+            if (!DicomClient.hasValidSOPInstanceUID(al)) {
+                al.put(attributeList.get(TagFromName.SOPInstanceUID));
+            }
+
             attributeList = al;
         }
         catch (Exception e) {
-            Log.get().warning("Error reading DICOM file " + fileName + " .  The file may not be processed properly. :  " + e);
+            Log.get().warning("Error reading DICOM file " + file.getAbsolutePath() + " .  The file may not be processed properly. :  " + e);
         }
-        
+
         AnonymizeGUI.getInstance().updateTagList(attributeList);
 
         patientID = Util.getAttributeValue(attributeList, TagFromName.PatientID);
@@ -471,7 +482,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
         buildGui();
         resetSummary();
-        addFile(fileName, attributeList);
+        addFile(file, attributeList);
         seriesSummary = getSeriesSummary();
         Log.get().info("Added series " + seriesSummary);
     }
@@ -671,11 +682,12 @@ public class Series extends JPanel implements ActionListener, Runnable {
     }
 
     /**
-     * Get a new the file to be written to.  The file should not already
-     * exist, and it should represent the content of the attribute list.
-     * Make any directories as required.
+     * Get a new the file to be written to. The file should not already exist,
+     * and it should represent the content of the attribute list. Make any
+     * directories as required.
      * 
-     * @param attributeList Content that will be written.
+     * @param attributeList
+     *            Content that will be written.
      * 
      * @return
      */
@@ -768,7 +780,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 e.printStackTrace();
             }
 
-            if (SOPClass.isImageStorage(Attribute.getSingleStringValueOrEmptyString(attributeList,TagFromName.SOPClassUID))) {
+            if (SOPClass.isImageStorage(Attribute.getSingleStringValueOrEmptyString(attributeList, TagFromName.SOPClassUID))) {
                 try {
                     BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
                     File imageFile = new File(dir, imageFileName);
@@ -818,10 +830,14 @@ public class Series extends JPanel implements ActionListener, Runnable {
             try {
                 previewProgressLayout.show(previewProgressPanel, CARD_PROGRESS);
                 zeroProgressBar();
-                for (String fileName : instanceList.values()) {
+                // for (String fileName : instanceList.values()) {
+                for (InstanceList.Instance instance : instanceList.getList()) {
                     tries++;
                     CustomAttributeList attributeList = new CustomAttributeList();
-                    attributeList.read(fileName);
+                    attributeList.read(instance.file);
+                    if (!DicomClient.hasValidSOPInstanceUID(attributeList)) {
+                        attributeList.put(instance.attributeList.get(TagFromName.SOPInstanceUID));
+                    }
 
                     AnonymizeGUI.getInstance().updateTagList(attributeList);
 
@@ -943,13 +959,13 @@ public class Series extends JPanel implements ActionListener, Runnable {
             while ((fileIndex < instanceList.size()) && (processOk)) {
                 int f = 0;
                 while ((fileIndex < instanceList.size()) && processOk && (f < UPLOAD_BUFFER_SIZE)) {
-                    String fileName = instanceList.getFileName(fileIndex);
+                    File file = instanceList.getFile(fileIndex);
                     AttributeList attributeList = new AttributeList();
                     try {
-                        attributeList.read(fileName);
+                        attributeList.read(file);
                     }
                     catch (Exception e) {
-                        String msg = seriesSummary + " Unable to read DICOM file " + fileName + " : " + e;
+                        String msg = seriesSummary + " Unable to read DICOM file " + file.getAbsolutePath() + " : " + e;
                         Log.get().warning(msg);
                         DicomClient.getInstance().showMessage(msg);
                         new Alert(msg, "Upload Failure");
@@ -1014,9 +1030,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
      * @param attributeList
      *            Parsed version of the DICOM file contents.
      */
-    public void addFile(String fileName, AttributeList attributeList) {
+    public void addFile(File file, AttributeList attributeList) {
         AnonymizeGUI.getInstance().updateTagList(attributeList);
-        String msg = instanceList.put(fileName, attributeList);
+        String msg = instanceList.put(file, attributeList);
         progressBar.setMaximum(instanceList.size());
         if (msg == null) {
             resetSummary();
@@ -1109,8 +1125,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
      */
     public synchronized void showPreview(int sliceNumber) {
         Preview preview = DicomClient.getInstance().getPreview();
-        String fileName = instanceList.values().get(sliceNumber - 1);
-        preview.showDicom(this, getPreviewTitle(sliceNumber), sliceNumber, getFileNameList().size(), fileName);
+        File file = instanceList.values().get(sliceNumber - 1);
+        preview.showDicom(this, getPreviewTitle(sliceNumber), sliceNumber, getFileList().size(), file);
     }
 
     /**
@@ -1118,8 +1134,17 @@ public class Series extends JPanel implements ActionListener, Runnable {
      * 
      * @return List of file names.
      */
-    public Collection<String> getFileNameList() {
+    public Collection<File> getFileList() {
         return instanceList.values();
+    }
+
+    /**
+     * Get the directory where series is stored.
+     * 
+     * @return Directory where series is stored.
+     */
+    public File getDirectory() {
+        return instanceList.getFile(0).getParentFile();
     }
 
 }

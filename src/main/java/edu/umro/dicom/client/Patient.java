@@ -22,6 +22,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -173,7 +174,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
      * could be derived from the file name, but it is more efficient to only
      * read and parse the file once.
      */
-    public Patient(String fileName, AttributeList attributeList, String anonymousPatientId) {
+    public Patient(File file, AttributeList attributeList, String anonymousPatientId) {
         patientId        = Util.getAttributeValue(attributeList, TagFromName.PatientID);
         patientId        = (patientId == null) ? "No patient id" : patientId;
         patientName      = Util.getAttributeValue(attributeList, TagFromName.PatientName); 
@@ -211,7 +212,7 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
 
         add(buildPatientButtonPanel(anonymousPatientId));
 
-        Study study = new Study(fileName, attributeList);
+        Study study = new Study(file, attributeList);
         add(study);
     }
 
@@ -231,19 +232,19 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
      * 
      * @param attributeList Representation of DICOM file.
      */
-    public void addStudy(String fileName, AttributeList attributeList) {
+    public void addStudy(File file, AttributeList attributeList) {
         String studyInstanceUid = Util.getAttributeValue(attributeList, TagFromName.StudyInstanceUID);
         studyInstanceUid = (studyInstanceUid == null) ? "" : studyInstanceUid;
         for (Component component : getComponents()) {
             if (component instanceof Study) {
                 Study study = (Study)component;
                 if (study.getStudyInstanceUID().equals(studyInstanceUid)) {
-                    study.addSeries(fileName, attributeList);
+                    study.addInstance(file, attributeList);
                     return;
                 }
             }
         }
-        add(new Study(fileName, attributeList));
+        add(new Study(file, attributeList));
     }
 
 

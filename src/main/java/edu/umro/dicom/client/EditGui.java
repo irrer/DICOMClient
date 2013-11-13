@@ -75,7 +75,7 @@ public class EditGui implements ActionListener, WindowListener {
     /** List of edited DICOM files that have been saved.  This list is kept so that
      * if a user saves the same file multiple times over the course of editing, a
      * new instance of the file will not be created every time. */
-    private HashMap<String, File> savedFileList = new HashMap<String, File>();
+    private HashMap<File, File> savedFileList = new HashMap<File, File>();
     
     /** True if DICOM series has been modified since last save. */
     private boolean modified = false;
@@ -409,25 +409,25 @@ public class EditGui implements ActionListener, WindowListener {
         }
     }
     
-    private String saveOneFile(String fileName) {
+    private String saveOneFile(File file) {
         File destFile;
         AttributeList attributeList = new AttributeList();
         try {
-            attributeList.read(fileName);
+            attributeList.read(file);
         }
         catch (DicomException e) {
-            return "DICOM error while reading file " + fileName + " : " + e.toString();
+            return "DICOM error while reading file " + file + " : " + e.toString();
         }
         catch (IOException e) {
-            return "Unable to read file " + fileName + " : " + e.toString();
+            return "Unable to read file " + file + " : " + e.toString();
         }
         performEdits(attributeList);
-        if (savedFileList.containsKey(fileName)) {
-            destFile = savedFileList.get(fileName);
+        if (savedFileList.containsKey(file)) {
+            destFile = savedFileList.get(file);
         }
         else {
             destFile = Series.getNewFile(attributeList);
-            savedFileList.put(fileName, destFile);
+            savedFileList.put(file, destFile);
         }
         destFile.delete();
         try {
@@ -446,8 +446,8 @@ public class EditGui implements ActionListener, WindowListener {
         Series series = preview.getPreviewedSeries();
         if (series != null) {
             if (applyToAllSlices.isSelected()) {
-                for (String fileName : series.getFileNameList()) {
-                    String msg = saveOneFile(fileName);
+                for (File file : series.getFileList()) {
+                    String msg = saveOneFile(file);
                     if (msg != null) {
                         Log.get().severe(msg);
                         new Alert(msg, "Error Saving Edited File");
@@ -456,8 +456,8 @@ public class EditGui implements ActionListener, WindowListener {
                 }
             }
             else {
-                String fileName = (String)(series.getFileNameList().toArray()[preview.getCurrentSlice()-1]);
-                saveOneFile(fileName);
+                File file = (File)(series.getFileList().toArray()[preview.getCurrentSlice()-1]);
+                saveOneFile(file);
             }
             setModified(false);
             return true;

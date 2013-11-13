@@ -34,6 +34,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.TreeMap;
@@ -85,6 +86,7 @@ import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
+import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.ReadStrategy;
 import com.pixelmed.dicom.TagFromName;
@@ -95,6 +97,7 @@ import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 import edu.umro.util.OpSys;
 import edu.umro.util.UMROException;
+import edu.umro.util.UMROGUID;
 import edu.umro.util.Utility;
 import edu.umro.util.XML;
 import edu.umro.util.General;
@@ -1011,6 +1014,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             resetAnonymizeDestination();
             patientList = new TreeMap<String, Patient>();
             messageTextArea.setText("");
+            showMessageText.delete(0, showMessageText.length());
         }
 
         if (source.equals(helpButton)) {
@@ -1286,19 +1290,19 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * 
      * @return The contents of the file
      */
-    private AttributeList readDicomFile(String fileName) {
+    private AttributeList readDicomFile(File file) {
         AttributeList attributeList = new AttributeList(); 
 
         FileInputStream fis = null;
         try {
             if (inCommandLineMode()) {
                 // this does not show any annoying messages in the log
-                attributeList.read(fileName);
+                attributeList.read(file);
             }
             else {
                 // The following is faster than <code>attributeList.read(fileName);</code>, as it only reads the first part of every DICOM file, but
                 // it also produces a lot of error messages because of the 'ragged end' of each file.
-                fis = new FileInputStream(new File(fileName));
+                fis = new FileInputStream(file);
                 byte[] buffer = new byte[DICOM_METADATA_LENGTH];
                 DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(buffer, 0, fis.read(buffer)));
                 attributeList.read(dis); // TODO change read to only get what is needed
@@ -1315,20 +1319,59 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             // Exceptions do not matter because
             //     1: If reading a partial file, there will always be an exception
             //     2: The content is checked anyway
-            Log.get().severe("Error reading DICOM file " + fileName + " : " + e);
+            Log.get().severe("Error reading DICOM file " + file.getAbsolutePath() + " : " + e);
         }
         finally {
             if (fis != null) try {
                 fis.close();
             }
             catch (Exception e) {
-                Log.get().warning("Unable to close stream for file " + fileName);
+                Log.get().warning("Unable to close stream for file " + file.getAbsolutePath());
             }
         }
         return attributeList;
     }
 
+    /**
+     * Determine if an attribute list has a valid SOP instance UID.
+     * 
+     * @param attributeList
+     * 
+     * @return True if valid.
+     */
+    public static boolean hasValidSOPInstanceUID(AttributeList attributeList) {
+        Attribute sopInstanceUIDAttr = attributeList.get(TagFromName.SOPInstanceUID);
+        if (sopInstanceUIDAttr == null) return false;
 
+        String sopInstanceUID = sopInstanceUIDAttr.getSingleStringValueOrNull();
+        if (sopInstanceUID == null) return false;
+        if (sopInstanceUID.length() < 10) return false;
+
+        return true;
+    }
+
+    private void ensureSOPInstanceUID(File file, AttributeList attributeList) {
+        if (!hasValidSOPInstanceUID(attributeList)) {
+            String msg = "No valid SOP Instance UID found.  Making random one for DICOM file: " + file.getAbsolutePath();
+            try {
+                Attribute attribute = AttributeFactory.newAttribute(TagFromName.SOPInstanceUID);
+                attribute.addValue(UMROGUID.getUID());
+                attributeList.put(attribute);
+                showMessage(msg);
+                if (inCommandLineMode()) {
+                    System.err.println(msg);
+                }
+            }
+            catch (DicomException e) {
+                ;
+            }
+            catch (UnknownHostException e) {
+                ;
+            }
+        }
+    }
+
+    
     /**
      * Add the given file to the list of loaded files.  If the file is not
      * a DICOM file or can not be read, then show a message and ignore it.
@@ -1346,7 +1389,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         try {
             fileCount++;
             setPreviewEnableable(false);
-            String fileName = file.getAbsolutePath();
             if (file.isDirectory()) {
                 if (descend) {
                     for (File child : file.listFiles()) {
@@ -1354,11 +1396,18 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     }
                 }
                 else {
-                    showMessage(new File(fileName).getAbsolutePath() + " is a directory and is being ignored.");
+                    showMessage(file.getAbsolutePath() + " is a directory and is being ignored.");
                 }
                 return;
             }
-            AttributeList attributeList = readDicomFile(fileName);
+            AttributeList attributeList = readDicomFile(file);
+            
+            if (attributeList.isEmpty()) {
+                showMessage(file.getAbsolutePath() + " does not appear to be a DICOM file and is being ignored.");
+                return;
+            }
+            
+            ensureSOPInstanceUID(file, attributeList);
 
             String patientId = "none";
             Attribute patientAttribute = attributeList.get(TagFromName.PatientID);
@@ -1369,24 +1418,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             }
 
-            Attribute sopInstanceUIDAttr = attributeList.get(TagFromName.SOPInstanceUID);
-            String sopInstanceUID = null;
-            if (sopInstanceUIDAttr != null) {
-                sopInstanceUID = sopInstanceUIDAttr.getSingleStringValueOrNull();
-            }
-            if ((sopInstanceUID == null) || (sopInstanceUID.length() < 10)) {
-                String msg = "No valid SOP Instance UID found, so this is not a valid DICOM file: " + fileName;
-                showMessage(msg);
-                if (inCommandLineMode()) {
-                    System.err.println(msg);
-                    System.exit(1);
-                }
-                return;
-            }
-
             Patient patient = patientList.get(patientId);
             if (patient == null) {
-                patient = new Patient(fileName, attributeList, makeNewPatientId());
+                patient = new Patient(file, attributeList, makeNewPatientId());
                 patientList.put(patientId, patient);
                 patientListPanel.add(patient);
                 setColor(patientListPanel);
@@ -1394,7 +1428,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 scrollBar.setValue(scrollBar.getMaximum());
             }
             else {
-                patient.addStudy(fileName, attributeList);
+                patient.addStudy(file, attributeList);
             }
 
             if (dragHereLabel != null) {

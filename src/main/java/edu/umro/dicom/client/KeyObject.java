@@ -16,6 +16,7 @@ package edu.umro.dicom.client;
  * limitations under the License.
  */
 
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -48,7 +49,7 @@ public class KeyObject extends AttributeList {
     private String seriesSummary = null;
 
     /** Files containing series slices. */
-    private Collection<String> fileNameList = null;
+    private Collection<File> fileList = null;
 
     /** Current date and time used for time stamping DICOM file. */
     private Date now = new Date();
@@ -182,7 +183,7 @@ public class KeyObject extends AttributeList {
         if (seriesDescription.length() == 0) {
             seriesDescription = "<no series description or number>";
         }
-        return "Manifest of " + seriesDescription + "  Files: " + fileNameList.size();
+        return "Manifest of " + seriesDescription + "  Files: " + fileList.size();
     }
 
 
@@ -268,9 +269,9 @@ public class KeyObject extends AttributeList {
 
             SequenceAttribute refSopSeqAttr = (SequenceAttribute)AttributeFactory.newAttribute(TagFromName.ReferencedSOPSequence);
             refSerSeqList.put(refSopSeqAttr);
-            for (String fileName : fileNameList) {
+            for (File file : fileList) {
                 AttributeList seriesList = new AttributeList();
-                seriesList.read(fileName);
+                seriesList.read(file);
 
                 AttributeList childList = new AttributeList();
                 refSopSeqAttr.addItem(childList);
@@ -318,7 +319,7 @@ public class KeyObject extends AttributeList {
             SequenceAttribute contentSeqAttr = (SequenceAttribute)AttributeFactory.newAttribute(TagFromName.ContentSequence);
             put(contentSeqAttr);
 
-            for (String fileName : fileNameList) {
+            for (File file : fileList) {
                 AttributeList refList = new AttributeList();
                 contentSeqAttr.addItem(refList);
                 addAttr(refList, TagFromName.RelationshipType, "CONTAINS");
@@ -328,7 +329,7 @@ public class KeyObject extends AttributeList {
                 refList.put(refSopSeq);
 
                 AttributeList seriesList = new AttributeList();
-                seriesList.read(fileName);
+                seriesList.read(file);
 
                 AttributeList refSopList = new AttributeList();
                 refSopSeq.addItem(refSopList);
@@ -367,11 +368,11 @@ public class KeyObject extends AttributeList {
      * @throws DicomException
      * @throws IOException
      */
-    public KeyObject(String seriesDescription, Collection<String> fileNameList) throws DicomException, IOException {
+    public KeyObject(String seriesDescription, Collection<File> fileList) throws DicomException, IOException {
         this.seriesSummary = seriesDescription;
-        this.fileNameList = fileNameList;
+        this.fileList = fileList;
         sampleInstance = new AttributeList();
-        sampleInstance.read((String)(fileNameList.toArray()[0]));
+        sampleInstance.read((String)(fileList.toArray()[0]));
         addRequiredTags();
         FileMetaInformation.addFileMetaInformation(this, Util.DEFAULT_STORAGE_SYNTAX, PROGRAM_NAME);
     }
