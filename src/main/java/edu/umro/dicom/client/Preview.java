@@ -41,8 +41,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 
 import javax.swing.BorderFactory;
@@ -60,6 +58,7 @@ import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -82,7 +81,6 @@ import com.pixelmed.dicom.OtherWordAttribute;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
-import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
@@ -181,9 +179,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     /** The series currently being displayed. */
     private Series series = null;
-
-    /** The file being displayed. */
-    private File file = null;
 
     /** Panel that switches back and forth between image and text viewing modes. */
     private JPanel cardPanel = null;
@@ -697,9 +692,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     @Override
     public void actionPerformed(ActionEvent ev) {
         if (ev.getSource().equals(closeButton)) {
-            setVisible(false);
-            editGui.setVisible(false);
-            editGui = null;
+            close();
         }
 
         if (ev.getSource().equals(imageRadioButton) || ev.getSource().equals(textRadioButton)) {
@@ -1339,7 +1332,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             if (showDicomInProgress.tryAcquire()) {
                 try {
                     this.series = series;
-                    this.file = file;
                     sliceSlider.setMaximum(maxSlice);
                     DicomClient.getInstance().setProcessedStatus();
 
@@ -1374,6 +1366,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         mainContainer = new Container();
         if (!DicomClient.inCommandLineMode()) {
             dialog = new JDialog(DicomClient.getInstance().getFrame(), false);
+            dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
             dialog.addWindowListener(this);
             dialog.setTitle(TITLE_PREFIX);
         }
@@ -1396,6 +1389,14 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             dialog.pack();
         }
     }
+    
+    private void close() {
+        if ((editGui == null) || (editGui.setVisible(false))) {
+            setVisible(false);
+            editGui.setVisible(false);
+            editGui = null;
+        }
+    }
 
     @Override
     public void windowOpened(WindowEvent e) {
@@ -1405,10 +1406,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     @Override
     public void windowClosing(WindowEvent e) {
-        if (editGui != null) {
-            editGui.setVisible(false);
-        }
-        
+        close();
     }
 
     @Override

@@ -1,62 +1,85 @@
 package edu.umro.dicom.client;
 
-import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.TreeSet;
 
-import javax.naming.directory.SearchControls;
-import javax.swing.ComboBoxModel;
+import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.JTextComponent;
-import javax.swing.text.PlainDocument;
 
+import com.pixelmed.dicom.Attribute;
+import com.pixelmed.dicom.AttributeFactory;
+import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
+import com.pixelmed.dicom.TagFromName;
 
-public class TagChooser extends JPanel implements DocumentListener, KeyListener {
+/**
+ * A GUI widget that lets the user easily choose a DICOM attribute tag.
+ * 
+ * @author irrer
+ *
+ */
+public class TagChooser extends JPanel implements DocumentListener, KeyListener, ActionListener {
 
     /** default */
     private static final long serialVersionUID = 1L;
 
-    private JTextField searchField = null;
-    JComboBox<String> comboBox = new JComboBox<String>(new String[] { "Ester", "James", "Jordi", "Jordina", "Jim", "Jorge", "Sergi" });
-    public TreeSet<String> nameList = null;
+    /** Maximum number of visible entries in the popup. */
+    private static final int MAX_VISIBLE = 10;
 
+    private JTextField searchField = null;
+    private JComboBox<String> comboBox = null;
+    private JCheckBox details = null;
+    
+    /** Attribute tags on this list are not selectable. */
+    private AttributeList forbiddenList = null;
+    
     private void update() {
+        CustomDictionary customDictionary = CustomDictionary.getInstance();
         String text = searchField.getText();
-        System.out.println("text: " + text);
         String[] terms = text.toLowerCase().split(" ");
 
         comboBox.removeAllItems();
 
-        ArrayList<String> nl = new ArrayList<String>(1000);
+        TreeSet<String> nameList = new TreeSet<String>();
 
-        for (String name : nameList) {
-            boolean ok = true;
-            for (String t : terms) {
-                if (!name.toLowerCase().contains(t)) {
-                    ok = false;
-                    break;
+        @SuppressWarnings("unchecked")
+        Iterator<AttributeTag> ti = customDictionary.getTagIterator();
+
+        // Put all names in a tree set so they come out sorted
+        // alphabetically.
+        while (ti.hasNext()) {
+            AttributeTag tag = ti.next();
+            if ((forbiddenList == null) || (forbiddenList.get(tag) == null)) {
+                String name = customDictionary.getNameFromTag((AttributeTag) tag);
+                if (details.isSelected()) name = String.format("%s %04x,%04x", name, tag.getGroup(), tag.getElement());
+                boolean ok = true;
+                for (String t : terms) {
+                    if (!name.toLowerCase().contains(t)) {
+                        ok = false;
+                        break;
+                    }
                 }
+                if (ok) nameList.add(name);
             }
-            if (ok) nl.add(name);
         }
 
         HashSet<String> alreadyOnList = new HashSet<String>();
         if (terms.length > 0) {
-            for (String name : nl) {
+            for (String name : nameList) {
                 if (name.toLowerCase().startsWith(terms[0])) {
                     comboBox.addItem(name);
                     alreadyOnList.add(name);
@@ -64,63 +87,181 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener 
             }
         }
 
-        for (String name : nl) {
+        for (String name : nameList) {
             if (!alreadyOnList.contains(name)) comboBox.addItem(name);
         }
+
+        int visSize = (comboBox.getItemCount() > MAX_VISIBLE) ? MAX_VISIBLE : comboBox.getItemCount();
+        comboBox.setMaximumRowCount(visSize);
+    }
+    
+    private void  updateAndShowComboBoxPopup() {
+        update();
         comboBox.setPopupVisible(true);
     }
 
     @Override
     public void insertUpdate(DocumentEvent e) {
-        update();
+        updateAndShowComboBoxPopup();
     }
 
     @Override
     public void removeUpdate(DocumentEvent e) {
-        update();
+        updateAndShowComboBoxPopup();
     }
 
     @Override
     public void changedUpdate(DocumentEvent e) {
-        update();
+        updateAndShowComboBoxPopup();
     }
 
-    private void initNameList() {
-        nameList = new TreeSet<String>();
-        CustomDictionary cd = CustomDictionary.getInstance();
-        @SuppressWarnings("unchecked")
-        Iterator<AttributeTag> ti = cd.getTagIterator();
-
-        // Put all names in a tree set so they come out sorted alphabetically.
-        while (ti.hasNext()) {
-            String name = cd.getNameFromTag((AttributeTag) (ti.next()));
-            nameList.add(name);
-        }
-
-    }
-
-    public TagChooser() {
-        FlowLayout flowLayout = new FlowLayout(FlowLayout.CENTER);
-        setLayout(flowLayout);
+    
+    private void buildSearchField() {
         searchField = new JTextField(20);
         searchField.getDocument().addDocumentListener(this);
         searchField.addKeyListener(this);
-        add(searchField);
-        add(comboBox);
-        initNameList();
-
-        for (String name : nameList)
-            comboBox.addItem(name);
+    }
+    
+    private void buildDetails() {
+        details = new JCheckBox("Details");
+        details.setToolTipText("<html>Show DICOM<br>attribute details</html>");
+        details.setSelected(false);
+        details.addActionListener(this);
     }
 
-    private static void createAndShowGUI() {
+    public TagChooser() {
+        String toolTip = "<html>Enter name fragments separated<br>by blanks to search.</html>";
+        JLabel label = new JLabel(" Search: ");
+        label.setToolTipText(toolTip);
+        buildSearchField();
+        searchField.setToolTipText(toolTip);
+        buildDetails();
+        comboBox = new JComboBox<String>(new String[] { });
+        
 
+        GridBagLayout gridBagLayout = new GridBagLayout();
+        setLayout(gridBagLayout);
+
+        GridBagConstraints c = new GridBagConstraints();
+        
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(label, c);
+        add(label);
+        
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 1;
+        c.gridy = 0;
+        c.weightx = 1;
+        gridBagLayout.setConstraints(searchField, c);
+        add(searchField);
+        
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 0;
+        c.gridy = 1;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(details, c);
+        add(details);
+        
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 1;
+        c.gridy = 1;
+        c.weightx = 1;
+        c.weighty = 0;
+        gridBagLayout.setConstraints(comboBox, c);
+        add(comboBox);
+
+        update();
+        final int GAP = 20;
+        this.setBorder(BorderFactory.createEmptyBorder(GAP, GAP, GAP, GAP));
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+    
+    
+    /**
+     * Move the selection by the given count.
+     * 
+     * @param incr Relative offset of new position.
+     */
+    private void incrementComboBoxSelection(int incr) {
+        int index = comboBox.getSelectedIndex() + incr;
+        int count = comboBox.getItemCount();
+        if (index < 0) index = 0;
+        if (index >= count) index = count-1;
+        comboBox.setSelectedIndex(index);
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+        switch (key) {
+        case KeyEvent.VK_UP:
+            comboBox.setPopupVisible(true);
+            incrementComboBoxSelection(-1);
+            break;
+        case KeyEvent.VK_DOWN:
+            comboBox.setPopupVisible(true);
+            incrementComboBoxSelection(1);
+            break;
+        case KeyEvent.VK_ENTER:
+            comboBox.setPopupVisible(false);
+            break;
+        default:
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == details) {
+            updateAndShowComboBoxPopup();
+        }
+    }
+    
+    public void setForbiddenList(AttributeList attributeList) {
+        forbiddenList = attributeList;
+        update();
+    }
+
+
+    
+    private static void createAndShowGUI() {
         // create and show a window containing the combo box
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(3);
-        frame.getContentPane().add(new TagChooser());
+        final TagChooser tagChooser = new TagChooser();
+        frame.getContentPane().add(tagChooser);
         frame.pack();
         frame.setVisible(true);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        Thread.sleep(4000);
+                        Attribute a = AttributeFactory.newAttribute(TagFromName.PatientID);
+                        AttributeList attributeList = new AttributeList();
+                        attributeList.put(a);
+
+                        System.out.println("setting forbidden list");
+                        tagChooser.setForbiddenList(attributeList);
+                    }
+                }
+                catch (Exception e) {
+                    System.out.println("createAndShowGUI Exception: " + e);
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     public static void main(String[] args) {
@@ -130,20 +271,4 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener 
             }
         });
     }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-        System.out.println("keyTyped");
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        System.out.println("keyPressed: " + (e.getKeyCode()));
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        System.out.println("keyReleased");
-    }
-
 }

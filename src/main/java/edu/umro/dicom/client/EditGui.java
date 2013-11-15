@@ -78,7 +78,7 @@ public class EditGui implements ActionListener, WindowListener {
     private HashMap<File, File> savedFileList = new HashMap<File, File>();
     
     /** True if DICOM series has been modified since last save. */
-    private boolean modified = false;
+    private volatile boolean modified = false;
 
     /** Reflects current state of EditGui. */
     private String currentCard;
@@ -244,22 +244,50 @@ public class EditGui implements ActionListener, WindowListener {
         String title = (series == null) ? "Editor" :  "Editing " + preview.getPreviewedSeries().getDescription();
         dialog.setTitle(title);
     }
-    
-    public void setVisible(boolean visible) {
-        if (!visible) {
-            cancel();
+
+    public boolean setVisible(boolean visible) {
+        if (visible || (!modified) || secondChanceToSave()) {
             editHistory = new LinkedList<Edit>();
             redoHistory = new LinkedList<Edit>();
+            resetDoButtons();
             savedFileList.clear();
             setModified(false);
             attributeLocation = null;
             setCard(CARD_MAIN);
-            resetDoButtons();
+            dialog.setVisible(visible);
+            DicomClient.getInstance().setEnabled(!visible);
+            return true;
         }
-
-        dialog.setVisible(visible);
-        DicomClient.getInstance().setEnabled(!visible);
+        return false;
     }
+
+    /**
+     * Give the user a second chance to save their work when they
+     * exit from editing with unsaved changes.
+     * 
+     * @return True if user wants to discard changes and actually exit, false to resume editing.
+     */
+    private boolean secondChanceToSave() {
+        String s = (editHistory.size() == 1) ? "" : "s";
+        String msg = "You have made " + editHistory.size() + " change" + s + ".  Save your change" + s + "?";
+        String title = editHistory.size() + " change" + s + " will be lost";
+        String[] buttonNameList = { "Save", "Don't save", "Cancel" };
+        Alert alert = new Alert(msg, title, buttonNameList, new Dimension(400, 300), true);
+        switch (alert.selectedButton) {
+        case 0:
+            saveAndClose();
+            return true;
+        case 1:
+            Log.get().info("Discarding " + editHistory.size() + " edits.");
+            return true;
+        case 2:
+            return false;
+        default:  // should never happen
+            return false;
+        }
+    }
+    
+    
 
     public boolean isVisible() {
         return dialog.isVisible();
@@ -320,7 +348,7 @@ public class EditGui implements ActionListener, WindowListener {
 
         if (ev.getSource().equals(redoButton)) redo();
 
-        if (ev.getSource().equals(cancelButton)) cancel();
+        if (ev.getSource().equals(cancelButton)) setVisible(false);
 
         if (ev.getSource().equals(copyButton)) copy();
 
@@ -349,8 +377,6 @@ public class EditGui implements ActionListener, WindowListener {
     
     private void setModified(boolean modified) {
         this.modified = modified;
-        saveButton.setEnabled(modified);
-        saveCloseButton.setEnabled(modified);
     }
     
     private void undo() {
@@ -381,32 +407,6 @@ public class EditGui implements ActionListener, WindowListener {
      */
     public boolean getModified() {
         return modified;
-    }
-    
-    private void cancel() {
-        if (editHistory.size() > 0) {
-            String s = (editHistory.size() == 1) ? "" : "s"; 
-            String msg = "You have made " + editHistory.size() + " change" + s + ".  Save your change" + s + "?";
-            String title = editHistory.size() + " change" + s + " will be lost";
-            String[] buttonNameList = { "Save", "Don't save", "Cancel" };
-            Alert alert = new Alert(msg, title, buttonNameList, new Dimension(400, 300), true);
-            switch (alert.selectedButton) {
-            case 0:
-                saveAndClose();
-                break;
-            case 1:
-                Log.get().info("Discarding " + editHistory.size() + " edits.");
-                setVisible(false);
-                preview.showDicom();
-                break;
-            case 2:
-                break;
-            }
-        }
-        else {
-            setVisible(false);
-            preview.showDicom();
-        }
     }
     
     private String saveOneFile(File file) {
@@ -585,7 +585,7 @@ public class EditGui implements ActionListener, WindowListener {
 
     @Override
     public void windowClosing(WindowEvent e) {
-        cancel();
+        secondChanceToSave();
     }
 
     @Override
