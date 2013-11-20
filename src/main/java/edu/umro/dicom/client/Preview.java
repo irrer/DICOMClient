@@ -116,7 +116,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             ValueRepresentation.US, ValueRepresentation.UT, ValueRepresentation.XS, ValueRepresentation.XO };
 
     /** A quickly searchable list of value representations. */
-    private static HashSet<String> vrSet = new HashSet<String>();
+    public static HashSet<String> vrSet = new HashSet<String>();
     {
         for (byte[] vr : TEXTUAL_VR) {
             vrSet.add(new String(vr));
@@ -281,7 +281,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     /** True if the GUI components need packing. Packing happens only once. */
     private static boolean needsPacking = true;
-
+    
     /**
      * Lock to prevent events from firing another showDicom operation while
      * already doing a showDicom.
@@ -766,7 +766,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     @Override
     public void mouseReleased(MouseEvent e) {
         if ((editGui != null) && (editGui.isVisible())) {
-            AttributeLocation attributeLocation = new AttributeLocation(this.attributeList, textPreview.getCaretPosition());
+            AttributeLocation attributeLocation = new AttributeLocation(textPreview.getCaretPosition());
             showText(attributeLocation);
             editGui.setAttributeLocation(attributeLocation);
         }
@@ -828,6 +828,15 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     public void setSeries(Series series) {
         sliceSlider.setMaximum(series.getFileList().size());
         DicomClient.getInstance().setProcessedStatus();
+    }
+    
+    /**
+     * Get the current attribute list.
+     * 
+     * @return The current attribute list.
+     */
+    public AttributeList getAttributeList() {
+        return attributeList;
     }
     
     /**

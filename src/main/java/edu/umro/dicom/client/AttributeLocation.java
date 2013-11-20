@@ -1,6 +1,5 @@
 package edu.umro.dicom.client;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import com.pixelmed.dicom.Attribute;
@@ -26,7 +25,6 @@ public class AttributeLocation {
     public Attribute attribute = null;
     private int sequenceItemIndex = -1;
     private boolean located = false;
-    private AttributeList XattributeList = null;
     private int startOfText = -1;
     private int endOfText = -1;
 
@@ -34,9 +32,12 @@ public class AttributeLocation {
 
     private ArrayList<AttributeParent> ancestry = new ArrayList<AttributeParent>();
 
-    public AttributeLocation(AttributeList attributeList, int textPosition) {
-        this.XattributeList = attributeList;
+    public AttributeLocation(int textPosition) {
         this.textPosition = textPosition;
+    }
+
+    public AttributeLocation(AttributeList attributeList) {
+        textPosition = 0;
     }
 
     public Attribute getAttribute() {

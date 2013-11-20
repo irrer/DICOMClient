@@ -20,6 +20,7 @@ import javax.swing.SpringLayout;
 
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
+import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.ValueRepresentation;
 
@@ -74,7 +75,8 @@ public class UpdateGui extends JPanel implements ActionListener {
             Attribute attribute = null;
         
             if (singleMultiplicity()) {
-                attribute = AttributeFactory.newAttribute(attributeLocation.getAttribute().getTag());
+                AttributeTag tag = attributeLocation.getAttribute().getTag();
+                attribute = AttributeFactory.newAttribute(tag, CustomDictionary.getInstance().getValueRepresentationFromTag(tag));
                 attribute.addValue(singleValueText.getText());
             }
             else attribute = multipleValueGui.getUpdatedAttribute();
@@ -226,14 +228,14 @@ public class UpdateGui extends JPanel implements ActionListener {
 
     private JPanel buildMVGuiFlowPanel() {
         JPanel flowPanel = new JPanel();
-        flowPanel.add(multipleValueGui = new MultipleValueGui(this, attributeLocation));
+        flowPanel.add(multipleValueGui = new MultipleValueGui(attributeLocation));
         return flowPanel;
     }
 
     private JPanel buildMVGuiBoxPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(multipleValueGui = new MultipleValueGui(this, attributeLocation));
+        panel.add(multipleValueGui = new MultipleValueGui(attributeLocation));
         return panel;
     }
 
@@ -241,7 +243,7 @@ public class UpdateGui extends JPanel implements ActionListener {
         JPanel panel = new JPanel();
         SpringLayout springLayout = new SpringLayout();
         panel.setLayout(springLayout);
-        panel.add(multipleValueGui = new MultipleValueGui(this, attributeLocation));
+        panel.add(multipleValueGui = new MultipleValueGui(attributeLocation));
         int gap = 15;
         springLayout.putConstraint(SpringLayout.EAST, multipleValueGui, -gap, SpringLayout.EAST, panel);
         springLayout.putConstraint(SpringLayout.WEST, multipleValueGui, gap, SpringLayout.WEST, panel);
@@ -254,7 +256,7 @@ public class UpdateGui extends JPanel implements ActionListener {
 
     private JPanel buildMVGuiBorderPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(multipleValueGui = new MultipleValueGui(this, attributeLocation), BorderLayout.CENTER);
+        panel.add(multipleValueGui = new MultipleValueGui(attributeLocation), BorderLayout.CENTER);
         return panel;
     }
 

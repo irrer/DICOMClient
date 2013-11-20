@@ -42,12 +42,16 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 
 import com.pixelmed.dicom.AttributeList;
+import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
+import com.pixelmed.dicom.ValueRepresentation;
 
+import edu.umro.dicom.client.CustomDictionary.Multiplicity;
 import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
@@ -136,7 +140,7 @@ public class EditGui implements ActionListener, WindowListener {
         int gapSmall = gapLarge / 2;
         Border borderLarge = BorderFactory.createEmptyBorder(gapLarge, gapLarge, gapLarge, gapLarge);
         Border borderSmall = BorderFactory.createEmptyBorder(gapSmall, gapSmall*2, gapSmall, gapSmall*2);
-        JButton[] list = { createButton, updateButton, copyButton, deleteButton };
+        JButton[] list = { updateButton, createButton, copyButton, deleteButton };
         for (JButton button : list) {
             JPanel p = new JPanel();
             p.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -167,6 +171,7 @@ public class EditGui implements ActionListener, WindowListener {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
         applyToAllSlices = new JCheckBox("All");
+        applyToAllSlices.setSelected(true);
         applyToAllSlices.addActionListener(this);
         applyToAllSlices.setToolTipText("<html>Apply changes to all<br>slices in this series.<br>If not checked, only<br>change the current slice.</html>");
         lowerPanel.add(applyToAllSlices);
@@ -185,7 +190,7 @@ public class EditGui implements ActionListener, WindowListener {
         redoPanel.add(redoButton);
         panel.add(redoPanel);
 
-        cancelButton = new JButton("Cancel");
+        cancelButton = new JButton("Discard");
         cancelButton.addActionListener(this);
         cancelButton.setToolTipText("<html>Discard all edits without<br>saving anything.</html>");
         lowerPanel.add(cancelButton);
@@ -215,20 +220,19 @@ public class EditGui implements ActionListener, WindowListener {
         return panel;
     }
 
-    private JComponent buildCreatePanel() {
-        JPanel panel = new JPanel();
-        return panel;
-    }
-
     private JComponent buildCenter() {
         cardPanel = new JPanel();
         cardLayout = new CardLayout();
         cardPanel.setLayout(cardLayout);
 
         cardPanel.add(buildButtonPanel(), CARD_MAIN);
-        cardPanel.add(buildCreatePanel(), CARD_CREATE);
+        
         updateGui = new UpdateGui(this);
         cardPanel.add(updateGui, CARD_UPDATE);
+        
+        createGui = new CreateGui(preview, this);
+        cardPanel.add(createGui, CARD_CREATE);
+        
         setCard(CARD_MAIN);
 
         return cardPanel;
@@ -246,7 +250,8 @@ public class EditGui implements ActionListener, WindowListener {
     }
 
     public boolean setVisible(boolean visible) {
-        if (visible || (!modified) || secondChanceToSave()) {
+        boolean status = visible || (!modified) || secondChanceToSave();
+        if (status) {
             editHistory = new LinkedList<Edit>();
             redoHistory = new LinkedList<Edit>();
             resetDoButtons();
@@ -256,9 +261,9 @@ public class EditGui implements ActionListener, WindowListener {
             setCard(CARD_MAIN);
             dialog.setVisible(visible);
             DicomClient.getInstance().setEnabled(!visible);
-            return true;
         }
-        return false;
+        preview.showDicom();
+        return status;
     }
 
     /**
@@ -300,6 +305,7 @@ public class EditGui implements ActionListener, WindowListener {
             dialog = new JDialog(DicomClient.getInstance().getFrame(), false);
             dialog.addWindowListener(this);
             setTitle();
+            dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         }
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -321,6 +327,15 @@ public class EditGui implements ActionListener, WindowListener {
         }
         setModified(false);
         setAttributeLocation(null);
+    }
+    
+    /**
+     * Get the most recently selected attribute location.
+     * 
+     * @return The most recently selected attribute location.
+     */
+    public AttributeLocation getAttributeLocation() {
+        return attributeLocation;
     }
     
     private void setCard(String cardName) {
@@ -523,6 +538,19 @@ public class EditGui implements ActionListener, WindowListener {
         return false;
     }
     
+    public static boolean isSingleMultiplicity(AttributeTag tag) {
+        CustomDictionary cd = CustomDictionary.getInstance();
+        return (cd.getValueMultiplicity(tag) == Multiplicity.M1) && (!ValueRepresentation.isSequenceVR(cd.getValueRepresentationFromTag(tag))); 
+    }
+
+    public static boolean isMultipleMultiplicity(AttributeTag tag) {
+        return (!isSingleMultiplicity(tag)) && (!ValueRepresentation.isSequenceVR(CustomDictionary.getInstance().getValueRepresentationFromTag(tag)));
+    }
+
+    public static boolean isNoMultiplicity(AttributeTag tag) {
+        return ValueRepresentation.isSequenceVR(CustomDictionary.getInstance().getValueRepresentationFromTag(tag));
+    }
+
     public void setAttributeLocation(AttributeLocation attributeLocation) {
         
         if (editInProgress()) {
@@ -585,7 +613,7 @@ public class EditGui implements ActionListener, WindowListener {
 
     @Override
     public void windowClosing(WindowEvent e) {
-        secondChanceToSave();
+        setVisible(false);
     }
 
     @Override

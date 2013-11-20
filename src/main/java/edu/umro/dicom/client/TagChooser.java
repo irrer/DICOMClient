@@ -52,6 +52,7 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
         String text = searchField.getText();
         String[] terms = text.toLowerCase().split(" ");
 
+        String currentName = getName(getSelectedName());
         comboBox.removeAllItems();
 
         TreeSet<String> nameList = new TreeSet<String>();
@@ -65,7 +66,9 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
             AttributeTag tag = ti.next();
             if ((forbiddenList == null) || (forbiddenList.get(tag) == null)) {
                 String name = customDictionary.getNameFromTag((AttributeTag) tag);
-                if (details.isSelected()) name = String.format("%s %04x,%04x", name, tag.getGroup(), tag.getElement());
+                String vr = new String(customDictionary.getValueRepresentationFromTag(tag));
+                String detailsText = String.format("%04x,%04x %2s", tag.getGroup(), tag.getElement(), vr).toUpperCase();
+                if (details.isSelected()) name = detailsText + " " + name;
                 boolean ok = true;
                 for (String t : terms) {
                     if (!name.toLowerCase().contains(t)) {
@@ -93,9 +96,19 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
 
         int visSize = (comboBox.getItemCount() > MAX_VISIBLE) ? MAX_VISIBLE : comboBox.getItemCount();
         comboBox.setMaximumRowCount(visSize);
+        
+        if (currentName != null) {
+            for (int i = 0; i < comboBox.getItemCount(); i++) {
+                String name = getName((String)comboBox.getItemAt(i));
+                if (currentName.equals(name)) {
+                    comboBox.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
     }
     
-    private void  updateAndShowComboBoxPopup() {
+    private void updateAndShowComboBoxPopup() {
         update();
         comboBox.setPopupVisible(true);
     }
@@ -128,6 +141,10 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
         details.setSelected(false);
         details.addActionListener(this);
     }
+    
+    public JComboBox<String> getComboBox() {
+        return comboBox;
+    }
 
     public TagChooser() {
         String toolTip = "<html>Enter name fragments separated<br>by blanks to search.</html>";
@@ -137,7 +154,6 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
         searchField.setToolTipText(toolTip);
         buildDetails();
         comboBox = new JComboBox<String>(new String[] { });
-        
 
         GridBagLayout gridBagLayout = new GridBagLayout();
         setLayout(gridBagLayout);
@@ -230,9 +246,35 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
         forbiddenList = attributeList;
         update();
     }
-
-
     
+    private String getName(String name) {
+        if (name != null) name = name.replaceAll(".* ", "");
+        return name;
+    }
+
+    /**
+     * Get the name of the selected attribute.
+     * 
+     * @return The name of the selected attribute.
+     */
+    public String getSelectedName() {
+        return getName((String)comboBox.getSelectedItem());
+    }
+
+    public AttributeTag getSelectedTag() {
+        AttributeTag tag = null;
+        String text = getSelectedName();
+        
+        if (text != null) {
+            tag = CustomDictionary.getInstance().getTagFromName(text);
+        }
+        return tag;
+    }
+    
+    
+    /**
+     * For debug only.
+     */
     private static void createAndShowGUI() {
         // create and show a window containing the combo box
         JFrame frame = new JFrame();
@@ -242,26 +284,28 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
         frame.pack();
         frame.setVisible(true);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (true) {
-                        Thread.sleep(4000);
-                        Attribute a = AttributeFactory.newAttribute(TagFromName.PatientID);
-                        AttributeList attributeList = new AttributeList();
-                        attributeList.put(a);
+        if (System.out == null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        while (true) {
+                            Thread.sleep(4000);
+                            Attribute a = AttributeFactory.newAttribute(TagFromName.PatientID);
+                            AttributeList attributeList = new AttributeList();
+                            attributeList.put(a);
 
-                        System.out.println("setting forbidden list");
-                        tagChooser.setForbiddenList(attributeList);
+                            System.out.println("setting forbidden list");
+                            tagChooser.setForbiddenList(attributeList);
+                        }
+                    }
+                    catch (Exception e) {
+                        System.out.println("createAndShowGUI Exception: " + e);
+                        e.printStackTrace();
                     }
                 }
-                catch (Exception e) {
-                    System.out.println("createAndShowGUI Exception: " + e);
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+            }).start();
+        }
     }
 
     public static void main(String[] args) {

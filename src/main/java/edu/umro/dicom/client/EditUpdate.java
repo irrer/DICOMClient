@@ -5,7 +5,6 @@ import com.pixelmed.dicom.AttributeList;
 
 class EditUpdate extends Edit {
 
-    private static final int MAX_DESCRIPTION_LENGTH = 80;
     private Attribute newAttribute = null;
 
     @Override
@@ -29,7 +28,7 @@ class EditUpdate extends Edit {
             return desc;
         }
         catch (Exception e) {
-            return "Changed value";
+            return "Updated value";
         }
     }
 }

@@ -18,6 +18,7 @@ import javax.swing.plaf.basic.BasicArrowButton;
 
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
+import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 
 import edu.umro.util.Log;
@@ -27,8 +28,8 @@ public class MultipleValueGui extends JPanel implements ActionListener {
     /** default */
     private static final long serialVersionUID = 1L;
 
-    UpdateGui updateGui = null;
-    
+    private ActionListener actionListener = null;
+
     private class ValueGui extends JPanel {
         /** default */
         private static final long serialVersionUID = 1L;
@@ -166,7 +167,8 @@ public class MultipleValueGui extends JPanel implements ActionListener {
     }
     
     public Attribute getUpdatedAttribute() throws DicomException {
-        Attribute attribute = AttributeFactory.newAttribute(attributeLocation.getAttribute().getTag());
+        AttributeTag tag = attributeLocation.getAttribute().getTag();
+        Attribute attribute = AttributeFactory.newAttribute(tag, CustomDictionary.getInstance().getValueRepresentationFromTag(tag));
         for (Component c : getComponents()) {
             String value = ((ValueGui)c).textField.getText();
             attribute.addValue(value);
@@ -207,7 +209,7 @@ public class MultipleValueGui extends JPanel implements ActionListener {
         }
     }
 
-    public MultipleValueGui(UpdateGui updateGui, AttributeLocation attributeLocation) {
+    public MultipleValueGui(AttributeLocation attributeLocation) {
         if (this == null) {   // TODO remove
             GridLayout gridLayout = new GridLayout(0, 1);
             gridLayout.setVgap(10);
@@ -217,7 +219,6 @@ public class MultipleValueGui extends JPanel implements ActionListener {
             BoxLayout boxLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
             setLayout(boxLayout);
         }
-        this.updateGui = updateGui;
         setAttributeLocation(attributeLocation);
     }
 }

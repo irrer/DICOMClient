@@ -10,6 +10,7 @@ import com.pixelmed.dicom.AttributeList;
  */
 
 public abstract class Edit {
+    protected static final int MAX_DESCRIPTION_LENGTH = 80;
 
     AttributeLocation attributeLocation = null;
 
