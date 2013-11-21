@@ -28,12 +28,8 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.TreeMap;
-
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -45,10 +41,12 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 
+import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
+import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.ValueRepresentation;
 
 import edu.umro.dicom.client.CustomDictionary.Multiplicity;
@@ -111,9 +109,6 @@ public class EditGui implements ActionListener, WindowListener {
 
     private JButton createCancelButton = null;
     private JButton updateCancelButton = null;
-
-    private JButton createApplyButton = null;
-    private JButton updateApplyButton = null;
 
     private UpdateGui updateGui; 
     private CreateGui createGui; 
@@ -494,6 +489,14 @@ public class EditGui implements ActionListener, WindowListener {
     }
 
     private void copy() {
+        AttributeLocation aLoc = attributeLocation;
+        AttributeList aList = preview.getAttributeList();
+        //AttributeList a1 = aLoc.getAttributeList(aList);
+        SequenceAttribute a2 = aLoc.getParentAttribute(aList);
+        //int index = aLoc.getSequenceItemIndex();
+        int parentIndex = aLoc.getParentIndex();
+        AttributeList src = a2.getItem(parentIndex).getAttributeList();
+      
         System.out.println("Copy not yet implemented.");   // TODO
     }
     
@@ -507,7 +510,7 @@ public class EditGui implements ActionListener, WindowListener {
         editHistory.add(edit);
         redoHistory.clear();
         setCard(CARD_MAIN);
-        setAttributeLocation(null);
+        setAttributeLocation(attributeLocation);
         resetDoButtons();
         preview.showDicom();
     }
@@ -551,7 +554,7 @@ public class EditGui implements ActionListener, WindowListener {
         return ValueRepresentation.isSequenceVR(CustomDictionary.getInstance().getValueRepresentationFromTag(tag));
     }
 
-    public void setAttributeLocation(AttributeLocation attributeLocation) {
+    public void setAttributeLocation(AttributeLocation attrLoc) {
         
         if (editInProgress()) {
             String modeName = currentCard.equals(CARD_UPDATE) ? "Update" : "Create";
@@ -575,7 +578,7 @@ public class EditGui implements ActionListener, WindowListener {
             }
         }
         
-        this.attributeLocation = attributeLocation;
+        this.attributeLocation = attrLoc;
         
         deleteButton.setEnabled(attributeLocation != null);
         updateButton.setEnabled((attributeLocation != null) && (attributeLocation.attribute != null) && (!(attributeLocation.attribute instanceof SequenceAttribute)));
@@ -608,8 +611,7 @@ public class EditGui implements ActionListener, WindowListener {
     }
 
     @Override
-    public void windowOpened(WindowEvent e) {
-    }
+    public void windowOpened(WindowEvent e) {}
 
     @Override
     public void windowClosing(WindowEvent e) {
@@ -617,31 +619,18 @@ public class EditGui implements ActionListener, WindowListener {
     }
 
     @Override
-    public void windowClosed(WindowEvent e) {
-        System.out.println("windowClosed"); // TODO remove
-    }
+    public void windowClosed(WindowEvent e) {}
 
     @Override
-    public void windowIconified(WindowEvent e) {
-        // TODO Auto-generated method stub
-        
-    }
+    public void windowIconified(WindowEvent e) {}
 
     @Override
-    public void windowDeiconified(WindowEvent e) {
-        // TODO Auto-generated method stub
-        
-    }
+    public void windowDeiconified(WindowEvent e) {}
 
     @Override
-    public void windowActivated(WindowEvent e) {
-        // TODO Auto-generated method stub
-        
-    }
+    public void windowActivated(WindowEvent e) {}
 
     @Override
-    public void windowDeactivated(WindowEvent e) {
-        System.out.println("windowDeactivated"); // TODO remove
-    }
+    public void windowDeactivated(WindowEvent e) {}
     
 }

@@ -67,7 +67,8 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
             if ((forbiddenList == null) || (forbiddenList.get(tag) == null)) {
                 String name = customDictionary.getNameFromTag((AttributeTag) tag);
                 String vr = new String(customDictionary.getValueRepresentationFromTag(tag));
-                String detailsText = String.format("%04x,%04x %2s", tag.getGroup(), tag.getElement(), vr).toUpperCase();
+                String vm = customDictionary.getValueMultiplicity(tag).getName();
+                String detailsText = String.format("%04x,%04x %2s %-3s", tag.getGroup(), tag.getElement(), vr, vm).toUpperCase();
                 if (details.isSelected()) name = detailsText + " " + name;
                 boolean ok = true;
                 for (String t : terms) {

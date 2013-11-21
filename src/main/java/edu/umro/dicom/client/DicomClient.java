@@ -892,6 +892,23 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             System.exit(1);
         }
     }
+    
+    /**
+     * Set the enabled status of container and all of its children.
+     *  
+     * @param container Top level container.
+     * 
+     * @param enable True to enable, false to disable (diabled == greyed out).
+     */
+    public static void setEnabledRecursively(Container container, boolean enable) {
+        Component[] components = container.getComponents();
+        for (Component component : components) {
+            component.setEnabled(enable);
+            if (component instanceof Container) {
+                setEnabledRecursively((Container)component, enable);
+            }
+        }
+    }
 
     /**
      * Top level that builds the GUI.
@@ -1441,11 +1458,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             File parent = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
             File anonymizedDirectory = new File(file.isDirectory() ? file : parent, "output");
 
-            if (anonymizeDestination == null) {
-                anonymizeDestination = anonymizedDirectory;
-                if (!inCommandLineMode()) {
-                    anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
-                    directoryChooser.setSelectedFile(anonymizeDestination);
+            synchronized (anonymizedDirectory) {
+                if (anonymizeDestination == null) {
+                    anonymizeDestination = anonymizedDirectory;
+                    if (!inCommandLineMode()) {
+                        anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
+                        directoryChooser.setSelectedFile(anonymizeDestination);
+                    }
                 }
             }
         }
@@ -1862,8 +1881,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @param enabled True to enable, false to disable.
      */
     public void setEnabled(boolean enabled) {
-        frame.getContentPane().setEnabled(enabled);
-        //frame.setEnabled(enabled);
+        setEnabledRecursively(frame.getContentPane(), enabled);
     }
 
 }

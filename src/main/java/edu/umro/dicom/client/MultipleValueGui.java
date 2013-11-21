@@ -28,7 +28,6 @@ public class MultipleValueGui extends JPanel implements ActionListener {
     /** default */
     private static final long serialVersionUID = 1L;
 
-    private ActionListener actionListener = null;
 
     private class ValueGui extends JPanel {
         /** default */
@@ -139,7 +138,7 @@ public class MultipleValueGui extends JPanel implements ActionListener {
             }
             try {
                 String[] oldValueList = attributeLocation.getAttribute().getStringValues();
-                if (oldValueList.length != getComponentCount()) return true;
+                if ((oldValueList == null) || (oldValueList.length != getComponentCount())) return true;
                 for (int v = 0; v < oldValueList.length; v++) {
                     ValueGui vg = (ValueGui) (getComponent(v));
                     if (!(vg.textField.getText().equals(oldValueList[v]))) return true;
@@ -166,14 +165,20 @@ public class MultipleValueGui extends JPanel implements ActionListener {
         revalidate();
     }
     
-    public Attribute getUpdatedAttribute() throws DicomException {
-        AttributeTag tag = attributeLocation.getAttribute().getTag();
+    public Attribute getUpdatedAttribute(AttributeTag tag) throws DicomException {
         Attribute attribute = AttributeFactory.newAttribute(tag, CustomDictionary.getInstance().getValueRepresentationFromTag(tag));
         for (Component c : getComponents()) {
             String value = ((ValueGui)c).textField.getText();
             attribute.addValue(value);
         }
         return attribute;
+    }
+    
+    public void reset() {
+        while (getComponentCount() > 1)
+            remove(1);
+        ValueGui vg = (ValueGui) (getComponent(0));
+        vg.textField.setText("");
     }
     
     public void setAttributeLocation(AttributeLocation attributeLocation) {

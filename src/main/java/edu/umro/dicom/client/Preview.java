@@ -722,9 +722,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
 
         if (ev.getSource().equals(editButton)) {
-            editGui = new EditGui(this);
-            editGui.setVisible(true);
-            showText(null);
+            if (editGui == null) {
+                editGui = new EditGui(this);
+                editGui.setVisible(true);
+                showText(null);
+                DicomClient.getInstance().setEnabled(false);
+            }
         }
     }
 
@@ -1401,9 +1404,11 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     
     private void close() {
         if ((editGui == null) || (editGui.setVisible(false))) {
-            setVisible(false);
-            editGui.setVisible(false);
-            editGui = null;
+            dialog.setVisible(false);
+            if (editGui != null) {
+                editGui.setVisible(false);
+                editGui = null;
+            }
         }
     }
 

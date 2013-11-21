@@ -100,7 +100,7 @@ public class CreateGui extends JPanel implements ActionListener {
             }
 
             if (EditGui.isMultipleMultiplicity(tag)) {
-                attribute = multipleValueGui.getUpdatedAttribute();
+                attribute = multipleValueGui.getUpdatedAttribute(tag);
             }
 
             if (EditGui.isNoMultiplicity(tag)) {
@@ -161,6 +161,8 @@ public class CreateGui extends JPanel implements ActionListener {
     private void setAttributeTag(AttributeTag tag) {
         // Even if not single mode, this is required for other card 'show' calls.  It should not be, but it is.
         cardLayout.show(cardPanel, CARD_SINGLE);
+        singleValueText.setText("");
+        multipleValueGui.reset();
         if (EditGui.isMultipleMultiplicity(tag)) cardLayout.show(cardPanel, CARD_MULTIPLE);
         else {
             if (EditGui.isNoMultiplicity(tag)) cardLayout.show(cardPanel, CARD_NONE);
@@ -230,10 +232,10 @@ public class CreateGui extends JPanel implements ActionListener {
 
     private JComponent buildMultiplePanel() {
         multipleValueGui = new MultipleValueGui(null);
-        JPanel flowPanel = new JPanel(new BorderLayout());
-        flowPanel.add(multipleValueGui, BorderLayout.NORTH);
-        flowPanel.add(new JLabel(), BorderLayout.CENTER);
-        return wrapInScrollPane(flowPanel);
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(multipleValueGui, BorderLayout.NORTH);
+        panel.add(new JLabel(), BorderLayout.CENTER);
+        return wrapInScrollPane(panel);
     }
 
     private JPanel buildMainPanel() {
@@ -244,14 +246,13 @@ public class CreateGui extends JPanel implements ActionListener {
         cardPanel.add(buildSingleValuePanel(), CARD_SINGLE);
         cardPanel.add(buildNoValuePanel(), CARD_NONE);
         cardPanel.add(buildMultiplePanel(), CARD_MULTIPLE);
-        panel = new JPanel();
-        BoxLayout layout = new BoxLayout(panel, BoxLayout.Y_AXIS);
-        panel.setLayout(layout);
-
         tagChooser = new TagChooser();
         tagChooser.getComboBox().addActionListener(this);
-        panel.add(tagChooser);
-        panel.add(cardPanel);
+
+        panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.add(tagChooser, BorderLayout.NORTH);
+        panel.add(cardPanel, BorderLayout.CENTER);
 
         return panel;
     }

@@ -553,6 +553,7 @@ public class CustomDictionary extends DicomDictionary {
      * 
      */
     public enum Multiplicity {
+        M0,
         M1,
         M1_2,
         M1_3,
@@ -604,6 +605,10 @@ public class CustomDictionary extends DicomDictionary {
         @Override
         public String toString() {
             return this.name() + "  min:" + min + "  max:" + ((max == Integer.MAX_VALUE) ? "N" : (""+max)) + "  incr:" + incr;
+        }
+        
+        public String getName() {
+            return this.name().substring(1).replace('_', '-');
         }
 
     };
@@ -1224,6 +1229,7 @@ public class CustomDictionary extends DicomDictionary {
 
     public Multiplicity getValueMultiplicity(AttributeTag tag) {
         Multiplicity m = valueMultiplicity.get(tag);
+        if (ValueRepresentation.isSequenceVR(getValueRepresentationFromTag(tag))) return Multiplicity.M0;
         return (m == null) ? Multiplicity.M1 : m;
     }
     

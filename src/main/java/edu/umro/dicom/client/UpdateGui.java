@@ -74,12 +74,12 @@ public class UpdateGui extends JPanel implements ActionListener {
         try {
             Attribute attribute = null;
         
+            AttributeTag tag = attributeLocation.getAttribute().getTag();
             if (singleMultiplicity()) {
-                AttributeTag tag = attributeLocation.getAttribute().getTag();
                 attribute = AttributeFactory.newAttribute(tag, CustomDictionary.getInstance().getValueRepresentationFromTag(tag));
                 attribute.addValue(singleValueText.getText());
             }
-            else attribute = multipleValueGui.getUpdatedAttribute();
+            else attribute = multipleValueGui.getUpdatedAttribute(tag);
             editGui.addNewEdit(new EditUpdate(attributeLocation, attribute));
             attributeLocation = null;
         }
@@ -219,47 +219,6 @@ public class UpdateGui extends JPanel implements ActionListener {
         return wrapInCenteredFlow(panel);
     }
 
-    private JPanel buildMVLabelPanel() {
-        multipleValueLabel = new JLabel("", JLabel.CENTER);
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panel.add(multipleValueLabel, BorderLayout.NORTH);
-        return panel;
-    }
-
-    private JPanel buildMVGuiFlowPanel() {
-        JPanel flowPanel = new JPanel();
-        flowPanel.add(multipleValueGui = new MultipleValueGui(attributeLocation));
-        return flowPanel;
-    }
-
-    private JPanel buildMVGuiBoxPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(multipleValueGui = new MultipleValueGui(attributeLocation));
-        return panel;
-    }
-
-    private JPanel buildMultiValueGuiSpringPanel() {
-        JPanel panel = new JPanel();
-        SpringLayout springLayout = new SpringLayout();
-        panel.setLayout(springLayout);
-        panel.add(multipleValueGui = new MultipleValueGui(attributeLocation));
-        int gap = 15;
-        springLayout.putConstraint(SpringLayout.EAST, multipleValueGui, -gap, SpringLayout.EAST, panel);
-        springLayout.putConstraint(SpringLayout.WEST, multipleValueGui, gap, SpringLayout.WEST, panel);
-        springLayout.putConstraint(SpringLayout.NORTH, multipleValueGui, gap, SpringLayout.NORTH, panel);
-        // springLayout.putConstraint(SpringLayout.SOUTH, multipleValueGui,
-        // -gap, SpringLayout.SOUTH, mvgPanel);
-
-        return panel;
-    }
-
-    private JPanel buildMVGuiBorderPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(multipleValueGui = new MultipleValueGui(attributeLocation), BorderLayout.CENTER);
-        return panel;
-    }
-
     private JScrollPane wrapInScrollPane(JPanel panel) {
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
@@ -270,15 +229,18 @@ public class UpdateGui extends JPanel implements ActionListener {
         JPanel panel = new JPanel();
 
         panel.setLayout(new BorderLayout());
-        panel.add(buildMVLabelPanel(), BorderLayout.NORTH);
-        panel.add(wrapInScrollPane(buildMVGuiFlowPanel()), BorderLayout.CENTER);
-        // panel.add(wrapInScrollPane(buildMultiValueGuiSpringPanel()),
-        // BorderLayout.CENTER);
-        // panel.add(wrapInScrollPane(buildMVGuiBorderPanel()),
-        // BorderLayout.CENTER);
-        // panel.add(wrapInScrollPane(buildMVGuiBoxPanel()),
-        // BorderLayout.CENTER);
+                
+        multipleValueLabel = new JLabel("", JLabel.CENTER);
+        panel.add(multipleValueLabel, BorderLayout.NORTH);
 
+        multipleValueGui = new MultipleValueGui(attributeLocation);
+        
+        JPanel bPanel = new JPanel(new BorderLayout());
+        bPanel.add(multipleValueGui, BorderLayout.NORTH);
+        bPanel.add(new JLabel(), BorderLayout.CENTER);
+        
+        panel.add(wrapInScrollPane(bPanel), BorderLayout.CENTER);
+        
         return panel;
     }
 
