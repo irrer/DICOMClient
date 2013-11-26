@@ -60,6 +60,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -648,6 +649,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         anonPanel.setLayout(gridLayout);
         anonPanel.add(buildAnonymizeDirectorySelector());
+        System.out.println("Done with buildAnonymizeDirectorySelector()");   // TODO remove
 
         anonymizeOptionsButton = new JButton("Anonymize Options...");
         anonymizeOptionsButton.addActionListener(this);
@@ -1463,10 +1465,19 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     anonymizeDestination = anonymizedDirectory;
                     if (!inCommandLineMode()) {
                         anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
-                        directoryChooser.setSelectedFile(anonymizeDestination);
+                        SwingUtilities.invokeLater(new Runnable() {
+                            public void run() {
+                                directoryChooser.setSelectedFile(anonymizeDestination);
+                            }
+                        }
+                        );
                     }
                 }
             }
+        }
+        catch (Exception e) {
+            e.printStackTrace();   // TODO remove
+            Log.get().severe("Unexpected error in DicomClient.addDicomFile: " + e);
         }
         finally {
             setPreviewEnableable(true);
@@ -1524,7 +1535,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             }            
         }
-        (new Thread(new Add(fileList))).start();
+        SwingUtilities.invokeLater(new Thread(new Add(fileList)));
     }
 
 
@@ -1532,7 +1543,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * Constructor to build the GUI.
      */
     private DicomClient() {
-        buildMain();
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                buildMain();
+            }
+        });
     }
 
 
@@ -1756,33 +1771,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         try {
             logPrelude();
             
-            if (false){ // TODO remove. For testing only.
-
-                AttributeTag[] atList = { TagFromName.PatientID, TagFromName.PatientName, TagFromName.Modality, TagFromName.MediaStorageSOPClassUID, TagFromName.SeriesDescription,
-                        TagFromName.SeriesDate, TagFromName.ContentDate, TagFromName.AcquisitionDate, TagFromName.InstanceCreationDate, TagFromName.RTPlanDate,
-                        TagFromName.StructureSetDate, TagFromName.SeriesTime, TagFromName.ContentTime, TagFromName.AcquisitionTime, TagFromName.InstanceCreationTime,
-                        TagFromName.RTPlanTime, TagFromName.StructureSetTime, TagFromName.InstanceCreationDate, TagFromName.InstanceCreationTime, TagFromName.SeriesInstanceUID };
-
-                for (AttributeTag at : atList) {
-                    System.out.println(at.toString()+ "    name: " + CustomDictionary.getInstance().getNameFromTag(at));
-                }
-                System.exit(99);
-                
-                class RS implements ReadStrategy {
-                    @Override
-                    public boolean terminate(AttributeList attributeList, Attribute attribute, long bytesRead) {
-                        System.out.println("bytesRead: " + bytesRead + "   attribute: " + CustomDictionary.getName(attribute));
-                        return attribute.getTag().equals(TagFromName.PatientID);
-                    }
-                }
-
-                File file = new File("D:\\pf\\Conquest\\dicomserver1417\\data\\99999999\\output\\99999999_RTPLAN.DCM");
-                DicomInputStream dis = new DicomInputStream(file);
-                AttributeList al = new AttributeList();
-                al.read(dis, new RS());
-                System.out.println("got it");
-                System.exit(99);
-            }
             args = parseArguments(args);
 
             // This disables the host name verification for certificate authentication.

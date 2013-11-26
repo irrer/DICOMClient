@@ -36,6 +36,8 @@ import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.DicomOutputStream;
 import com.pixelmed.dicom.PersonNameAttribute;
+import com.pixelmed.dicom.SequenceAttribute;
+import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.TimeAttribute;
 import com.pixelmed.dicom.TransferSyntax;
 
@@ -266,7 +268,7 @@ public class Util {
      * 
      * @throws DicomException
      */
-    public static AttributeList cloneAttributeList(AttributeList source) throws IOException, DicomException {
+    private static AttributeList cloneTopLevelAttributeList(AttributeList source) throws IOException, DicomException {
         AttributeList dest = new AttributeList();
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -279,6 +281,38 @@ public class Util {
         return dest;
     }
 
+    /**
+     * Make a new copy of an attribute list, not sharing any data with the original.
+     * 
+     * @param source List to copy.
+     * 
+     * @return Copy of list.
+     * 
+     * @throws IOException
+     * 
+     * @throws DicomException
+     */
+
+    public static AttributeList cloneAttributeList(AttributeList source) throws IOException, DicomException {
+        AttributeList virtualList = new AttributeList();
+        {
+            Attribute sopInstanceUID = AttributeFactory.newAttribute(TagFromName.SOPInstanceUID);
+            sopInstanceUID.addValue(Util.getUID());
+            virtualList.put(sopInstanceUID);
+        }
+
+        // Make a top level sequence as a container. Any type of sequence will
+        // do, this is relatively generic.
+        SequenceAttribute contentSequence = new SequenceAttribute(TagFromName.ContentSequence);
+        virtualList.put(contentSequence);
+
+        contentSequence.addItem(source);
+
+        AttributeList newAttributeList = cloneTopLevelAttributeList(virtualList);
+
+        AttributeList dest = ((SequenceAttribute) newAttributeList.get(TagFromName.ContentSequence)).getItem(0).getAttributeList();
+        return dest;
+    }
 
     /**
      * Determine if the given UID is syntactically valid, which

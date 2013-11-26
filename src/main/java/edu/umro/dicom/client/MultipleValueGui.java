@@ -80,7 +80,7 @@ public class MultipleValueGui extends JPanel implements ActionListener {
         }
     }
 
-    private AttributeLocation attributeLocation = null;
+    private Attribute attribute = null;
 
     private void duplicate(ValueGui valueGui) {
         ValueGui newValuGui = new ValueGui(this, valueGui.textField.getText());
@@ -126,26 +126,47 @@ public class MultipleValueGui extends JPanel implements ActionListener {
         }
         setupEnabled();
     }
+    
+    /**
+     * This is called if the original value is null, meaning that the value does
+     * not exist.  If the value is an empty string then it does exist.  In this
+     * case the value is considered modified by the user if they have increased
+     * the number of fields or have added text to any of the fields.  If there is
+     * only one field with no text, then the value is considered modified.  This
+     * is done because the field is generated when the interface is shown, even
+     * though the user did not do anything.  This represents how DICOM should work,
+     * that there are no null fields.
+     * 
+     * The possible down side is that the user wants to replace a null field with
+     * an empty string, in which case the user has to explicitly click the Update
+     * button.
+     * 
+     * @return
+     */
+    private boolean nullValueModified() {
+        if (getComponentCount() == 1) {
+            ValueGui vg = (ValueGui)getComponent(0);
+            String value = vg.textField.getText();
+            if (value.length() == 0) return false;
+        }
+        return true;
+    }
 
     public boolean isModified() {
-        if ((attributeLocation != null) || (attributeLocation.getAttribute() != null)) {
-            { // TODO remove
-                boolean isUp = UpdateGui.isUpdateable(attributeLocation.getAttribute());
-                System.out.println("MultipleValueGui.isModified attrLoc: " + attributeLocation + "  updateable: " + isUp);
-                if (!isUp) {
-                    System.out.println("MultipleValueGui.isModified BAAAAAD");
-                }
-            }
+        if (attribute != null) {
             try {
-                String[] oldValueList = attributeLocation.getAttribute().getStringValues();
-                if ((oldValueList == null) || (oldValueList.length != getComponentCount())) return true;
+                String[] oldValueList = attribute.getStringValues();
+                
+                if (oldValueList == null) return nullValueModified();
+                
+                if ((oldValueList.length != getComponentCount())) return true;
                 for (int v = 0; v < oldValueList.length; v++) {
                     ValueGui vg = (ValueGui) (getComponent(v));
                     if (!(vg.textField.getText().equals(oldValueList[v]))) return true;
                 }
             }
             catch (DicomException e) {
-                String name = CustomDictionary.getName(attributeLocation.getAttribute());
+                String name = CustomDictionary.getName(attribute);
                 Log.get().warning("Unable to get DICOM values as strings from attribute " + name + " : " + e);
             }
         }
@@ -181,49 +202,29 @@ public class MultipleValueGui extends JPanel implements ActionListener {
         vg.textField.setText("");
     }
     
-    public void setAttributeLocation(AttributeLocation attributeLocation) {
-        System.out.println("MultipleValueGui.setAttributeLocation: " + attributeLocation);
-        {   // TODO remove
-            if (attributeLocation == null) {
-                System.out.println("null Badness!!!!");
-            }
-            else {
-                boolean isUp = UpdateGui.isUpdateable(attributeLocation.getAttribute());
-                System.out.println("MultValGui.setAttributeLocation isUpdateable:  " + isUp);
-                if (!isUp) {
-                    System.out.println("Badness!!!!");
-                }
-            }
-        }
+    public void setAttribute(Attribute attribute) {
         try {
-            this.attributeLocation = attributeLocation;
+            this.attribute = attribute;
             removeAll();
-            if ((attributeLocation == null) || (attributeLocation.getAttribute() == null) || (attributeLocation.getAttribute().getStringValues() == null)) {
+            if ((attribute == null) || (attribute.getStringValues() == null)) {
                 add(new ValueGui(this, ""));
             }
             else {
-                for (String value : attributeLocation.getAttribute().getStringValues()) {
+                for (String value : attribute.getStringValues()) {
                     add(new ValueGui(this, value));
                 }
             }
             setupEnabled();
         }
         catch (DicomException e) {
-            // TODO Auto-generated catch block
+            Log.get().severe("Unexpected error in MultipleValueGui.setAttribute: " + e);
             e.printStackTrace();
         }
     }
 
-    public MultipleValueGui(AttributeLocation attributeLocation) {
-        if (this == null) {   // TODO remove
-            GridLayout gridLayout = new GridLayout(0, 1);
-            gridLayout.setVgap(10);
-            setLayout(gridLayout);
-        }
-        else {
-            BoxLayout boxLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
-            setLayout(boxLayout);
-        }
-        setAttributeLocation(attributeLocation);
+    public MultipleValueGui(Attribute attribute) {
+        BoxLayout boxLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
+        setLayout(boxLayout);
+        setAttribute(attribute);
     }
 }

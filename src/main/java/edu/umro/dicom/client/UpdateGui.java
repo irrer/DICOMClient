@@ -148,7 +148,7 @@ public class UpdateGui extends JPanel implements ActionListener {
         cardLayout.show(cardPanel, CARD_SINGLE); // reliably forces screen
                                                  // redraw
         cardLayout.show(cardPanel, CARD_MULTIPLE);
-        multipleValueGui.setAttributeLocation(attributeLocation);
+        multipleValueGui.setAttribute(attributeLocation.getAttribute());
     }
     
     public void setAttributeLocation(AttributeLocation attributeLocation) {
@@ -156,6 +156,8 @@ public class UpdateGui extends JPanel implements ActionListener {
         
         this.attributeLocation = isUpdateable(attributeLocation) ? attributeLocation : null;
 
+        if (attributeLocation == null)         // TODO remove
+            System.out.println("Null badness");
         Attribute attribute = this.attributeLocation.getAttribute();
         if (isUpdateable(attribute)) {
             if (CustomDictionary.getVM(attribute) == Multiplicity.M1)
@@ -164,7 +166,7 @@ public class UpdateGui extends JPanel implements ActionListener {
                 setMultipleMode(this.attributeLocation);
         }
         else {
-            multipleValueGui.setAttributeLocation(null);
+            multipleValueGui.setAttribute(null);
             editGui.setToMainMode();
         }
     }
@@ -233,7 +235,7 @@ public class UpdateGui extends JPanel implements ActionListener {
         multipleValueLabel = new JLabel("", JLabel.CENTER);
         panel.add(multipleValueLabel, BorderLayout.NORTH);
 
-        multipleValueGui = new MultipleValueGui(attributeLocation);
+        multipleValueGui = new MultipleValueGui((attributeLocation == null) ? null : attributeLocation.getAttribute());
         
         JPanel bPanel = new JPanel(new BorderLayout());
         bPanel.add(multipleValueGui, BorderLayout.NORTH);

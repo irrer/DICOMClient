@@ -722,12 +722,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
 
         if (ev.getSource().equals(editButton)) {
-            if (editGui == null) {
-                editGui = new EditGui(this);
-                editGui.setVisible(true);
-                showText(null);
-                DicomClient.getInstance().setEnabled(false);
-            }
+            if (editGui == null) editGui = new EditGui(this);
+            editGui.setVisible(true);
+            showText(null);
+            DicomClient.getInstance().setEnabled(false);
         }
     }
 
@@ -952,6 +950,15 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         text.append(line + "\n");
         int textEnd = text.length();
         if (attributeLocation != null) attributeLocation.setAttribute(text.length(), 0, attribute, textStart, textEnd);
+        /*
+        if (attributeLocation != null) {
+            if (attributeLocation.isLocated()) {
+                if (attributeLocation.getStartOfText() == -1) {
+
+                }
+            }
+        }
+        */
         numLines++;
     }
 
@@ -968,7 +975,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             if (vr == null) {
                 vr = new byte[] { '?', '?' };
             }
-            String prefix = group + "," + element + " " + (char) vr[0] + (char) vr[1] + "  ";
+            String vmName = CustomDictionary.getInstance().getValueMultiplicity(tag).getName();
+            String prefix = group + "," + element + " " + (char) vr[0] + (char) vr[1] + " " + vmName + "  ";
             line = prefix + line;
         }
         return line;
@@ -1202,6 +1210,9 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
     
+    public void selectForEdit(AttributeLocation attributeLocation) {
+        showText(attributeLocation);
+    }
     
     /**
      * Perform edits on attribute list if there are any edits.
@@ -1403,11 +1414,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     }
     
     private void close() {
-        if ((editGui == null) || (editGui.setVisible(false))) {
+        if ((editGui == null) || (!editGui.isVisible()) || (editGui.setVisible(false))) {
             dialog.setVisible(false);
             if (editGui != null) {
                 editGui.setVisible(false);
-                editGui = null;
             }
         }
     }

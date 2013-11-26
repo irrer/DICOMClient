@@ -117,6 +117,7 @@ public class CreateGui extends JPanel implements ActionListener {
             if (attributeLocation == null) attributeLocation = new AttributeLocation(0);
 
             editGui.addNewEdit(new EditCreate(attributeLocation, attribute));
+            preview.selectForEdit(attributeLocation);
         }
         catch (DicomException e) {
             new Alert("Unable to save create of " + tagChooser.getSelectedName() + "\n\n" + e, "Failed to Save Create");

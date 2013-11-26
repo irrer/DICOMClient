@@ -256,8 +256,8 @@ public class EditGui implements ActionListener, WindowListener {
             setCard(CARD_MAIN);
             dialog.setVisible(visible);
             DicomClient.getInstance().setEnabled(!visible);
+            preview.showDicom();
         }
-        preview.showDicom();
         return status;
     }
 
@@ -268,6 +268,7 @@ public class EditGui implements ActionListener, WindowListener {
      * @return True if user wants to discard changes and actually exit, false to resume editing.
      */
     private boolean secondChanceToSave() {
+        if (editHistory.size() == 0) return true;  // if no changes, then we're done
         String s = (editHistory.size() == 1) ? "" : "s";
         String msg = "You have made " + editHistory.size() + " change" + s + ".  Save your change" + s + "?";
         String title = editHistory.size() + " change" + s + " will be lost";
@@ -489,15 +490,7 @@ public class EditGui implements ActionListener, WindowListener {
     }
 
     private void copy() {
-        AttributeLocation aLoc = attributeLocation;
-        AttributeList aList = preview.getAttributeList();
-        //AttributeList a1 = aLoc.getAttributeList(aList);
-        SequenceAttribute a2 = aLoc.getParentAttribute(aList);
-        //int index = aLoc.getSequenceItemIndex();
-        int parentIndex = aLoc.getParentIndex();
-        AttributeList src = a2.getItem(parentIndex).getAttributeList();
-      
-        System.out.println("Copy not yet implemented.");   // TODO
+        if (attributeLocation != null) addNewEdit(new EditCopy(attributeLocation));
     }
     
     /**
@@ -513,6 +506,7 @@ public class EditGui implements ActionListener, WindowListener {
         setAttributeLocation(attributeLocation);
         resetDoButtons();
         preview.showDicom();
+        setAttributeLocation(null);
     }
     
     public void setToMainMode() {
@@ -579,17 +573,17 @@ public class EditGui implements ActionListener, WindowListener {
         }
         
         this.attributeLocation = attrLoc;
-        
+
         deleteButton.setEnabled(attributeLocation != null);
         updateButton.setEnabled((attributeLocation != null) && (attributeLocation.attribute != null) && (!(attributeLocation.attribute instanceof SequenceAttribute)));
         copyButton.setEnabled((attributeLocation != null) && (attributeLocation.attribute == null));
-        
-        if (attributeLocation == null) {
-            String tip = "<html>Select an entry in<br>the preview window</html>";
-            deleteButton.setToolTipText(tip);
-            updateButton.setToolTipText(tip);
-        }
-        else {
+
+        deleteButton.setToolTipText("<html>Select an entry in<br>the preview window</html>");
+        updateButton.setToolTipText("<html>Select an entry in the<br>preview window that is<br>not a numbered <em>Item</em> or<br>Sequence attribute</html>");
+        copyButton.setToolTipText("<html>Select a numbered <em>Item</em> under a<br>Sequence attribute to copy</html>");
+        createButton.setToolTipText("<html>Create a new attribute</html>");
+
+        if (attributeLocation != null) {
             String desc;
             if (attributeLocation.attribute == null) {
                 int item = attributeLocation.getParentIndex() + 1;
@@ -598,13 +592,18 @@ public class EditGui implements ActionListener, WindowListener {
             else {
                 desc = CustomDictionary.getName(attributeLocation);
             }
-                        
+
             deleteButton.setToolTipText("Delete " + desc);
-            updateButton.setToolTipText("Update " + desc);
+
+            if ((attributeLocation.attribute != null) && (!ValueRepresentation.isSequenceVR(attributeLocation.attribute.getVR()))) updateButton.setToolTipText("Update " + desc);
+
+            if (attributeLocation.attribute == null) copyButton.setToolTipText("Copy " + desc);
             
             if (currentCard.equals(CARD_UPDATE)) {
-                if (UpdateGui.isUpdateable(attributeLocation)) updateGui.setAttributeLocation(attributeLocation);
-                else setCard(CARD_MAIN);
+                if (UpdateGui.isUpdateable(attributeLocation))
+                    updateGui.setAttributeLocation(attributeLocation);
+                else
+                    setCard(CARD_MAIN);
             }
             if (currentCard.equals(CARD_CREATE)) createGui.setAttributeLocation(attributeLocation);
         }
