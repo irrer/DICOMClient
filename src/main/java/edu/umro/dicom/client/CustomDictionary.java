@@ -1229,8 +1229,10 @@ public class CustomDictionary extends DicomDictionary {
 
     public Multiplicity getValueMultiplicity(AttributeTag tag) {
         Multiplicity m = valueMultiplicity.get(tag);
+        if (m != null) return m;
+        if ((tag == null) || (getValueRepresentationFromTag(tag) == null)) return Multiplicity.M0;
         if (ValueRepresentation.isSequenceVR(getValueRepresentationFromTag(tag))) return Multiplicity.M0;
-        return (m == null) ? Multiplicity.M1 : m;
+        return Multiplicity.M1;
     }
     
     public static Multiplicity getVM(Attribute attribute) {

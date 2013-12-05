@@ -842,7 +842,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     AnonymizeGUI.getInstance().updateTagList(attributeList);
 
                     Anonymize.anonymize(attributeList, getAnonymizingReplacementList());
-                    FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, "DICOMService");
+                    FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, DicomClient.PROJECT_NAME);
 
                     // set up to put file in new directory
                     newFile = getNewFile(attributeList);

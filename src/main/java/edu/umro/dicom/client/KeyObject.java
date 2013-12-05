@@ -57,9 +57,6 @@ public class KeyObject extends AttributeList {
     /** One slice of the source series. */
     private AttributeList sampleInstance = null;
 
-    /** Name of this program. */
-    private static final String PROGRAM_NAME = "DICOM Upload";
-
     /** Specific definition of what this Key Object represents. */
     public static final String SPECIFIC_MEANING = "Instances in series to support verification that it is complete";
 
@@ -223,7 +220,7 @@ public class KeyObject extends AttributeList {
         addAttr(TagFromName.StationName, (OpSys.getHostName() != null) ? OpSys.getHostName() : OpSys.getHostIPAddress());
         put(constructAttribute(TagFromName.StudyDescription, ""));
         put(constructAttribute(TagFromName.NameOfPhysiciansReadingStudy, ""));
-        addAttr(TagFromName.ManufacturerModelName, PROGRAM_NAME);
+        addAttr(TagFromName.ManufacturerModelName, DicomClient.PROJECT_NAME);
         put(AttributeFactory.newAttribute(TagFromName.ReferencedPerformedProcedureStepSequence));
         put(constructAttribute(TagFromName.PatientName, ""));
         put(constructAttribute(TagFromName.PatientID, ""));
@@ -374,6 +371,6 @@ public class KeyObject extends AttributeList {
         sampleInstance = new AttributeList();
         sampleInstance.read((String)(fileList.toArray()[0]));
         addRequiredTags();
-        FileMetaInformation.addFileMetaInformation(this, Util.DEFAULT_STORAGE_SYNTAX, PROGRAM_NAME);
+        FileMetaInformation.addFileMetaInformation(this, Util.DEFAULT_STORAGE_SYNTAX, DicomClient.PROJECT_NAME);
     }
 }

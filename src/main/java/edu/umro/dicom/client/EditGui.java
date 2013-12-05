@@ -41,12 +41,10 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 
-import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
-import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.ValueRepresentation;
 
 import edu.umro.dicom.client.CustomDictionary.Multiplicity;
@@ -79,9 +77,6 @@ public class EditGui implements ActionListener, WindowListener {
      * new instance of the file will not be created every time. */
     private HashMap<File, File> savedFileList = new HashMap<File, File>();
     
-    /** True if DICOM series has been modified since last save. */
-    private volatile boolean modified = false;
-
     /** Reflects current state of EditGui. */
     private String currentCard;
             
@@ -244,46 +239,48 @@ public class EditGui implements ActionListener, WindowListener {
         dialog.setTitle(title);
     }
 
-    public boolean setVisible(boolean visible) {
-        boolean status = visible || (!modified) || secondChanceToSave();
-        if (status) {
-            editHistory = new LinkedList<Edit>();
-            redoHistory = new LinkedList<Edit>();
-            resetDoButtons();
-            savedFileList.clear();
-            setModified(false);
-            attributeLocation = null;
-            setCard(CARD_MAIN);
-            dialog.setVisible(visible);
-            DicomClient.getInstance().setEnabled(!visible);
-            preview.showDicom();
-        }
-        return status;
+    public void setVisible(boolean visible) {
+        dialog.setVisible(visible);        
+        DicomClient.getInstance().setEnabled(!visible);
+    }
+    
+    /**
+     * Discard all editing history without saving.
+     */
+    public void reset() {
+        editHistory.clear();
+        redoHistory.clear();
+        resetDoButtons();
+        savedFileList.clear();
+        attributeLocation = null;
+        setCard(CARD_MAIN);
     }
 
     /**
-     * Give the user a second chance to save their work when they
-     * exit from editing with unsaved changes.
+     * Give the user a chance to save changes.
      * 
-     * @return True if user wants to discard changes and actually exit, false to resume editing.
+     * @return True if user wants to stop editing (either because they saved the
+     * changes or they discarded the edits), false if they want to resume editing.
      */
-    private boolean secondChanceToSave() {
-        if (editHistory.size() == 0) return true;  // if no changes, then we're done
+    public boolean letUserSaveIfTheyWantTo() {
+        if (!isModified()) return true;  // if no changes, then we're done
+        
+        // build a dialog to ask the user what they want to do
         String s = (editHistory.size() == 1) ? "" : "s";
         String msg = "You have made " + editHistory.size() + " change" + s + ".  Save your change" + s + "?";
         String title = editHistory.size() + " change" + s + " will be lost";
         String[] buttonNameList = { "Save", "Don't save", "Cancel" };
         Alert alert = new Alert(msg, title, buttonNameList, new Dimension(400, 300), true);
+        
         switch (alert.selectedButton) {
         case 0:
-            saveAndClose();
-            return true;
+            return save();
         case 1:
             Log.get().info("Discarding " + editHistory.size() + " edits.");
             return true;
         case 2:
             return false;
-        default:  // should never happen
+        default:  // should never happen because there is no such button
             return false;
         }
     }
@@ -321,7 +318,6 @@ public class EditGui implements ActionListener, WindowListener {
             dialog.getContentPane().add(panel);
             dialog.pack();
         }
-        setModified(false);
         setAttributeLocation(null);
     }
     
@@ -353,13 +349,21 @@ public class EditGui implements ActionListener, WindowListener {
 
         if (ev.getSource().equals(saveButton)) save();
 
-        if (ev.getSource().equals(saveCloseButton)) saveAndClose();
+        if (ev.getSource().equals(saveCloseButton)) {
+            if (save()) {
+                reset();
+                setVisible(false);
+            }
+        }
 
         if (ev.getSource().equals(undoButton)) undo();
 
         if (ev.getSource().equals(redoButton)) redo();
 
-        if (ev.getSource().equals(cancelButton)) setVisible(false);
+        if (ev.getSource().equals(cancelButton)) {
+            reset();
+            setVisible(false);
+        }
 
         if (ev.getSource().equals(copyButton)) copy();
 
@@ -386,13 +390,8 @@ public class EditGui implements ActionListener, WindowListener {
         }
     }
     
-    private void setModified(boolean modified) {
-        this.modified = modified;
-    }
-    
     private void undo() {
         if (!editHistory.isEmpty()) {
-            setModified(true);
             Edit e = editHistory.removeLast();
             redoHistory.push(e);
             resetDoButtons();
@@ -402,22 +401,12 @@ public class EditGui implements ActionListener, WindowListener {
     
     private void redo() {
         if (!redoHistory.isEmpty()) {
-            setModified(true);
             Edit e = redoHistory.removeFirst();
             editHistory.add(e);
             resetDoButtons();
             preview.showDicom();
         }
 
-    }
-    
-    /**
-     * Determine if there are one or more unsaved edits.
-     * 
-     * @return True if there are unsaved edits.
-     */
-    public boolean getModified() {
-        return modified;
     }
     
     private String saveOneFile(File file) {
@@ -453,6 +442,22 @@ public class EditGui implements ActionListener, WindowListener {
         }
     }
         
+    
+    /**
+     * Save the current edits.  The edit history will remain unchanged whether or not
+     * the save was successful.  A save can fail because of an I/O error such as not
+     * having permission to write the file or disk full.
+     * <p>
+     * A save is performed whether or not there were edits made.  This is useful in
+     * the case where the user wants to save the file in a different format without
+     * making changes.
+     * <p>
+     * It is possible for a save to be partially successful, in the case where a
+     * series with multiple slices is being saved and only some of them are saved before
+     * one fails.
+     * 
+     * @return True if successful.
+     */
     private boolean save() {
         Series series = preview.getPreviewedSeries();
         if (series != null) {
@@ -470,25 +475,21 @@ public class EditGui implements ActionListener, WindowListener {
                 File file = (File)(series.getFileList().toArray()[preview.getCurrentSlice()-1]);
                 saveOneFile(file);
             }
-            setModified(false);
             return true;
         }
         return false;
     }
     
+    
     /**
-     * Save the DICOM file(s), close the dialog, and discard edit history.  If the save is not successful, then
-     * leave the dialog open and keep the edit history.
+     * Determine if the user has unsaved edits.
      * 
+     * @return True if the user has unsaved edits.
      */
-    private void saveAndClose() {
-        if (save()) {
-            redoHistory.clear();
-            editHistory.clear();
-            setVisible(false);
-        }
+    public boolean isModified() {
+        return !editHistory.isEmpty();
     }
-
+    
     private void copy() {
         if (attributeLocation != null) addNewEdit(new EditCopy(attributeLocation));
     }
@@ -499,7 +500,6 @@ public class EditGui implements ActionListener, WindowListener {
      * @param edit
      */
     public void addNewEdit(Edit edit) {
-        setModified(true);
         editHistory.add(edit);
         redoHistory.clear();
         setCard(CARD_MAIN);
@@ -614,22 +614,36 @@ public class EditGui implements ActionListener, WindowListener {
 
     @Override
     public void windowClosing(WindowEvent e) {
-        setVisible(false);
+        if (!isModified()) {
+            setVisible(false);
+            reset();
+            return;
+        }
+
+        if (letUserSaveIfTheyWantTo()) {
+            reset();
+            setVisible(false);
+        }
     }
 
     @Override
-    public void windowClosed(WindowEvent e) {}
+    public void windowClosed(WindowEvent e) {
+    }
 
     @Override
-    public void windowIconified(WindowEvent e) {}
+    public void windowIconified(WindowEvent e) {
+    }
 
     @Override
-    public void windowDeiconified(WindowEvent e) {}
+    public void windowDeiconified(WindowEvent e) {
+    }
 
     @Override
-    public void windowActivated(WindowEvent e) {}
+    public void windowActivated(WindowEvent e) {
+    }
 
     @Override
-    public void windowDeactivated(WindowEvent e) {}
-    
+    public void windowDeactivated(WindowEvent e) {
+    }
+
 }

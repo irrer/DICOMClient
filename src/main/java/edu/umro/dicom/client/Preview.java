@@ -400,11 +400,11 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         subPanel.add(matchCountLabel);
         
-        if (edu.umro.util.OpSys.getHostIPAddress().equals("141.214.125.68")) {  // TODO remove 'if' when support for editing is ready
-            System.out.println("Enbabling DICOM editing...");
+        //if (edu.umro.util.OpSys.getHostIPAddress().equals("141.214.125.68")) {  // TODO remove 'if' when support for editing is ready
+        //    System.out.println("Enabling DICOM editing...");
             subPanel.add(new JLabel("             "));
             subPanel.add(editButton);
-        }
+        //}
 
         panel.add(scrollPaneText, BorderLayout.CENTER);
         panel.add(subPanel, BorderLayout.SOUTH);
@@ -1413,19 +1413,31 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
     
+    /**
+     * Handle the user's request to close the dialog.
+     */
     private void close() {
-        if ((editGui == null) || (!editGui.isVisible()) || (editGui.setVisible(false))) {
+        if (editGui == null) {
             dialog.setVisible(false);
-            if (editGui != null) {
-                editGui.setVisible(false);
-            }
+            return;            
+        }
+                
+        if (!editGui.isModified()) {
+            editGui.setVisible(false);
+            editGui.reset();
+            dialog.setVisible(false);
+            return;            
+        }
+                
+        if (editGui.letUserSaveIfTheyWantTo()) {
+            editGui.reset();
+            dialog.setVisible(false);
+            editGui.setVisible(false);
         }
     }
 
     @Override
     public void windowOpened(WindowEvent e) {
-        // TODO Auto-generated method stub
-        
     }
 
     @Override
@@ -1435,32 +1447,22 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     @Override
     public void windowClosed(WindowEvent e) {
-        // TODO Auto-generated method stub
-        
     }
 
     @Override
     public void windowIconified(WindowEvent e) {
-        // TODO Auto-generated method stub
-        
     }
 
     @Override
     public void windowDeiconified(WindowEvent e) {
-        // TODO Auto-generated method stub
-        
     }
 
     @Override
     public void windowActivated(WindowEvent e) {
-        // TODO Auto-generated method stub
-        
     }
 
     @Override
     public void windowDeactivated(WindowEvent e) {
-        // TODO Auto-generated method stub
-        
     }
 
 }

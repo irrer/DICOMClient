@@ -1768,12 +1768,15 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @param args
      */
     public static void main(String[] args) {
+        System.out.println("DICOM+ starting.  Using jar file: " + new java.io.File(DicomClient.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getName());
+
         try {
             logPrelude();
-            
+
             args = parseArguments(args);
 
-            // This disables the host name verification for certificate authentication.
+            // This disables the host name verification for certificate
+            // authentication.
             HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
                 public boolean verify(String hostname, SSLSession session) {
                     return true;
@@ -1788,7 +1791,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             DicomClient dicomClient = getInstance();
             dicomClient.setupTrustStore();
 
-            // If in command line mode, then anonymize all files and exit happily
+            // If in command line mode, then anonymize all files and exit
+            // happily
             if (inCommandLineMode()) {
                 for (String fileName : args) {
                     dicomClient.addDicomFile(new File(fileName), true);
