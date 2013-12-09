@@ -13,8 +13,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.SpringLayout;
-
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
@@ -22,8 +20,6 @@ import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.ValueRepresentation;
-
-import edu.umro.dicom.client.CustomDictionary.Multiplicity;
 
 public class CreateGui extends JPanel implements ActionListener {
 

@@ -28,6 +28,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import javax.swing.BorderFactory;
@@ -65,6 +66,7 @@ public class EditGui implements ActionListener, WindowListener {
     private static final String CARD_MAIN = "main";
     private static final String CARD_CREATE = "create";
     private static final String CARD_UPDATE = "update";
+    private static final String CARD_OPTION = "option";
 
     /** Ordered list of edits made by the user. */
     private LinkedList<Edit> editHistory = new LinkedList<Edit>();
@@ -95,8 +97,16 @@ public class EditGui implements ActionListener, WindowListener {
     private JButton saveCloseButton = null;
     private JButton undoButton = null;
     private JButton redoButton = null;
-    private JCheckBox applyToAllSlices = null;
+    private JButton optionButton = null;
 
+    private JCheckBox saveToAllSlices = null;
+    private JCheckBox overwrite = null;
+    private JCheckBox saveAsDicom = null;
+    private JCheckBox saveAsText = null;
+    private JCheckBox saveAsPng = null;
+    private JCheckBox saveAsXml = null;
+    private JButton returnFromOptionsButton = null;
+    
     private JButton createButton = null;
     private JButton updateButton = null;
     private JButton copyButton = null;
@@ -160,12 +170,6 @@ public class EditGui implements ActionListener, WindowListener {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        applyToAllSlices = new JCheckBox("All");
-        applyToAllSlices.setSelected(true);
-        applyToAllSlices.addActionListener(this);
-        applyToAllSlices.setToolTipText("<html>Apply changes to all<br>slices in this series.<br>If not checked, only<br>change the current slice.</html>");
-        lowerPanel.add(applyToAllSlices);
-
         undoButton = new JButton("Undo");
         undoButton.addActionListener(this);
         JPanel undoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -180,7 +184,12 @@ public class EditGui implements ActionListener, WindowListener {
         redoPanel.add(redoButton);
         panel.add(redoPanel);
 
-        cancelButton = new JButton("Discard");
+        optionButton = new JButton("Options");
+        optionButton.addActionListener(this);
+        optionButton.setToolTipText("<html>Select Editing Options</html>");
+        lowerPanel.add(optionButton);
+
+        cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(this);
         cancelButton.setToolTipText("<html>Discard all edits without<br>saving anything.</html>");
         lowerPanel.add(cancelButton);
@@ -200,7 +209,6 @@ public class EditGui implements ActionListener, WindowListener {
     }
 
     private JComponent buildButtonPanel() {
-
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
 
@@ -208,6 +216,76 @@ public class EditGui implements ActionListener, WindowListener {
         panel.add(buildButtonPanelSouth(), BorderLayout.SOUTH);
 
         return panel;
+    }
+    
+    private JComponent buildOptionPanel() {
+        JPanel checkBoxPanel = new JPanel();
+        BoxLayout boxLayout = new BoxLayout(checkBoxPanel, BoxLayout.Y_AXIS);
+        checkBoxPanel.setLayout(boxLayout);
+        
+        checkBoxPanel.add(new JLabel(" "));
+        checkBoxPanel.add(new JLabel(" "));
+        
+        JLabel title = new JLabel("Editing Options");
+        title.setFont(DicomClient.FONT_LARGE);
+        checkBoxPanel.add(title);
+        
+        checkBoxPanel.add(new JLabel(" "));
+        checkBoxPanel.add(new JLabel(" "));
+        checkBoxPanel.add(new JLabel(" "));
+
+        saveToAllSlices = new JCheckBox("Save to all slices in series");
+        saveToAllSlices.setSelected(true);
+        saveToAllSlices.addActionListener(this);
+        saveToAllSlices.setToolTipText("<html>Save changes to all<br>slices in this series.<br>If not checked, only<br>change the current slice.</html>");
+        checkBoxPanel.add(saveToAllSlices);
+        checkBoxPanel.add(new JLabel(" "));
+
+        overwrite = new JCheckBox("Over-write original file(s)");
+        overwrite.setToolTipText("<html>If checked, save by over-writing the<br>original DICOM files.  If not checked,<br>only write to new files.</html>");
+        overwrite.setSelected(false);
+        checkBoxPanel.add(overwrite);
+        checkBoxPanel.add(new JLabel(" "));
+
+        saveAsDicom = new JCheckBox("Save as DICOM");
+        saveAsDicom.setSelected(true);
+        checkBoxPanel.add(saveAsDicom);
+        checkBoxPanel.add(new JLabel(" "));
+
+        saveAsText = new JCheckBox("Save as text");
+        saveAsText.setSelected(false);
+        checkBoxPanel.add(saveAsText);
+        checkBoxPanel.add(new JLabel(" "));
+
+        saveAsPng = new JCheckBox("Save as PNG image");
+        saveAsPng.setSelected(false);
+        checkBoxPanel.add(saveAsPng);
+        checkBoxPanel.add(new JLabel(" "));
+
+        saveAsXml = new JCheckBox("Save as XML");
+        saveAsXml.setSelected(false);
+        checkBoxPanel.add(saveAsXml);
+        checkBoxPanel.add(new JLabel(" "));
+
+        JPanel flowPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        
+        flowPanel.add(checkBoxPanel);
+        
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.add(flowPanel, BorderLayout.CENTER);
+        
+        returnFromOptionsButton = new JButton("Back to Main");
+        returnFromOptionsButton.addActionListener(this);
+        JPanel rfobPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        int gap = 20;
+        Border borderLarge = BorderFactory.createEmptyBorder(gap, gap, gap, gap);
+        rfobPanel.setBorder(borderLarge);
+        rfobPanel.add(returnFromOptionsButton);
+        
+        mainPanel.add(rfobPanel, BorderLayout.SOUTH);
+        
+        return mainPanel;
     }
 
     private JComponent buildCenter() {
@@ -222,6 +300,8 @@ public class EditGui implements ActionListener, WindowListener {
         
         createGui = new CreateGui(preview, this);
         cardPanel.add(createGui, CARD_CREATE);
+        
+        cardPanel.add(buildOptionPanel(), CARD_OPTION);
         
         setCard(CARD_MAIN);
 
@@ -251,7 +331,6 @@ public class EditGui implements ActionListener, WindowListener {
         editHistory.clear();
         redoHistory.clear();
         resetDoButtons();
-        savedFileList.clear();
         attributeLocation = null;
         setCard(CARD_MAIN);
     }
@@ -360,6 +439,10 @@ public class EditGui implements ActionListener, WindowListener {
 
         if (ev.getSource().equals(redoButton)) redo();
 
+        if (ev.getSource().equals(optionButton)) setCard(CARD_OPTION);
+        
+        if (ev.getSource().equals(returnFromOptionsButton)) setCard(CARD_MAIN);
+        
         if (ev.getSource().equals(cancelButton)) {
             reset();
             setVisible(false);
@@ -409,6 +492,23 @@ public class EditGui implements ActionListener, WindowListener {
 
     }
     
+    private ArrayList<String> getFileSuffixList() {
+        ArrayList<String> list = new ArrayList<String>();
+        if (saveAsDicom.isSelected()) list.add(Util.DICOM_SUFFIX);
+        if (saveAsText.isSelected()) list.add(Util.TEXT_SUFFIX);
+        if (saveAsPng.isSelected()) list.add(Util.PNG_SUFFIX);
+        if (saveAsXml.isSelected()) list.add(Util.XML_SUFFIX);
+        return list;
+    }
+    
+    
+    /**
+     * Save a single file.
+     * 
+     * @param file The file to be saved.
+     * 
+     * @return Null on success, error message on failure.
+     */
     private String saveOneFile(File file) {
         File destFile;
         AttributeList attributeList = new AttributeList();
@@ -422,24 +522,65 @@ public class EditGui implements ActionListener, WindowListener {
             return "Unable to read file " + file + " : " + e.toString();
         }
         performEdits(attributeList);
-        if (savedFileList.containsKey(file)) {
-            destFile = savedFileList.get(file);
+
+        if (overwrite.isSelected()) {
+            destFile = file;
         }
         else {
-            destFile = Series.getNewFile(attributeList);
-            savedFileList.put(file, destFile);
+            if (savedFileList.containsKey(file)) {
+                destFile = savedFileList.get(file);
+            }
+            else {
+                String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, getFileSuffixList());
+                destFile = new File(DicomClient.getInstance().getDestination(), prefix + Util.DICOM_SUFFIX);
+                savedFileList.put(file, destFile);
+            }
         }
-        destFile.delete();
-        try {
-            attributeList.write(destFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
-            return null;
+        String prefix = destFile.getName().replaceAll("\\.[^\\.]*$", "");
+
+        if (saveAsDicom.isSelected()) {
+            try {
+                destFile.delete();
+                attributeList.write(destFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
+            }
+            catch (IOException e) {
+                return "Unable to write file " + destFile + " : " + e.toString();
+            }
+            catch (DicomException e) {
+                return "DICOM error while writing file " + destFile + " : " + e.toString();
+            }
         }
-        catch (IOException e) {
-            return "Unable to write file " + destFile + " : " + e.toString();
+        
+        if (saveAsText.isSelected()) {
+            try {
+                File textFile = new File(destFile.getParentFile(), prefix + Util.TEXT_SUFFIX);
+                Util.writeTextFile(attributeList, textFile);
+            }
+            catch (Exception e) {
+                return "Unable to save text version of " + destFile.getAbsolutePath() + " : " + e.toString();
+            }
         }
-        catch (DicomException e) {
-            return "DICOM error while writing file " + destFile + " : " + e.toString();
+        
+        if (saveAsPng.isSelected()) {
+            try {
+                File pngFile = new File(destFile.getParentFile(), prefix + Util.PNG_SUFFIX);
+                Util.writePngFile(attributeList, pngFile);
+            }
+            catch (Exception e) {
+                return "Unable to save PNG image version of " + destFile.getAbsolutePath() + " : " + e.toString();
+            }
         }
+        
+        if (saveAsXml.isSelected()) {
+            try {
+                File xmlFile = new File(destFile.getParentFile(), prefix + Util.XML_SUFFIX);
+                Util.writeXmlFile(attributeList, xmlFile);
+            }
+            catch (Exception e) {
+                return "Unable to save text version of " + destFile.getAbsolutePath() + " : " + e.toString();
+            }
+        }
+        return null;   // success
     }
         
     
@@ -461,7 +602,7 @@ public class EditGui implements ActionListener, WindowListener {
     private boolean save() {
         Series series = preview.getPreviewedSeries();
         if (series != null) {
-            if (applyToAllSlices.isSelected()) {
+            if (saveToAllSlices.isSelected()) {
                 for (File file : series.getFileList()) {
                     String msg = saveOneFile(file);
                     if (msg != null) {

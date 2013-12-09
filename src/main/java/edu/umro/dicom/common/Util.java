@@ -16,8 +16,10 @@ package edu.umro.dicom.common;
  * limitations under the License.
  */
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -26,6 +28,11 @@ import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.StringTokenizer;
+
+import javax.imageio.ImageIO;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
 
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
@@ -36,12 +43,20 @@ import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.DicomOutputStream;
 import com.pixelmed.dicom.PersonNameAttribute;
+import com.pixelmed.dicom.SOPClass;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.TimeAttribute;
 import com.pixelmed.dicom.TransferSyntax;
+import com.pixelmed.dicom.XMLRepresentationOfDicomObjectFactory;
+import com.pixelmed.display.ConsumerFormatImageMaker;
 
+import edu.umro.dicom.client.DicomClient;
 import edu.umro.util.JarInfo;
+import edu.umro.util.Log;
+import edu.umro.util.UMROException;
+import edu.umro.util.Utility;
+import edu.umro.util.XML;
 
 /**
  * General purpose methods.
@@ -77,6 +92,11 @@ public class Util {
     /** DICOM postal address. */
     public static final String UMRO_POSTAL_ADDRESS = "University of Michigan Health System, 1500 E. Medical Center Drive Ann Arbor, MI 48109";
 
+    /** Suffixes used when writing files. */
+    public static final String TEXT_SUFFIX = ".TXT";
+    public static final String PNG_SUFFIX = ".PNG";
+    public static final String XML_SUFFIX = ".XML";
+    public static final String DICOM_SUFFIX = ".DCM";
 
     /**
      * Get an attribute value, or null if anything goes wrong.  Also, if there is a value,
@@ -333,4 +353,69 @@ public class Util {
         return ok;
 
     }
+
+    /**
+     * Write the given attribute list to a PNG file. If the attribute list does
+     * not describe an image file, then do nothing.
+     * 
+     * @param attributeList
+     *            DICOM source.
+     * @param pngFile
+     *            PNG image file to create.
+     */
+    public static void writePngFile(AttributeList attributeList, File pngFile) throws DicomException, IOException {
+        if (SOPClass.isImageStorage(Attribute.getSingleStringValueOrEmptyString(attributeList, TagFromName.SOPClassUID))) {
+            pngFile.delete();
+            BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
+            ImageIO.write(image, "png", pngFile);
+            Log.get().info("Wrote image file " + pngFile.getAbsolutePath());
+        }
+    }
+
+    /**
+     * Write the given attribute list to a text file as a user would see it in
+     * the text previewer.
+     * 
+     * @param attributeList
+     *            DICOM source.
+     * 
+     * @param textFile
+     *            Text file to create.
+     * 
+     * @throws IOException
+     * @throws UMROException
+     */
+    public static void writeTextFile(AttributeList attributeList, File textFile) throws IOException, UMROException {
+        StringBuffer text = new StringBuffer();
+        DicomClient.getInstance().getPreview().addTextAttributes(attributeList, text, 0, null);
+        textFile.delete();
+        textFile.createNewFile();
+        Utility.writeFile(textFile, text.toString().getBytes());
+        Log.get().info("Wrote text file " + textFile.getAbsolutePath());
+    }
+
+    /**
+     * Write the given attribute list to a text file as a user would see it in the text previewer.
+     * 
+     * @param attributeList
+     *            DICOM source.
+     * 
+     * @param xmlFile
+     *            XML file to create.
+     *            
+     * @throws IOException
+     * @throws UMROException 
+     * @throws ParserConfigurationException 
+     */
+    public static void writeXmlFile(AttributeList attributeList, File xmlFile) throws IOException, UMROException, ParserConfigurationException {
+        Document document = new XMLRepresentationOfDicomObjectFactory().getDocument(attributeList);
+        if (DicomClient.getReplaceControlCharacters()) {
+            XML.replaceControlCharacters(document, ' ');
+        }
+        String xmlText = XML.domToString(document);
+        xmlFile.delete();
+        Utility.writeFile(xmlFile, xmlText.getBytes());
+        Log.get().info("Wrote xml file " + xmlFile.getAbsolutePath());
+    }
+
 }

@@ -22,8 +22,6 @@ import java.util.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.restlet.engine.io.IoUtils;
-
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.TagFromName;

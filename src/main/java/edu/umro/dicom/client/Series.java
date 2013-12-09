@@ -23,7 +23,6 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,7 +31,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.Semaphore;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JButton;
@@ -41,26 +39,18 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.xml.parsers.ParserConfigurationException;
-import org.w3c.dom.Document;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
-import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.FileMetaInformation;
-import com.pixelmed.dicom.ReadStrategy;
-import com.pixelmed.dicom.SOPClass;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.TagFromName;
-import com.pixelmed.dicom.XMLRepresentationOfDicomObjectFactory;
-import com.pixelmed.display.ConsumerFormatImageMaker;
 import edu.umro.dicom.common.Anonymize;
 import edu.umro.dicom.common.PACS;
 import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
-import edu.umro.util.Utility;
-import edu.umro.util.XML;
 
 /**
  * Represent a DICOM series.
@@ -73,9 +63,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     /** Default ID. */
     private static final long serialVersionUID = 1L;
-
-    /** Suffix for creating DICOM files. */
-    private static final String DICOM_SUFFIX = ".DCM";
 
     /** Card layout identifier for preview slider mode. */
     static private final String CARD_SLIDER = "Slider";
@@ -681,57 +668,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         return replacementAttributeList;
     }
 
-    /**
-     * Get a new the file to be written to. The file should not already exist,
-     * and it should represent the content of the attribute list. Make any
-     * directories as required.
-     * 
-     * @param attributeList
-     *            Content that will be written.
-     * 
-     * @return
-     */
-    static public File getNewFile(AttributeList attributeList) {
-        File dir = DicomClient.getInstance().getDestination();
-
-        if ((DicomClient.inCommandLineMode()) && (DicomClient.getOutputFile() != null)) {
-            if (DicomClient.getInstance().getFileCount() > 1) {
-                dir = DicomClient.getOutputFile();
-            }
-            else {
-                return DicomClient.getOutputFile();
-            }
-        }
-
-        String patientIdText = Util.getAttributeValue(attributeList, TagFromName.PatientID);
-        String modalityText = Util.getAttributeValue(attributeList, TagFromName.Modality);
-        String seriesNumberText = Util.getAttributeValue(attributeList, TagFromName.SeriesNumber);
-        String instanceNumberText = Util.getAttributeValue(attributeList, TagFromName.InstanceNumber);
-
-        while ((instanceNumberText != null) && (instanceNumberText.length() < 4)) {
-            instanceNumberText = "0" + instanceNumberText;
-        }
-
-        String name = "";
-        name += (patientIdText == null) ? "" : patientIdText;
-        name += (modalityText == null) ? "" : ("_" + modalityText);
-        name += (seriesNumberText == null) ? "" : ("_" + seriesNumberText);
-        name += (instanceNumberText == null) ? "" : ("_" + instanceNumberText);
-
-        name = name.replace(' ', '_');
-
-        File file = new File(dir, name + DICOM_SUFFIX);
-        int count = 1;
-        while (file.exists()) {
-            file = new File(dir, name + "_" + count + DICOM_SUFFIX);
-            count++;
-        }
-
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        return file;
-    }
 
     /**
      * If in command line mode, save the anonymized DICOM as text and, if
@@ -744,9 +680,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
      *            File where anonymized DICOM is to be written.
      */
     private void saveTextAndXmlAndImageFiles(AttributeList attributeList, File file) {
-        if (DicomClient.inCommandLineMode()) {
-            StringBuffer text = new StringBuffer();
-            DicomClient.getInstance().getPreview().addTextAttributes(attributeList, text, 0, null);
             String fileName = file.getName();
             String textFileName = null;
             String imageFileName = null;
@@ -754,22 +687,20 @@ public class Series extends JPanel implements ActionListener, Runnable {
             File dir = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
             int dotIndex = fileName.lastIndexOf('.');
             if (dotIndex == -1) {
-                textFileName = fileName + ".TXT";
-                imageFileName = fileName + ".PNG";
-                xmlFileName = fileName + ".XML";
+                textFileName = fileName + Util.TEXT_SUFFIX;
+                imageFileName = fileName + Util.PNG_SUFFIX;
+                xmlFileName = fileName + Util.XML_SUFFIX;
             }
             else {
                 String baseName = fileName.substring(0, dotIndex);
-                textFileName = baseName + ".TXT";
-                imageFileName = baseName + ".PNG";
-                xmlFileName = baseName + ".XML";
+                textFileName = baseName + Util.TEXT_SUFFIX;
+                imageFileName = baseName + Util.PNG_SUFFIX;
+                xmlFileName = baseName + Util.XML_SUFFIX;
             }
 
             File textFile = new File(dir, textFileName);
             try {
-                textFile.delete();
-                textFile.createNewFile();
-                Utility.writeFile(textFile, text.toString().getBytes());
+                Util.writeTextFile(attributeList, textFile);
             }
             catch (UMROException e) {
                 System.err.println("Unable to write anonymized text file: " + e);
@@ -780,42 +711,27 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 e.printStackTrace();
             }
 
-            if (SOPClass.isImageStorage(Attribute.getSingleStringValueOrEmptyString(attributeList, TagFromName.SOPClassUID))) {
-                try {
-                    BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
-                    File imageFile = new File(dir, imageFileName);
-                    try {
-                        ImageIO.write(image, "png", imageFile);
-                        Log.get().info("Created image file " + imageFile.getAbsolutePath());
-                    }
-                    catch (IOException e) {
-                        Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath() + " : " + e);
-                    }
-                }
-                catch (Exception e) {
-                    Log.get().info("Unable to convert to image file: " + e);
-                }
+            File imageFile = new File(dir, imageFileName);
+            try {
+                Util.writePngFile(attributeList, imageFile);
+            }
+            catch (Exception e) {
+                Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath() + " : " + e);
             }
 
             try {
-                Document document = new XMLRepresentationOfDicomObjectFactory().getDocument(attributeList);
-                if (DicomClient.getReplaceControlCharacters()) {
-                    XML.replaceControlCharacters(document, ' ');
-                }
-                String xmlText = XML.domToString(document);
-                Utility.writeFile(new File(dir, xmlFileName), xmlText.getBytes());
+                Util.writeXmlFile(attributeList, new File(dir, xmlFileName));
             }
             catch (ParserConfigurationException e) {
                 System.err.println("Unable to parse anonymized DICOM as XML: " + e);
                 e.printStackTrace();
             }
-            catch (UMROException e) {
+            catch (Exception e) {
                 System.err.println("Unable to write anonymized XML file: " + e);
                 e.printStackTrace();
             }
-
-        }
     }
+    
 
     /**
      * AnonymizeGUI this series and write the results to new files.
@@ -839,18 +755,44 @@ public class Series extends JPanel implements ActionListener, Runnable {
                         attributeList.put(instance.attributeList.get(TagFromName.SOPInstanceUID));
                     }
 
+                    // ensure that all types of attributes that will be
+                    // encountered have already been initialized for
+                    // anonymization
                     AnonymizeGUI.getInstance().updateTagList(attributeList);
 
+                    // do the actual anonymization
                     Anonymize.anonymize(attributeList, getAnonymizingReplacementList());
+                    
+                    // Indicate that the file was touched by this application.  Also a subtle way to advertise.  :)
                     FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, DicomClient.PROJECT_NAME);
 
-                    // set up to put file in new directory
-                    newFile = getNewFile(attributeList);
-                    File parent = (newFile.getParentFile() == null) ? new File(".") : newFile.getParentFile();
-                    parent.mkdirs();
-                    attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
+                    if (DicomClient.inCommandLineMode()) {
+                        if (DicomClient.getInstance().commandParameterOutputFileSpecified()) {
+                            newFile = DicomClient.getInstance().getDestination();
+                        }
+                        else {
+                            ArrayList<String> suffixList = new ArrayList<String>();
+                            suffixList.add(Util.DICOM_SUFFIX);
+                            suffixList.add(Util.TEXT_SUFFIX);
+                            suffixList.add(Util.PNG_SUFFIX);
+                            suffixList.add(Util.XML_SUFFIX);
+                            String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, suffixList);
+                            newFile = new File(DicomClient.getInstance().getDestination(), prefix + Util.DICOM_SUFFIX);
+                        }
+                        if (!newFile.getParentFile().exists()) newFile.getParentFile().mkdirs();
+                        attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
+                        saveTextAndXmlAndImageFiles(attributeList, newFile);
+                    }
+                    else {
+                        File dir = DicomClient.getInstance().getDestination();
+                        if (!dir.exists()) dir.mkdirs();
+                        ArrayList<String> suffixList = new ArrayList<String>();
+                        suffixList.add(Util.DICOM_SUFFIX);
+                        String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, suffixList);
+                        newFile = new File(dir, prefix + Util.DICOM_SUFFIX);
+                        attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
+                    }
 
-                    saveTextAndXmlAndImageFiles(attributeList, newFile);
                     count++;
                     setProgress(count);
                     Log.get().info("Anonymized to file: " + newFile.getAbsolutePath());
