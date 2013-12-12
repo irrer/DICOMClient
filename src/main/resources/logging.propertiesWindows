@@ -51,6 +51,7 @@ edu.umro.util.LogFileHandler.pattern=./log/dicomclient-%g-%u.log
 edu.umro.util.LogFileHandler.limit=100000000
 edu.umro.util.LogFileHandler.count=1000
 edu.umro.util.LogFileHandler.level=ALL
+########edu.umro.util.LogFileHandler.level=SEVERE
 edu.umro.util.LogFileHandler.append=false
 
 # The formatter for edu.umro.util.LogFileHandler is overridden at run time, so

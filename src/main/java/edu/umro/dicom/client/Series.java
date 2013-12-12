@@ -767,8 +767,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, DicomClient.PROJECT_NAME);
 
                     if (DicomClient.inCommandLineMode()) {
-                        if (DicomClient.getInstance().commandParameterOutputFileSpecified()) {
-                            newFile = DicomClient.getInstance().getDestination();
+                        if (DicomClient.getInstance().getCommandParameterOutputFile() != null) {
+                            newFile = DicomClient.getInstance().getCommandParameterOutputFile();
                         }
                         else {
                             ArrayList<String> suffixList = new ArrayList<String>();
@@ -777,14 +777,16 @@ public class Series extends JPanel implements ActionListener, Runnable {
                             suffixList.add(Util.PNG_SUFFIX);
                             suffixList.add(Util.XML_SUFFIX);
                             String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, suffixList);
-                            newFile = new File(DicomClient.getInstance().getDestination(), prefix + Util.DICOM_SUFFIX);
+                            newFile = new File(DicomClient.getInstance().getDestinationDirectory(), prefix + Util.DICOM_SUFFIX);
                         }
+                        System.out.println("newFile: " + newFile);  // TODO remove
+                        if (newFile != null) System.out.println("newFile path: " + newFile.getAbsolutePath());  // TODO remove
                         if (!newFile.getParentFile().exists()) newFile.getParentFile().mkdirs();
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
                         saveTextAndXmlAndImageFiles(attributeList, newFile);
                     }
                     else {
-                        File dir = DicomClient.getInstance().getDestination();
+                        File dir = DicomClient.getInstance().getDestinationDirectory();
                         if (!dir.exists()) dir.mkdirs();
                         ArrayList<String> suffixList = new ArrayList<String>();
                         suffixList.add(Util.DICOM_SUFFIX);

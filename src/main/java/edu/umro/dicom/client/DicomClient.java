@@ -113,7 +113,7 @@ import edu.umro.util.General;
  */
 public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener, DocumentListener {
 
-    /** The portion of a DICOM file that must be read to get the metadata required to get generatl information about it. */
+    /** The portion of a DICOM file that must be read to get the metadata required to get general information about it. */
     private static final int DICOM_METADATA_LENGTH = 4 * 1024;
 
     /** Name that appears in title bar of window. */
@@ -260,9 +260,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** The default patient ID to use. */
     private static String defaultPatientId = null;
 
-    /** Put anonymized files here. */
+    /** Put single anonymized file here. */
     private static File commandParameterOutputFile = null;
 
+    /** Put multiple anonymized files here. */
+    private static File commandParameterOutputDirectory = null;
+
+    
     private JFrame frame = null;
 
     private JPanel modePanel = null;
@@ -619,7 +623,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         anonymizeDestinationBrowseButton.addActionListener(this);
         anonymizeDestinationBrowseButton.setToolTipText("<html>Choose a directory for anonymized files.<br>Directory will be created if necessary.</html>");
 
-        directoryChooser = new JFileChooser();
+        if (commandParameterOutputDirectory != null)
+            directoryChooser = new JFileChooser(commandParameterOutputDirectory);
+        else
+            if (commandParameterOutputFile != null)
+                directoryChooser = new JFileChooser(commandParameterOutputFile.getParentFile());
+            else
+                directoryChooser = new JFileChooser();
+        
         directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         if (commandParameterOutputFile != null) {
@@ -1132,19 +1143,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     }
 
 
-    /**
-     * Get the destination directory.  If null, then the
-     * user has not yet chosen one.
-     * 
-     * @return The destination directory.
-     */
-    public File getDestinationDirectory() {
-        if (anonymizeDestination == null) {
-            anonymizeDestination = directoryChooser.getSelectedFile();
-        }
-        return anonymizeDestination;
-    }
-
 
     /**
      * If the destination directory has not already been chosen, then use
@@ -1541,11 +1539,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * Constructor to build the GUI.
      */
     private DicomClient() {
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                buildMain();
-            }
-        });
+        if (inCommandLineMode()) {
+            buildMain();
+        }
+        else {
+            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    buildMain();
+                }
+            });
+        }
     }
 
 
@@ -1570,6 +1573,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /**
      * Scroll the main list so that the given series is visible.
+     * 
      * @param series
      */
     public static void scrollToSeries(Series series) {
@@ -1623,17 +1627,22 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return defaultPatientId; 
     }
 
-    public boolean commandParameterOutputFileSpecified() {
-        return commandParameterOutputFile != null;
+    public File getCommandParameterOutputFile() {
+        return commandParameterOutputFile;
     }
-    
-    public File getDestination() {
+
+    public File getDestinationDirectory() {
+        if (directoryChooser == null) Log.get().severe("Attempt by getDestinationDirectory method to access directoryChooser before it has been constructed");
+        return directoryChooser.getSelectedFile();
+        /*
         if (inCommandLineMode()) {
-            return (commandParameterOutputFile == null) ? new File(".") : commandParameterOutputFile;
+            if (commandParameterOutputDirectory != null) return commandParameterOutputDirectory;
+            return new File(".");
         }
         else {
             return directoryChooser.getSelectedFile();
         }
+        */
     }
 
     /**
@@ -1653,7 +1662,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      *         create new files without overwriting existing files.
      */
     boolean testPrefix(String prefix, ArrayList<String> suffixList) {
-        File dir = getDestination();
+        File dir = getDestinationDirectory();
         for (int s = 0; s < suffixList.size(); s++) {
             File file = new File(dir, prefix + suffixList.get(s));
             if (file.exists()) return false;
@@ -1718,7 +1727,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 ...\n" + 
             "        -c Run in command line mode (without GUI)\n" +
             "        -P Specify new patient ID for anonymization\n" +
-            "        -o Specify output file for anonymization\n" +
+            "        -o Specify output file for anonymization (single file only, command line only)\n" +
+            "        -d Specify output directory for anonymization (can not be used with -o option)\n" +
             "        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package\n" +
             "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
             "        -z Replace each control character in DICOM attributes with a blank.  Required by SAS\n" +
@@ -1763,37 +1773,43 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         commandParameterOutputFile = new File(args[a]);
                     }
                     else {
-                        if (args[a].equals("-c")) {
-                            commandLineMode = true;
+                        if (args[a].equals("-d")) {
+                            a++;
+                            commandParameterOutputDirectory = new File(args[a]);
                         }
                         else {
-                            if (args[a].equals("-t")) {
-                                showDetails = true;
+                            if (args[a].equals("-c")) {
+                                commandLineMode = true;
                             }
-
                             else {
-                                if (args[a].equals("-3")) {
-                                    restrictXmlTagsToLength32 = true;
+                                if (args[a].equals("-t")) {
+                                    showDetails = true;
                                 }
+
                                 else {
-                                    if (args[a].equals("-z")) {
-                                        replaceControlCharacters = true;
+                                    if (args[a].equals("-3")) {
+                                        restrictXmlTagsToLength32 = true;
                                     }
                                     else {
-                                        if (args[a].equals("-g")) {
-                                            aggressivelyAnonymize = true;
+                                        if (args[a].equals("-z")) {
+                                            replaceControlCharacters = true;
                                         }
                                         else {
-                                            if (args[a].startsWith("-")) {
-                                                usage("Invalid argument: " + args[a]);
-                                                System.exit(1);
+                                            if (args[a].equals("-g")) {
+                                                aggressivelyAnonymize = true;
                                             }
                                             else {
-                                                fileList = new String[args.length - a];
-                                                int f = 0;
-                                                for (; a < args.length; a++) {
-                                                    fileList[f] = args[a];
-                                                    f++;
+                                                if (args[a].startsWith("-")) {
+                                                    usage("Invalid argument: " + args[a]);
+                                                    System.exit(1);
+                                                }
+                                                else {
+                                                    fileList = new String[args.length - a];
+                                                    int f = 0;
+                                                    for (; a < args.length; a++) {
+                                                        fileList[f] = args[a];
+                                                        f++;
+                                                    }
                                                 }
                                             }
                                         }
@@ -1807,6 +1823,18 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
         catch (Exception e) {
             usage("Unable to parse command line arguments.");
+        }
+        if ((commandParameterOutputFile != null) && (commandParameterOutputDirectory != null)) {
+            usage("Can not specify both -o and -d options.");
+            System.exit(1);
+        }
+        if ((commandParameterOutputFile != null) && (fileList.length != 1)) {
+            usage("Can one specify -o option with exactly one input file.");
+            System.exit(1);
+        }
+        if ((commandParameterOutputFile != null) && (!inCommandLineMode())) {
+            usage("Can one specify -o option in command line mode.");
+            System.exit(1);
         }
         return fileList;
     }
@@ -1880,6 +1908,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     dicomClient.addDicomFile(new File(fileName), true);
                 }
                 Series.processOk = true;
+                System.out.println("dicomClient.headlessPanel: " + dicomClient.headlessPanel);  //  TODO remove
                 processAll(dicomClient.headlessPanel);
                 System.exit(0);
             }

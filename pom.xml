@@ -1,246 +1,232 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-<!--
-   Copyright 2012 Regents of the University of Michigan
+	<!-- Copyright 2012 Regents of the University of Michigan Licensed under 
+		the Apache License, Version 2.0 (the "License"); you may not use this file 
+		except in compliance with the License. You may obtain a copy of the License 
+		at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable 
+		law or agreed to in writing, software distributed under the License is distributed 
+		on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either 
+		express or implied. See the License for the specific language governing permissions 
+		and limitations under the License. -->
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+	<!-- Use 'mvn package' from the command line to build everything. From Eclipse 
+		you can use: right click on pom.xml click Run As ... click Maven assembly:assembly 
+		Note that the order that the plugins appear in this file is important, because 
+		multiple plugins are associated with the same phase, but the output of one 
+		plugin is used as input for the subsequent plugin. author Jim Irrer irrer@umich.edu -->
 
-       http://www.apache.org/licenses/LICENSE-2.0
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>edu.umro.DICOM</groupId>
+	<artifactId>dicomclient</artifactId>
+	<version>1.0.28</version>
+	<packaging>jar</packaging>
+	<name>${project.artifactId}</name>
+	<properties>
+		<resource.dir>src/main/resources</resource.dir>
+		<release>1</release>
+	</properties>
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
--->
+	<dependencies>
+		<dependency>
+			<groupId>pixelmed</groupId>
+			<artifactId>pixelmed</artifactId>
+			<version>20130426</version>
+		</dependency>
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet.ext.net</artifactId>
+			<version>2.0.10</version>
+		</dependency>
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet</artifactId>
+			<version>2.0.10</version>
+		</dependency>
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet.ext.httpclient</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet.ext.simple</artifactId>
+			<version>2.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.restlet.jse</groupId>
+			<artifactId>org.restlet.ext.ssl</artifactId>
+			<version>2.0.10</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.umro</groupId>
+			<artifactId>util</artifactId>
+			<version>1.3.6</version>
+		</dependency>
+		<!-- -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.2</version>
+			<scope>test</scope>
+		</dependency>
 
-        <!-- Use 'mvn package' from the command line to build everything. From Eclipse 
-                you can use: right click on pom.xml click Run As ... click Maven assembly:assembly 
-                Note that the order that the plugins appear in this file is important, because 
-                multiple plugins are associated with the same phase, but the output of one 
-                plugin is used as input for the subsequent plugin.
-                
-                author Jim Irrer  irrer@umich.edu
-                -->
-
-        <modelVersion>4.0.0</modelVersion>
-        <groupId>edu.umro.DICOM</groupId>
-        <artifactId>dicomclient</artifactId>
-        <version>1.0.28</version>
-        <packaging>jar</packaging>
-        <name>${artifactId}</name>
-        <properties>
-                <resource.dir>src/main/resources</resource.dir>
-                <release>1</release>
-        </properties>
-        
-        <dependencies>
-                <!-- <dependency>
-                        <groupId>pixelmed</groupId>
-                        <artifactId>pixelmed</artifactId>
-                        <version>20110928</version>
-                </dependency> -->
-                <dependency>
-                        <groupId>pixelmed</groupId>
-                        <artifactId>pixelmed</artifactId>
-                        <version>20130426</version>
-                </dependency>
-                <dependency>
-                        <groupId>org.restlet.jse</groupId>
-                        <artifactId>org.restlet.ext.net</artifactId>
-                        <version>2.0.10</version>
-                </dependency>
-                <dependency>
-                        <groupId>org.restlet.jse</groupId>
-                        <artifactId>org.restlet</artifactId>
-                        <version>2.0.10</version>
-                </dependency>
-                <dependency>
-                        <groupId>org.restlet.jse</groupId>
-                        <artifactId>org.restlet.ext.httpclient</artifactId>
-                        <version>2.0.0</version>
-                </dependency>
-                <dependency>
-                        <groupId>org.restlet.jse</groupId>
-                        <artifactId>org.restlet.ext.simple</artifactId>
-                        <version>2.0.3</version>
-                </dependency>
-                <dependency>
-                        <groupId>org.restlet.jse</groupId>
-                        <artifactId>org.restlet.ext.ssl</artifactId>
-                        <version>2.0.10</version>
-                </dependency>
-                <dependency>
-                        <groupId>edu.umro</groupId>
-                        <artifactId>util</artifactId>
-                        <version>1.3.2</version>
-                </dependency>
-                	            
-            </dependencies>
-        <dependencyManagement>
-            <dependencies>
-            </dependencies>
-        </dependencyManagement>
-        <modules>
-        </modules>
-        <build>
-            <plugins>
-            
-            <plugin>   <!-- Construct the manifest -->
+	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+		</dependencies>
+	</dependencyManagement>
+	<modules>
+	</modules>
+	<build>
+		<plugins>
+		  <!-- maven compiler
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.6</version>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin> -->
 
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <!-- <version>2.2-beta-5</version> -->
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifestFile>target/MANIFEST.MF</manifestFile>
+                    </archive>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>generate-manifest-with-timestamp</id>
+                        <id>make-assembly</id>
                         <phase>test</phase>
-                        <configuration>
-                            <tasks>
-                                <delete file="target/MANIFEST.MF" />
-                                <copy file="src/main/resources/MANIFEST.MF" todir="target" />
-                                <echo>Hello from timestamp</echo>
-                                <tstamp>
-                                    <format property="TIMESTAMP" pattern="yyyy-MMM-dd hh:mm:ss aa" locale="en,US" />
-                                </tstamp>
-                                <replace file="target/MANIFEST.MF">
-                                    <replacefilter token="@@BUILD_DATE@@" value="${TIMESTAMP}"/>
-                                    <replacefilter token="@@BUILDER@@" value="${user.name}"/>
-                                    <replacefilter token="@@VERSION@@" value="${version}"/>
-                                </replace>
-                            </tasks>
-                        </configuration>
                         <goals>
-                            <goal>run</goal>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
+
+			<plugin>  <!-- source jar -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+                        <phase>compiler:compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+					</execution>
+				</executions>
+			</plugin>
             
-            
-                        <plugin>  <!-- source jar -->
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-source-plugin</artifactId>
-                                <executions>
-                                        <execution>
-                                                <id>attach-sources</id>
-                                                <goals>
-                                                        <goal>jar</goal>
-                                                </goals>
-                                        </execution>
-                                </executions>
-                        </plugin>
-                        
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                        <archive>
-                            <manifestFile>target/MANIFEST.MF</manifestFile>
-                        </archive>
-                </configuration>
-            </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<archive>
+						<manifestFile>target/MANIFEST.MF</manifestFile>
+					</archive>
+				</configuration>
+			</plugin>
+			
 
-                        <!-- jar with dependencies -->
-                        <plugin>  
-                                <artifactId>maven-assembly-plugin</artifactId>
-                                <version>2.2-beta-5</version>
-                                <configuration>
-                                    <descriptorRefs>
-                                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                                    </descriptorRefs>
-                                    <archive>
-                                        <manifestFile>target/MANIFEST.MF</manifestFile>
-                                    </archive>
-                                </configuration>
-                                <executions>
-                                        <execution>
-                                                <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                                                <!-- <phase>package</phase> -->
-                                                <phase>test</phase>
-                                                <goals>
-                                                        <goal>single</goal>
-                                                </goals>
-                                        </execution>
-                                </executions>
-                        </plugin>
+			<plugin>  <!-- build install package -->
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.6</version>
+				<!-- Copy the package files into the build repository. -->
+				<executions>
+				    <execution>
+                        <id>generate-manifest-with-timestamp</id>
+                        <phase>compiler</phase>
+                        <configuration>
+                            <tasks>
+                                <delete file="target/MANIFEST.MF" />
+                                <copy file="src/main/resources/MANIFEST.MF" todir="target" />
+                                <echo>Hello from generate-manifest-with-timestamp</echo>
+                                <tstamp>
+                                    <format property="TIMESTAMP" pattern="yyyy-MMM-dd hh:mm:ss aa"
+                                        locale="en,US" />
+                                </tstamp>
+                                <replace file="target/MANIFEST.MF">
+                                    <replacefilter token="@@BUILD_DATE@@" value="${TIMESTAMP}" />
+                                    <replacefilter token="@@BUILDER@@" value="${user.name}" />
+                                    <replacefilter token="@@VERSION@@" value="${project.version}" />
+                                </replace>
+                            </tasks>
+                        </configuration>
+                    </execution>
+				
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<echo>maven-antrun-plugin build install package</echo>
+								<property name="project.dir"
+									value="Z:\Projects\Dicom\dicomclient\BuildRepository\${project.artifactId}-${project.version}" />
+								<property name="dest.dir"
+									value="${project.dir}\${project.artifactId}-${project.version}" />
+								<echo>dest.dir is: ${dest.dir}</echo>
+								<echo>version is: ${project.version}</echo>
+								<echo>artifactId is: ${project.artifactId}</echo>
 
-                        <plugin>  <!-- maven compiler -->
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-compiler-plugin</artifactId>
-                                <version>2.3.2</version>
-                                <configuration>
-                                        <source>1.6</source>
-                                        <target>1.6</target>
-                                </configuration>
-                        </plugin>
+								<delete dir="${project.dir}" />
+								<mkdir dir="${project.dir}" />
+								<mkdir dir="${dest.dir}" />
+								<copy
+									file="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
+									toDir="${dest.dir}" />
+								<copy file="${resource.dir}/DicomClientConfig.xml" toDir="${dest.dir}" />
+								<copy file="${resource.dir}/dicomsvc.jks" toDir="${dest.dir}" />
+								<copy file="${resource.dir}/logging.propertiesWindows"
+									toDir="${dest.dir}" />
+								<copy file="${resource.dir}/logging.propertiesLinux" toDir="${dest.dir}" />
+								<copy file="${resource.dir}/DICOMClient.bat" toDir="${dest.dir}" />
+								<replace file="${dest.dir}/DICOMClient.bat" token="@@with-dep-jar@@"
+									value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
+								<copy file="${resource.dir}/DICOMClient.sh" toDir="${dest.dir}" />
+								<replace file="${dest.dir}/DICOMClient.sh" token="@@with-dep-jar@@"
+									value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
+								<property name="zip.dest"
+									value="${project.dir}/${project.artifactId}-${project.version}_Install.zip" />
+								<zip basedir="${dest.dir}" destfile="${zip.dest}" />
+								<copy file="${zip.dest}" toDir="prebuilt_packages" />
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
-                        <plugin>  <!-- build install package -->
-                                <artifactId>maven-antrun-plugin</artifactId>
-                                <version>1.6</version>
-                                <!-- Copy the package files into the build repository. -->
-                                <executions>
-                                        <execution>
-                                                <phase>package</phase>
-                                                <configuration>
-                                                        <tasks>
-                                                                <property name="project.dir" value="Z:\Projects\Dicom\dicomclient\BuildRepository\${artifactId}-${version}" />
-                                                                <property name="dest.dir" value="${project.dir}\${artifactId}-${version}" />
-                                                                <echo>dest.dir is: ${dest.dir}</echo>
-                                                                <echo>version is: ${version}</echo>
-                                                                <echo>artifactId is: ${artifactId}</echo>
-
-                                                                <delete dir="${project.dir}" />
-                                                                <mkdir dir="${project.dir}" />
-                                                                <mkdir dir="${dest.dir}" />
-                                                                <copy
-                                                                        file="target/${artifactId}-${version}-jar-with-dependencies.jar"
-                                                                        toDir="${dest.dir}" />
-                                                                <copy file="${resource.dir}/DicomClientConfig.xml" toDir="${dest.dir}" />
-                                                                <copy file="${resource.dir}/dicomsvc.jks" toDir="${dest.dir}" />
-                                                                <copy file="${resource.dir}/logging.propertiesWindows" toDir="${dest.dir}" />
-                                                                <copy file="${resource.dir}/logging.propertiesLinux" toDir="${dest.dir}" />
-                                                                <copy file="${resource.dir}/DICOMClient.bat" toDir="${dest.dir}" />
-                                                                <replace file="${dest.dir}/DICOMClient.bat" token="@@with-dep-jar@@"
-                                                                        value="${artifactId}-${version}-jar-with-dependencies.jar" />
-                                                                <copy file="${resource.dir}/DICOMClient.sh" toDir="${dest.dir}" />
-                                                                <replace file="${dest.dir}/DICOMClient.sh" token="@@with-dep-jar@@"
-                                                                        value="${artifactId}-${version}-jar-with-dependencies.jar" />
-                                                                <property name="zip.dest" value="${project.dir}/${artifactId}-${version}_Install.zip" />
-                                                                <zip basedir="${dest.dir}" destfile="${zip.dest}"/>
-                                                                <copy file="${zip.dest}" toDir="prebuilt_packages" />
-                                                        </tasks>
-                                                </configuration>
-                                                <goals>
-                                                        <goal>run</goal>
-                                                </goals>
-                                        </execution>
-                                </executions>
-                        </plugin>
-
-                </plugins>
-        </build>
-        <repositories>
-                <repository>
-                        <id>maven-restlet</id>
-                        <name>Public online Restlet repository</name>
-                        <url>http://maven.restlet.org</url>
-                </repository>
-        </repositories>
-        <distributionManagement>
-                <repository>
-                        <id>releases</id>
-                        <name>Internal Releases</name>
-                        <url>http://141.214.124.203:8081/nexus/content/repositories/releases</url>
-                </repository>
-                <snapshotRepository>
-                        <id>snapshots</id>
-                        <name>Internal Releases</name>
-                        <url>http://141.214.124.203:8081/nexus/content/repositories/snapshots</url>
-                </snapshotRepository>
-        </distributionManagement>
+		</plugins>
+	</build>
+	<repositories>
+		<repository>
+			<id>maven-restlet</id>
+			<name>Public online Restlet repository</name>
+			<url>http://maven.restlet.org</url>
+		</repository>
+	</repositories>
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<name>Internal Releases</name>
+			<url>http://141.214.124.203:8081/nexus/content/repositories/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Internal Releases</name>
+			<url>http://141.214.124.203:8081/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>

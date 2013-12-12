@@ -532,7 +532,7 @@ public class EditGui implements ActionListener, WindowListener {
             }
             else {
                 String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, getFileSuffixList());
-                destFile = new File(DicomClient.getInstance().getDestination(), prefix + Util.DICOM_SUFFIX);
+                destFile = new File(DicomClient.getInstance().getDestinationDirectory(), prefix + Util.DICOM_SUFFIX);
                 savedFileList.put(file, destFile);
             }
         }
