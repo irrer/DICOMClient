@@ -93,14 +93,18 @@
 
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <!-- <version>2.2-beta-5</version> -->
+                <version>2.4</version>
                 <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <!--
                     <archive>
                         <manifestFile>target/MANIFEST.MF</manifestFile>
                     </archive>
+                    -->
                 </configuration>
                 <executions>
                     <execution>
@@ -127,7 +131,7 @@
 				</executions>
 			</plugin>
             
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.4</version>
@@ -136,22 +140,22 @@
 						<manifestFile>target/MANIFEST.MF</manifestFile>
 					</archive>
 				</configuration>
-			</plugin>
+			</plugin> -->
 			
-
 			<plugin>  <!-- build install package -->
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.6</version>
 				<!-- Copy the package files into the build repository. -->
 				<executions>
+				    
 				    <execution>
                         <id>generate-manifest-with-timestamp</id>
-                        <phase>compiler</phase>
+                        <phase>package</phase>
                         <configuration>
                             <tasks>
+                                <echo>Hello from generate-manifest-with-timestamp : ${TIMESTAMP}</echo>
                                 <delete file="target/MANIFEST.MF" />
-                                <copy file="src/main/resources/MANIFEST.MF" todir="target" />
-                                <echo>Hello from generate-manifest-with-timestamp</echo>
+                                <copy file="MANIFEST.MF" tofile="target/MANIFEST.MF"/>
                                 <tstamp>
                                     <format property="TIMESTAMP" pattern="yyyy-MMM-dd hh:mm:ss aa"
                                         locale="en,US" />
@@ -161,14 +165,22 @@
                                     <replacefilter token="@@BUILDER@@" value="${user.name}" />
                                     <replacefilter token="@@VERSION@@" value="${project.version}" />
                                 </replace>
-                            </tasks>
+                                <jar update="true" destfile="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar" manifest="target/MANIFEST.MF"/>
+                                <jar update="true" destfile="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar" includes="target/MANIFEST.MF"/>
+                                <delete file="target/MANIFEST.MF" />
+                                <echo>Bye from generate-manifest-with-timestamp: ${TIMESTAMP}</echo>
+                        <!-- </tasks>
                         </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
-				
+				    
+				    
 					<execution>
 						<phase>package</phase>
 						<configuration>
-							<tasks>
+							<tasks> -->
 								<echo>maven-antrun-plugin build install package</echo>
 								<property name="project.dir"
 									value="Z:\Projects\Dicom\dicomclient\BuildRepository\${project.artifactId}-${project.version}" />
