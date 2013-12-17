@@ -8,7 +8,6 @@ import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.network.StorageSOPClassSCU;
 
-import edu.umro.dicom.common.PACS;
 import edu.umro.util.Log;
 
 public class DicomPush extends MultipleInstanceTransferStatusHandler {

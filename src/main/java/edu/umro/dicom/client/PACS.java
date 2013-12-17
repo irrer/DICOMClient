@@ -1,4 +1,4 @@
-package edu.umro.dicom.common;
+package edu.umro.dicom.client;
 
 /*
  * Copyright 2013 Regents of the University of Michigan

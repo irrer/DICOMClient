@@ -91,7 +91,6 @@ import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.TagFromName;
 
-import edu.umro.dicom.common.PACS;
 import edu.umro.util.Log;
 import edu.umro.util.OpSys;
 import edu.umro.util.UMROException;
