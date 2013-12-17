@@ -24,17 +24,14 @@ The DICOM project.  This project provides support for:
 Run using the *.sh or *.bat scripts on Linux or Windows respectively.
 
 
-Use 'mvn assembly:assembly' from the command line to build everything.
-  
-  From Eclipse you can use:
-  
-      right click on pom.xml
-      
-      click Run As ...
-      
-      click Maven assembly:assembly
-    
-Use 'mvn install' to put the jars into the repository.
+From the command line to build everything and put the jars into the repository:
+
+    mvn -DskipTests=true --settings "D:\pf\Maven\m2\settings.xml" install
+        
+From the command line to run automatic tests:
+
+    mvn --settings "D:\pf\Maven\m2\settings.xml" test
+
     
 This will generate all of the required resources including the jar file with
 all dependencies and the RPM file for Linux installation.  The generated files

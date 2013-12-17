@@ -478,8 +478,8 @@ public class FileDrop
         {   dt.addDropTargetListener( dropListener );
         }   // end try
         catch( java.util.TooManyListenersException e )
-        {   e.printStackTrace();
-        log(out, "FileDrop: Drop will not work due to previous error. Do you have another listener attached?" );
+        {
+        log(out, "FileDrop: Drop will not work due to previous error. Do you have another listener attached?" + Log.fmtEx(e));
         }   // end catch
 
         // Listen for hierarchy changes and remove the drop target when the parent gets cleared out.

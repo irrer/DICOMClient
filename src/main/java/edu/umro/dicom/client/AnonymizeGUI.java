@@ -719,8 +719,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             try {
                 anonymizeGUI = new AnonymizeGUI();
             } catch (DicomException e) {
-                Log.get().severe("Unable to construct anonymize GUI: " + e);
-                e.printStackTrace();
+                Log.get().severe("Unable to construct anonymize GUI: " + Log.fmtEx(e));
             }
         return anonymizeGUI;
     }

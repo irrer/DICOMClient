@@ -73,6 +73,9 @@ public class Util {
     /** The root UID which is used to prefix files constructed by the University of Michigan. */
     public static final String UMRO_ROOT_GUID = "1.3.6.1.4.1.22361";
 
+    /** The name of the System property to define to enable testing. */
+    public static final String TESTING_PROPERTY = "TESTING";
+
     /** Default transfer syntax for serializing DICOM files. */
     public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ImplicitVRLittleEndian;
     public static final String DEFAULT_STORAGE_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
@@ -97,6 +100,12 @@ public class Util {
     public static final String PNG_SUFFIX = ".PNG";
     public static final String XML_SUFFIX = ".XML";
     public static final String DICOM_SUFFIX = ".DCM";
+    
+    private static boolean testing() {
+        boolean t = System.getProperties().containsKey(TESTING_PROPERTY);  // TODO remove
+        System.out.println("am i testing: " + t);   // TODO remove
+        return System.getProperties().contains(TESTING_PROPERTY);
+    }
 
     /**
      * Get an attribute value, or null if anything goes wrong.  Also, if there is a value,
@@ -166,10 +175,20 @@ public class Util {
         // Initialized MAC address if necessary.
         if (!initialized) {
             initialized = true;
-            macAddress = UMROMACAddress.getMACAddress();
-            macAddress = Math.abs(macAddress);
+            if (testing()) {
+                macAddress = 0;
+            }
+            else {
+                macAddress = UMROMACAddress.getMACAddress();
+                macAddress = Math.abs(macAddress);
+            }
         }
 
+        if (testing()) {
+            macAddress++;
+            String text = "000000000000000000000000" + macAddress;
+            return "0.0.0.0.0.0.0.0." + text.substring (text.length()-20);
+        }
         // Use standard class to get unique values.
         String guidText = new UID().toString();
 
@@ -177,13 +196,12 @@ public class Util {
 
         int unique = Math.abs(Integer.valueOf(st.nextToken(), 16).intValue());
         long time = Math.abs(Long.valueOf(st.nextToken(), 16).longValue());
-        // why add 0x8000 ? because usually starts at -8000, which wastes 4 digits
-        int count = Math
-        .abs(Short.valueOf(st.nextToken(), 16).shortValue() + 0x8000);
+        // why add 0x8000 ? because usually starts at -8000, which wastes 4
+        // digits
+        int count = Math.abs(Short.valueOf(st.nextToken(), 16).shortValue() + 0x8000);
 
         // concatenate values to make it into a DICOM GUID.
-        String guid = UMRO_ROOT_GUID + macAddress + "." + unique + "." + time
-        + "." + count;
+        String guid = UMRO_ROOT_GUID + macAddress + "." + unique + "." + time + "." + count;
 
         return guid;
     }

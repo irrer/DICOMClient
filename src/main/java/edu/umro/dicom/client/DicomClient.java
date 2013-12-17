@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Properties;
 import java.util.TreeMap;
 import java.util.logging.Level;
 
@@ -623,15 +624,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         anonymizeDestinationBrowseButton.addActionListener(this);
         anonymizeDestinationBrowseButton.setToolTipText("<html>Choose a directory for anonymized files.<br>Directory will be created if necessary.</html>");
 
-        if (commandParameterOutputDirectory != null)
-            directoryChooser = new JFileChooser(commandParameterOutputDirectory);
-        else
-            if (commandParameterOutputFile != null)
-                directoryChooser = new JFileChooser(commandParameterOutputFile.getParentFile());
-            else
-                directoryChooser = new JFileChooser();
+        directoryChooser = new JFileChooser();
         
         directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+        if (commandParameterOutputDirectory != null) {
+            directoryChooser.setSelectedFile(commandParameterOutputDirectory);
+        }
 
         if (commandParameterOutputFile != null) {
             anonymizeDestinationText.setText(commandParameterOutputFile.getAbsolutePath());
@@ -658,7 +657,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         anonPanel.setLayout(gridLayout);
         anonPanel.add(buildAnonymizeDirectorySelector());
-        System.out.println("Done with buildAnonymizeDirectorySelector()");   // TODO remove
 
         anonymizeOptionsButton = new JButton("Anonymize Options...");
         anonymizeOptionsButton.addActionListener(this);
@@ -1274,10 +1272,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 // attributeList.read(dis,DicomClientReadStrategy.dicomClientReadStrategy);
                 // attributeList.read(dis);
                 attributeList.read(new File(fileName));
-                { // TODO remove
-                    String sopUID = attributeList.get(TagFromName.SOPInstanceUID).getSingleStringValueOrEmptyString();
-                    System.out.println("Read file: " + fileName + " SOPInstanceUID: " + sopUID);
-                }
             }
         }
         catch (Exception e) {
@@ -1472,8 +1466,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
         }
         catch (Exception e) {
-            e.printStackTrace();   // TODO remove
-            Log.get().severe("Unexpected error in DicomClient.addDicomFile: " + e);
+            Log.get().severe("Unexpected error in DicomClient.addDicomFile: " + Log.fmtEx(e));
         }
         finally {
             setPreviewEnableable(true);
@@ -1632,17 +1625,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     }
 
     public File getDestinationDirectory() {
-        if (directoryChooser == null) Log.get().severe("Attempt by getDestinationDirectory method to access directoryChooser before it has been constructed");
+        if (commandParameterOutputDirectory != null) {
+            directoryChooser.setSelectedFile(commandParameterOutputDirectory);
+        }
         return directoryChooser.getSelectedFile();
-        /*
-        if (inCommandLineMode()) {
-            if (commandParameterOutputDirectory != null) return commandParameterOutputDirectory;
-            return new File(".");
-        }
-        else {
-            return directoryChooser.getSelectedFile();
-        }
-        */
     }
 
     /**
@@ -1771,11 +1757,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     if (args[a].equals("-o")) {
                         a++;
                         commandParameterOutputFile = new File(args[a]);
+                        Log.get().info("Output file: " + commandParameterOutputFile.getAbsolutePath());
                     }
                     else {
                         if (args[a].equals("-d")) {
                             a++;
                             commandParameterOutputDirectory = new File(args[a]);
+                            Log.get().info("Output directory: " + commandParameterOutputDirectory.getAbsolutePath());
                         }
                         else {
                             if (args[a].equals("-c")) {
@@ -1880,6 +1868,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public static void main(String[] args) {
         System.out.println("DICOM+ starting.  Using jar file: " + new java.io.File(DicomClient.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getName());
 
+        {
+            System.out.println("DicomPlus-------------------------");
+            System.getProperties().list(System.out);
+            System.out.println("\nDicomPlus-------------------------");
+        }
         try {
             logPrelude();
 
@@ -1908,7 +1901,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     dicomClient.addDicomFile(new File(fileName), true);
                 }
                 Series.processOk = true;
-                System.out.println("dicomClient.headlessPanel: " + dicomClient.headlessPanel);  //  TODO remove
                 processAll(dicomClient.headlessPanel);
                 System.exit(0);
             }
@@ -1922,10 +1914,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 dicomClient.filesDropped(fileList);
             }
         }
-        catch (Exception ex) {
-            Log.get().severe("Unexpected exception: " + ex);
+        catch (Exception e) {
+            Log.get().severe("Unexpected exception: " + Log.fmtEx(e));
             System.err.println("Unexpected failure.  Stack trace follows:");
-            ex.printStackTrace();
+            e.printStackTrace();
             System.exit(1);
         }
     }

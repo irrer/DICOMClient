@@ -216,8 +216,7 @@ public class MultipleValueGui extends JPanel implements ActionListener {
             setupEnabled();
         }
         catch (DicomException e) {
-            Log.get().severe("Unexpected error in MultipleValueGui.setAttribute: " + e);
-            e.printStackTrace();
+            Log.get().severe("Unexpected error in MultipleValueGui.setAttribute: " + Log.fmtEx(e));
         }
     }
 

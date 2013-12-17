@@ -26,6 +26,8 @@ import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.TagFromName;
 
+import edu.umro.util.Log;
+
 /**
  * A GUI widget that lets the user easily choose a DICOM attribute tag.
  * 
@@ -296,13 +298,12 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
                             AttributeList attributeList = new AttributeList();
                             attributeList.put(a);
 
-                            System.out.println("setting forbidden list");
+                            Log.get().info("setting forbidden list...");
                             tagChooser.setForbiddenList(attributeList);
                         }
                     }
                     catch (Exception e) {
-                        System.out.println("createAndShowGUI Exception: " + e);
-                        e.printStackTrace();
+                        Log.get().severe("createAndShowGUI Exception: " + Log.fmtEx(e));
                     }
                 }
             }).start();

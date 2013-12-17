@@ -703,12 +703,10 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 Util.writeTextFile(attributeList, textFile);
             }
             catch (UMROException e) {
-                System.err.println("Unable to write anonymized text file: " + e);
-                e.printStackTrace();
+                System.err.println("Unable to write anonymized text file: " + Log.fmtEx(e));
             }
             catch (IOException e) {
-                System.err.println("Unable to create anonymized text file " + textFile.getAbsolutePath() + " : " + e);
-                e.printStackTrace();
+                System.err.println("Unable to create anonymized text file " + textFile.getAbsolutePath() + " : " + Log.fmtEx(e));
             }
 
             File imageFile = new File(dir, imageFileName);
@@ -716,19 +714,17 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 Util.writePngFile(attributeList, imageFile);
             }
             catch (Exception e) {
-                Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath() + " : " + e);
+                Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath() + " : " + Log.fmtEx(e));
             }
 
             try {
                 Util.writeXmlFile(attributeList, new File(dir, xmlFileName));
             }
             catch (ParserConfigurationException e) {
-                System.err.println("Unable to parse anonymized DICOM as XML: " + e);
-                e.printStackTrace();
+                System.err.println("Unable to parse anonymized DICOM as XML: " + Log.fmtEx(e));
             }
             catch (Exception e) {
-                System.err.println("Unable to write anonymized XML file: " + e);
-                e.printStackTrace();
+                System.err.println("Unable to write anonymized XML file: " + Log.fmtEx(e));
             }
     }
     
@@ -777,10 +773,11 @@ public class Series extends JPanel implements ActionListener, Runnable {
                             suffixList.add(Util.PNG_SUFFIX);
                             suffixList.add(Util.XML_SUFFIX);
                             String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, suffixList);
+                            Log.get().info("Series dir: " + DicomClient.getInstance().getDestinationDirectory().getAbsolutePath());  // TODO remove
                             newFile = new File(DicomClient.getInstance().getDestinationDirectory(), prefix + Util.DICOM_SUFFIX);
                         }
                         System.out.println("newFile: " + newFile);  // TODO remove
-                        if (newFile != null) System.out.println("newFile path: " + newFile.getAbsolutePath());  // TODO remove
+                        if (newFile != null) Log.get().info("newFile path: " + newFile.getAbsolutePath());  // TODO remove
                         if (!newFile.getParentFile().exists()) newFile.getParentFile().mkdirs();
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
                         saveTextAndXmlAndImageFiles(attributeList, newFile);
@@ -943,8 +940,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             }
         }
         catch (Exception e) {
-            Log.get().severe("Unexpected error in edu.umro.dicom.client.Series.uploadSeries: " + e);
-            e.printStackTrace();
+            Log.get().severe("Unexpected error in edu.umro.dicom.client.Series.uploadSeries: " + Log.fmtEx(e));
         }
         finally {
             previewProgressLayout.show(previewProgressPanel, CARD_SLIDER);

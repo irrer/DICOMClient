@@ -313,8 +313,7 @@ public class Anonymize {
             }
         }
         catch (Exception e) {
-            Log.get().severe("Unexpected exception (ignored) for attribute " + attribute + " in Anonymize.aggressivelyAnonymize: " + e);
-            e.printStackTrace();
+            Log.get().severe("Unexpected exception (ignored) for attribute " + attribute + " in Anonymize.aggressivelyAnonymize: " + Log.fmtEx(e));
         }
     }
 

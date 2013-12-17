@@ -225,8 +225,12 @@ public class ClientConfig {
                 }
             }
         }
-        catch (UMROException e) { Log.get().severe("UMROException getAggressiveAnonymization : " + e);}
-        catch (DicomException e) { Log.get().severe("DicomException getAggressiveAnonymization"); e.printStackTrace();}
+        catch (UMROException e) {
+            Log.get().severe("UMROException getAggressiveAnonymization: " + Log.fmtEx(e));
+        }
+        catch (DicomException e) {
+            Log.get().severe("DicomException getAggressiveAnonymization: " + Log.fmtEx(e));
+        }
 
         return replaceList;
     }
