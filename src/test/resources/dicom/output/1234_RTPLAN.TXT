@@ -1,0 +1,195 @@
+FileMetaInformationGroupLength : 194
+FileMetaInformationVersion : 0x0 0x1
+MediaStorageSOPClassUID : 1.2.840.10008.5.1.4.1.1.481.5 (RT Plan Storage)
+MediaStorageSOPInstanceUID : 0.0.0.0.0.0.0.0.0.0.00000000000000000001
+TransferSyntaxUID : 1.2.840.10008.1.2
+ImplementationClassUID : 1.3.6.1.4.1.5962.99.2
+ImplementationVersionName : PIXELMEDJAVA001
+SourceApplicationEntityTitle : DICOM+
+InstanceCreationDate : 20100915
+InstanceCreationTime : 115230
+SOPClassUID : 1.2.840.10008.5.1.4.1.1.481.5 (RT Plan Storage)
+SOPInstanceUID : 0.0.0.0.0.0.0.0.0.0.00000000000000000001
+StudyDate : 20100915
+StudyTime :
+AccessionNumber : none
+Modality : RTPLAN
+Manufacturer : ADAC
+ReferringPhysicianName : none
+StationName : none
+StudyDescription : none
+OperatorsName : none
+ManufacturerModelName : Pinnacle3
+ReferencedStudySequence : 
+    Item: 1 / 1
+        ReferencedSOPClassUID : 1.2.840.10008.3.1.2.3.2
+        ReferencedSOPInstanceUID : 0.0.0.0.0.0.0.0.0.0.00000000000000000002
+PatientName : 1234
+PatientID : 1234
+PatientBirthDate : 18000101
+PatientSex : O
+SoftwareVersions : 8.0m \  Version: 8.2g
+StudyInstanceUID : 0.0.0.0.0.0.0.0.0.0.00000000000000000003
+SeriesInstanceUID : 0.0.0.0.0.0.0.0.0.0.00000000000000000004
+StudyID : none
+SeriesNumber :
+FrameOfReferenceUID : 0.0.0.0.0.0.0.0.0.0.00000000000000000005
+PositionReferenceIndicator :
+RTPlanLabel : wb.0
+RTPlanName : none
+RTPlanDescription : WHOLE BRAIN 
+RTPlanDate : 20100915
+RTPlanTime : 115230
+RTPlanGeometry : PATIENT
+FractionGroupSequence : 
+    Item: 1 / 1
+        FractionGroupNumber : 0
+        NumberOfFractionsPlanned : 1
+        NumberOfBeams : 2
+        NumberOfBrachyApplicationSetups : 0
+        ReferencedBeamSequence : 
+            Item: 1 / 2
+                BeamDoseSpecificationPoint : 6.9836030006409 \  85.683609008789 \  60.5
+                BeamDose : 0
+                BeamMeterset : 0
+                ReferencedBeamNumber : 1
+            Item: 2 / 2
+                BeamDoseSpecificationPoint : 6.9836030006409 \  85.683609008789 \  60.5
+                BeamDose : 0
+                BeamMeterset : 0
+                ReferencedBeamNumber : 2
+BeamSequence : 
+    Item: 1 / 2
+        Manufacturer : Varian
+        InstitutionName : none
+        TreatmentMachineName : EX1
+        PrimaryDosimeterUnit : MU
+        SourceAxisDistance : 1000
+        BeamLimitingDeviceSequence : 
+            Item: 1 / 3
+                RTBeamLimitingDeviceType : X
+                SourceToBeamLimitingDeviceDistance : 500
+                NumberOfLeafJawPairs : 1
+            Item: 2 / 3
+                RTBeamLimitingDeviceType : Y
+                SourceToBeamLimitingDeviceDistance : 400
+                NumberOfLeafJawPairs : 1
+            Item: 3 / 3
+                RTBeamLimitingDeviceType : MLCX
+                SourceToBeamLimitingDeviceDistance : 500
+                NumberOfLeafJawPairs : 60
+                LeafPositionBoundaries : -200 \  -190 \  -180 \  -170 \  -160 \  -150 \  -140 \  -130 \  -120 \  -110 \  -100 \  -95 \  -90 \  -85 \  -80 \  -75 \  -70 \  -65 \  -60 \  -55 \  -50 \  -45 \  -40 \  -35 \  -30 \  -25 \  -20 \  -15 \  -10 \  -5 \  0 \  5 \  10 \  15 \  20 \  25 \  30 \  35 \  40 \  45 \  50 \  55 \  60 \  65 \  70 \  75 \  80 \  85 \  90 \  95 \  100 \  110 \  120 \  130 \  140 \  150 \  160 \  170 \  180 \  190 \  200
+        BeamNumber : 1
+        BeamName : LEFT LAT
+        BeamType : STATIC
+        RadiationType : PHOTON
+        TreatmentDeliveryType : TREATMENT
+        NumberOfWedges : 0
+        NumberOfCompensators : 0
+        NumberOfBoli : 0
+        NumberOfBlocks : 0
+        FinalCumulativeMetersetWeight : 100
+        NumberOfControlPoints : 2
+        ControlPointSequence : 
+            Item: 1 / 2
+                ControlPointIndex : 0
+                NominalBeamEnergy : 6
+                BeamLimitingDevicePositionSequence : 
+                    Item: 1 / 3
+                        RTBeamLimitingDeviceType : X
+                        LeafJawPositions : -121 \  121
+                    Item: 2 / 3
+                        RTBeamLimitingDeviceType : Y
+                        LeafJawPositions : -95 \  95
+                    Item: 3 / 3
+                        RTBeamLimitingDeviceType : MLCX
+                        LeafJawPositions : 0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  -13.2 \  -13.2 \  -13.2 \  -13.2 \  -17.3 \  -23.2 \  -28.8 \  -34.8 \  -40.2 \  -46.3 \  -52.7 \  -59.2 \  -65.2 \  -70.7 \  -76.3 \  -81.7 \  -86.7 \  -88.8 \  -90.2 \  -91.7 \  -93.8 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0
+                GantryAngle : 90.0
+                GantryRotationDirection : NONE
+                BeamLimitingDeviceAngle : 0.0
+                BeamLimitingDeviceRotationDirection : NONE
+                PatientSupportAngle : 0.0
+                PatientSupportRotationDirection : NONE
+                TableTopEccentricAngle : 0.0
+                TableTopEccentricRotationDirection : NONE
+                TableTopVerticalPosition :
+                TableTopLongitudinalPosition :
+                TableTopLateralPosition :
+                IsocenterPosition : 6.9836030006409 \  85.683609008789 \  60.5
+                SourceToSurfaceDistance : 922.69110107422
+                CumulativeMetersetWeight : 0
+            Item: 2 / 2
+                ControlPointIndex : 1
+                CumulativeMetersetWeight : 100
+        ReferencedPatientSetupNumber : 1
+    Item: 2 / 2
+        Manufacturer : Varian
+        InstitutionName : none
+        TreatmentMachineName : EX1
+        PrimaryDosimeterUnit : MU
+        SourceAxisDistance : 1000
+        BeamLimitingDeviceSequence : 
+            Item: 1 / 3
+                RTBeamLimitingDeviceType : X
+                SourceToBeamLimitingDeviceDistance : 500
+                NumberOfLeafJawPairs : 1
+            Item: 2 / 3
+                RTBeamLimitingDeviceType : Y
+                SourceToBeamLimitingDeviceDistance : 400
+                NumberOfLeafJawPairs : 1
+            Item: 3 / 3
+                RTBeamLimitingDeviceType : MLCX
+                SourceToBeamLimitingDeviceDistance : 500
+                NumberOfLeafJawPairs : 60
+                LeafPositionBoundaries : -200 \  -190 \  -180 \  -170 \  -160 \  -150 \  -140 \  -130 \  -120 \  -110 \  -100 \  -95 \  -90 \  -85 \  -80 \  -75 \  -70 \  -65 \  -60 \  -55 \  -50 \  -45 \  -40 \  -35 \  -30 \  -25 \  -20 \  -15 \  -10 \  -5 \  0 \  5 \  10 \  15 \  20 \  25 \  30 \  35 \  40 \  45 \  50 \  55 \  60 \  65 \  70 \  75 \  80 \  85 \  90 \  95 \  100 \  110 \  120 \  130 \  140 \  150 \  160 \  170 \  180 \  190 \  200
+        BeamNumber : 2
+        BeamName : RIGHT LAT
+        BeamType : STATIC
+        RadiationType : PHOTON
+        TreatmentDeliveryType : TREATMENT
+        NumberOfWedges : 0
+        NumberOfCompensators : 0
+        NumberOfBoli : 0
+        NumberOfBlocks : 0
+        FinalCumulativeMetersetWeight : 100
+        NumberOfControlPoints : 2
+        ControlPointSequence : 
+            Item: 1 / 2
+                ControlPointIndex : 0
+                NominalBeamEnergy : 6
+                BeamLimitingDevicePositionSequence : 
+                    Item: 1 / 3
+                        RTBeamLimitingDeviceType : X
+                        LeafJawPositions : -121 \  121
+                    Item: 2 / 3
+                        RTBeamLimitingDeviceType : Y
+                        LeafJawPositions : -95 \  95
+                    Item: 3 / 3
+                        RTBeamLimitingDeviceType : MLCX
+                        LeafJawPositions : 0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  -121 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  13.3 \  13.3 \  13.3 \  13.3 \  17.3 \  23.3 \  28.8 \  34.8 \  40.2 \  46.3 \  52.7 \  59.3 \  65.3 \  70.8 \  76.3 \  81.7 \  86.7 \  88.8 \  90.3 \  91.7 \  93.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  120.8 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0 \  0
+                GantryAngle : 270.0
+                GantryRotationDirection : NONE
+                BeamLimitingDeviceAngle : 0.0
+                BeamLimitingDeviceRotationDirection : NONE
+                PatientSupportAngle : 0.0
+                PatientSupportRotationDirection : NONE
+                TableTopEccentricAngle : 0.0
+                TableTopEccentricRotationDirection : NONE
+                TableTopVerticalPosition :
+                TableTopLongitudinalPosition :
+                TableTopLateralPosition :
+                IsocenterPosition : 6.9836030006409 \  85.683609008789 \  60.5
+                SourceToSurfaceDistance : 919.62280273438
+                CumulativeMetersetWeight : 0
+            Item: 2 / 2
+                ControlPointIndex : 1
+                CumulativeMetersetWeight : 100
+        ReferencedPatientSetupNumber : 1
+PatientSetupSequence : 
+    Item: 1 / 1
+        PatientPosition : HFS
+        PatientSetupNumber : 1
+ReferencedStructureSetSequence : 
+    Item: 1 / 1
+        ReferencedSOPClassUID : 1.2.840.10008.5.1.4.1.1.481.3 (RT Structure Set Storage)
+        ReferencedSOPInstanceUID : 0.0.0.0.0.0.0.0.0.0.00000000000000000006
