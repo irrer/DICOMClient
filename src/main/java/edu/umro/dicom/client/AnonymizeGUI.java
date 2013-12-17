@@ -61,7 +61,6 @@ import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.ValueRepresentation;
 
-import edu.umro.dicom.common.Anonymize;
 import edu.umro.util.Log;
 
 
