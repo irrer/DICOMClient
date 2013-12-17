@@ -93,7 +93,6 @@ import com.pixelmed.dicom.TagFromName;
 
 import edu.umro.dicom.common.Anonymize;
 import edu.umro.dicom.common.PACS;
-import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 import edu.umro.util.OpSys;
 import edu.umro.util.UMROException;

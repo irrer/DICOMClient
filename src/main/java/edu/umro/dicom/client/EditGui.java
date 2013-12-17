@@ -49,7 +49,6 @@ import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.ValueRepresentation;
 
 import edu.umro.dicom.client.CustomDictionary.Multiplicity;
-import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
 /**

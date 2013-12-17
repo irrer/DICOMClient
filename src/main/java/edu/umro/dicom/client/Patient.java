@@ -42,7 +42,6 @@ import javax.swing.text.PlainDocument;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.TagFromName;
 
-import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
 /**

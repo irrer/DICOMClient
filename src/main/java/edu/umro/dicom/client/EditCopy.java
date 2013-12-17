@@ -5,7 +5,6 @@ import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
 
-import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
 public class EditCopy extends Edit {

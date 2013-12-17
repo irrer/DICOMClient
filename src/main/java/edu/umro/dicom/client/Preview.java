@@ -84,7 +84,6 @@ import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
-import edu.umro.dicom.common.Util;
 import edu.umro.util.Log;
 
 /**

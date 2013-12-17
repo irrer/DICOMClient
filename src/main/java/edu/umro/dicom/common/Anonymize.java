@@ -40,6 +40,7 @@ import com.pixelmed.dicom.ValueRepresentation;
 
 import edu.umro.dicom.client.ClientConfig;
 import edu.umro.dicom.client.CustomDictionary;
+import edu.umro.dicom.client.Util;
 import edu.umro.util.Log;
 import edu.umro.util.UMROGUID;
 

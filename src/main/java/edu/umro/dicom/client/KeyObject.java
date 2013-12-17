@@ -31,7 +31,6 @@ import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClass;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.TagFromName;
-import edu.umro.dicom.common.Util;
 import edu.umro.util.OpSys;
 
 /**

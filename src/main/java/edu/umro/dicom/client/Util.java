@@ -1,4 +1,4 @@
-package edu.umro.dicom.common;
+package edu.umro.dicom.client;
 
 /*
  * Copyright 2012 Regents of the University of Michigan
@@ -51,7 +51,7 @@ import com.pixelmed.dicom.TransferSyntax;
 import com.pixelmed.dicom.XMLRepresentationOfDicomObjectFactory;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
-import edu.umro.dicom.client.DicomClient;
+import edu.umro.dicom.common.UMROMACAddress;
 import edu.umro.util.JarInfo;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
