@@ -742,7 +742,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
                 }
                 catch (DicomException e) {
                     Log.get().logrb(Level.SEVERE, Anonymize.class.getCanonicalName(),
-                            "translateGuid", null, "Unexpected value for attribute.  Ignored. ", e);
+                            "translateUid", null, "Unexpected value for attribute.  Ignored. ", e);
                 }
             }
         }

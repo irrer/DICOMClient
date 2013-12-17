@@ -198,7 +198,7 @@ public class KeyObject extends AttributeList {
         addAttr(TagFromName.MediaStorageSOPClassUID, SOPClass.KeyObjectSelectionDocumentStorage);
         addAttr(TagFromName.MediaStorageSOPInstanceUID, sopInstanceUID);
         addAttr(TagFromName.TransferSyntaxUID, Util.DEFAULT_STORAGE_SYNTAX);
-        addAttr(TagFromName.ImplementationClassUID, Util.UMRO_ROOT_GUID);
+        addAttr(TagFromName.ImplementationClassUID, Util.UMRO_ROOT_UID);
         addAttr(TagFromName.SpecificCharacterSet, "ISO_IR 100");
         addAttr(TagFromName.SOPClassUID, SOPClass.KeyObjectSelectionDocumentStorage);
         addAttr(TagFromName.SOPInstanceUID, sopInstanceUID);

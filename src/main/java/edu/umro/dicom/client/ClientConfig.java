@@ -270,16 +270,17 @@ public class ClientConfig {
      * Get the template that controls how new patient IDs are generated for anonymization.
      *  
      * @return Template that controls how new patient IDs are generated for anonymization.
+     * 
+     * @throws UMROException 
      */
-    public String getRootGuid() {
+    public String getRootUid() throws UMROException {
         try {
+            return XML.getValue(config, "/DicomClientConfig/RootUid/text()");
+        }
+        catch (Exception e) {
+            // Try old name just in case the configuration file uses the old name
             return XML.getValue(config, "/DicomClientConfig/RootGuid/text()");
         }
-        catch (UMROException e) {
-
-        }
-        Log.get().severe("getRootGuid: Unable to read configuration file " + CONFIG_FILE_NAME);
-        return null;
     }
 
 

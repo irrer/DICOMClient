@@ -34,10 +34,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Properties;
 import java.util.TreeMap;
 import java.util.logging.Level;
 
@@ -94,7 +92,6 @@ import com.pixelmed.dicom.TagFromName;
 import edu.umro.util.Log;
 import edu.umro.util.OpSys;
 import edu.umro.util.UMROException;
-import edu.umro.util.UMROGUID;
 import edu.umro.util.Utility;
 import edu.umro.util.XML;
 import edu.umro.util.General;
@@ -1361,7 +1358,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             String msg = "No valid SOP Instance UID found.  Making random one for DICOM file: " + file.getAbsolutePath();
             try {
                 Attribute attribute = AttributeFactory.newAttribute(TagFromName.SOPInstanceUID);
-                attribute.addValue(UMROGUID.getUID());
+                attribute.addValue(Util.getUID());
                 attributeList.put(attribute);
                 showMessage(msg);
                 if (inCommandLineMode()) {
@@ -1369,9 +1366,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             }
             catch (DicomException e) {
-                ;
-            }
-            catch (UnknownHostException e) {
                 ;
             }
         }
@@ -1886,7 +1880,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             CustomAttributeList.setDictionary(CustomDictionary.getInstance());
 
             Anonymize.setTemplate(ClientConfig.getInstance().getAnonPatientIdTemplate());
-            Anonymize.setRootGuid(ClientConfig.getInstance().getRootGuid());
 
             DicomClient dicomClient = getInstance();
             dicomClient.setupTrustStore();

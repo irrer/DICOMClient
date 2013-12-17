@@ -27,6 +27,7 @@ import java.rmi.server.UID;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
@@ -51,9 +52,9 @@ import com.pixelmed.dicom.TransferSyntax;
 import com.pixelmed.dicom.XMLRepresentationOfDicomObjectFactory;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
-import edu.umro.dicom.common.UMROMACAddress;
 import edu.umro.util.JarInfo;
 import edu.umro.util.Log;
+import edu.umro.util.OpSys;
 import edu.umro.util.UMROException;
 import edu.umro.util.Utility;
 import edu.umro.util.XML;
@@ -71,7 +72,7 @@ public class Util {
     private final static int TRANSFER_BUFFER_SIZE = 64 * 1024;
 
     /** The root UID which is used to prefix files constructed by the University of Michigan. */
-    public static final String UMRO_ROOT_GUID = "1.3.6.1.4.1.22361";
+    public static final String UMRO_ROOT_UID = "1.3.6.1.4.1.22361";
 
     /** The name of the System property to define to enable testing. */
     public static final String TESTING_PROPERTY = "TESTING";
@@ -85,13 +86,16 @@ public class Util {
     private static JarInfo jarInfo = null;
 
     /** The MAC address of this machine.  This is used to make
-     * the GUID unique across machines.
+     * the UID unique across machines.
      */
     private static long macAddress = 0;
 
     /** Flag to determine whether MAC address has been initialized. */
     private static boolean initialized = false;
 
+    /** Root UID used as a prefix when building UIDs. */
+    private static String rootUid = null;
+    
     /** DICOM postal address. */
     public static final String UMRO_POSTAL_ADDRESS = "University of Michigan Health System, 1500 E. Medical Center Drive Ann Arbor, MI 48109";
 
@@ -164,35 +168,62 @@ public class Util {
 
 
     /**
-     * Generate a DICOM compliant GUID using the UMRO root.
-     *
-     * @return A DICOM compliant GUID using the UMRO root.
-     * @throws SocketException 
-     * @throws UnknownHostException 
+     * Initialize UID parameters.
      */
-    public static synchronized String getUID() throws UnknownHostException, SocketException {
-
-        // Initialized MAC address if necessary.
+    private static void initialize() {
         if (!initialized) {
             initialized = true;
             if (testing()) {
+                rootUid = "0.0.0.0.0.0.0.0.0.0";
                 macAddress = 0;
             }
             else {
-                macAddress = UMROMACAddress.getMACAddress();
+                try {
+                    rootUid = ClientConfig.getInstance().getRootUid();
+                }
+                catch (Exception e) {
+                    Log.get().severe("Unable to get root UID from configuration.  Instead using Univ Mich Hosp UID: " + UMRO_ROOT_UID);
+                    rootUid = UMRO_ROOT_UID;
+                }
+
+                try {
+                    macAddress = OpSys.getMACAddress();
+                }
+                catch (Exception e) {
+                    macAddress = Long.parseLong(OpSys.getHostIPAddress().replace('.', 'x').replaceAll("x", ""));
+                    // if localhost (127.0.0.1) is returned, then try something
+                    // random instead. The risk is
+                    // that the same 2^63 random number will be returned twice,
+                    // but it is a low risk.
+                    if (macAddress == 127001) {
+                        macAddress = new Random().nextLong();
+                    }
+                }
                 macAddress = Math.abs(macAddress);
             }
         }
+    }
+    
+    /**
+     * Generate a DICOM compliant UID using the UMRO root.
+     *
+     * @return A DICOM compliant UID using the UMRO root.
+     * @throws SocketException 
+     * @throws UnknownHostException 
+     */
+    public static synchronized String getUID() {
+
+        initialize();
 
         if (testing()) {
             macAddress++;
             String text = "000000000000000000000000" + macAddress;
-            return "0.0.0.0.0.0.0.0." + text.substring (text.length()-20);
+            return rootUid + "." + text.substring(text.length() - 20);
         }
         // Use standard class to get unique values.
-        String guidText = new UID().toString();
+        String uidText = new UID().toString();
 
-        StringTokenizer st = new StringTokenizer(guidText, ":");
+        StringTokenizer st = new StringTokenizer(uidText, ":");
 
         int unique = Math.abs(Integer.valueOf(st.nextToken(), 16).intValue());
         long time = Math.abs(Long.valueOf(st.nextToken(), 16).longValue());
@@ -200,10 +231,10 @@ public class Util {
         // digits
         int count = Math.abs(Short.valueOf(st.nextToken(), 16).shortValue() + 0x8000);
 
-        // concatenate values to make it into a DICOM GUID.
-        String guid = UMRO_ROOT_GUID + macAddress + "." + unique + "." + time + "." + count;
+        // concatenate values to make it into a DICOM UID.
+        String uid = rootUid + "." + macAddress + "." + unique + "." + time + "." + count;
 
-        return guid;
+        return uid;
     }
 
 
