@@ -1708,7 +1708,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             "        -d Specify output directory for anonymization (can not be used with -o option)\n" +
             "        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package\n" +
             "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
-            "        -z Replace each control character in DICOM attributes with a blank.  Required by SAS\n" +
+            "        -z Replace each control character in generated XML files that describe DICOM attributes with a blank.  Required by SAS\n" +
             "        -g Perform aggressive anonymization - anonymize fields that are not marked for\n" +
             "           anonymization but contain strings found in fields that are marked for anonymization.\n";
         System.err.println(usage);

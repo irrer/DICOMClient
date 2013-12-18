@@ -106,8 +106,6 @@ public class Util {
     public static final String DICOM_SUFFIX = ".DCM";
     
     private static boolean testing() {
-        boolean t = System.getProperties().containsKey(TESTING_PROPERTY);  // TODO remove
-        System.out.println("am i testing: " + t);   // TODO remove
         return System.getProperties().contains(TESTING_PROPERTY);
     }
 

@@ -696,6 +696,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             }
 
             File textFile = new File(dir, textFileName);
+            Log.get().info("Writing text file: " + textFile.getAbsolutePath());
             try {
                 Util.writeTextFile(attributeList, textFile);
             }
@@ -708,20 +709,23 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
             File imageFile = new File(dir, imageFileName);
             try {
+                Log.get().info("Writing PNG file: " + imageFile.getAbsolutePath());
                 Util.writePngFile(attributeList, imageFile);
             }
             catch (Exception e) {
                 Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath() + " : " + Log.fmtEx(e));
             }
 
+            File xmlFile = new File(dir, xmlFileName);
             try {
-                Util.writeXmlFile(attributeList, new File(dir, xmlFileName));
+                Log.get().info("Writing XML file: " + xmlFile.getAbsolutePath());
+                Util.writeXmlFile(attributeList, xmlFile);
             }
             catch (ParserConfigurationException e) {
-                System.err.println("Unable to parse anonymized DICOM as XML: " + Log.fmtEx(e));
+                System.err.println("Unable to parse anonymized DICOM file " + xmlFile.getAbsolutePath() + " as XML: " + Log.fmtEx(e));
             }
             catch (Exception e) {
-                System.err.println("Unable to write anonymized XML file: " + Log.fmtEx(e));
+                System.err.println("Unable to write anonymized " + xmlFile.getAbsolutePath() + " XML file: " + Log.fmtEx(e));
             }
     }
     
