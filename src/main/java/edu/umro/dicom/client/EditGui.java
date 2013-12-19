@@ -72,18 +72,23 @@ public class EditGui implements ActionListener, WindowListener {
 
     /** Ordered list of redo's available to the user. */
     private LinkedList<Edit> redoHistory = new LinkedList<Edit>();
-    
-    /** List of edited DICOM files that have been saved.  This list is kept so that
+
+    /**
+     * List of edited DICOM files that have been saved. This list is kept so that
      * if a user saves the same file multiple times over the course of editing, a
-     * new instance of the file will not be created every time. */
+     * new instance of the file will not be created every time.
+     */
     private HashMap<File, File> savedFileList = new HashMap<File, File>();
-    
+
     /** Reflects current state of EditGui. */
     private String currentCard;
-            
+
+    /** True indicates that there are unsaved modifications. */
+    private boolean modified = false;
+
     /** Last attribute to be selected for editing. */
     private AttributeLocation attributeLocation = null;
-    
+
     private JDialog dialog = null;
     private Container mainContainer = null;
     private Preview preview = null;
@@ -105,7 +110,7 @@ public class EditGui implements ActionListener, WindowListener {
     private JCheckBox saveAsPng = null;
     private JCheckBox saveAsXml = null;
     private JButton returnFromOptionsButton = null;
-    
+
     private JButton createButton = null;
     private JButton updateButton = null;
     private JButton copyButton = null;
@@ -327,6 +332,7 @@ public class EditGui implements ActionListener, WindowListener {
      * Discard all editing history without saving.
      */
     public void reset() {
+        modified = false;
         editHistory.clear();
         redoHistory.clear();
         resetDoButtons();
@@ -474,6 +480,7 @@ public class EditGui implements ActionListener, WindowListener {
     
     private void undo() {
         if (!editHistory.isEmpty()) {
+            modified = true;
             Edit e = editHistory.removeLast();
             redoHistory.push(e);
             resetDoButtons();
@@ -483,6 +490,7 @@ public class EditGui implements ActionListener, WindowListener {
     
     private void redo() {
         if (!redoHistory.isEmpty()) {
+            modified = true;
             Edit e = redoHistory.removeFirst();
             editHistory.add(e);
             resetDoButtons();
@@ -537,6 +545,8 @@ public class EditGui implements ActionListener, WindowListener {
         }
         String prefix = destFile.getName().replaceAll("\\.[^\\.]*$", "");
 
+        destFile.getParentFile().mkdirs();
+        
         if (saveAsDicom.isSelected()) {
             try {
                 destFile.delete();
@@ -615,6 +625,7 @@ public class EditGui implements ActionListener, WindowListener {
                 File file = (File)(series.getFileList().toArray()[preview.getCurrentSlice()-1]);
                 saveOneFile(file);
             }
+            modified = false;
             return true;
         }
         return false;
@@ -627,7 +638,7 @@ public class EditGui implements ActionListener, WindowListener {
      * @return True if the user has unsaved edits.
      */
     public boolean isModified() {
-        return !editHistory.isEmpty();
+        return modified;
     }
     
     private void copy() {
@@ -640,6 +651,7 @@ public class EditGui implements ActionListener, WindowListener {
      * @param edit
      */
     public void addNewEdit(Edit edit) {
+        modified = true;
         editHistory.add(edit);
         redoHistory.clear();
         setCard(CARD_MAIN);
