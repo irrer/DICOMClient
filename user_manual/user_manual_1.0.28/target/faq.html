@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+  <head>
+    <title>DICOM+ User Manual</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="../../../stylesheets/styles.css">
+    <link rel="stylesheet" href="../../../stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../../javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>DICOM+ User Manual</h1>
+        <p>Version 1.0.28</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/irrer/DICOMClient" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/irrer/DICOMClient/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/irrer/DICOMClient/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+
+<h3>Frequently Asked Questions</h3>
+
+<p/><br/>
+<strong>Will DICOM+ over-write my existing files?</strong><br/>
+No - The program is designed to preserve existing files.  Both anonymization and
+editing create new copies of the files.  Before a new file is written, the program
+checks to make sure that the name it is using is unique.
+<br/>
+Note that if the same series is anonymized multiple times, it will result in multiple
+sets of files.  This is by design, as a common use case is to anonymize the same set
+of files multiple times with different user IDs to create test data.
+
+<p/>
+
+The only exceptions are:
+
+<ul>
+
+<li>When editing a file, the user specifically indicates that the original file should be over-written.</li>
+
+<li>When the user repeatedly saves during an edit session, the same destination file is used.</li>
+
+</ul>
+
+
+
+<p/><br/>
+<strong>How does DICOM+ construct file names?</strong><br/>
+File names are constructed so as to be human readable, and are formatted
+with the following fields (if they are present in the source DICOM file) separated by underscore:
+
+<ul>
+<li>Patient ID</li>
+<li>Modality</li>
+<li>Series Number</li>
+<li>Instance Number</li>
+</ul>
+
+If the resulting file already exists, an integer is appended to the name to make it unique.
+
+
+
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/irrer">irrer</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>
