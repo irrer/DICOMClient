@@ -1,0 +1,63 @@
+
+<h3>Anonymizing Files</h3>
+
+Before anonymizing, first make sure that the application is in
+anonymize mode using the <code>Anonymize &nbsp; Upload</code> radio
+buttons at the top of the main window.
+
+<p/>
+<br/>
+
+If a particular patient ID is desired, enter it in the <code>New Patient ID</code> 
+field.  This field is initialized to a random value at startup.  The pattern for
+this is defined in the configuration file.
+
+<p/>
+<br/>
+
+Be default, the patient name is set to the same value as the patient ID.  If they
+need to be different, click the checkbox to the right of the <code>New Patient Name</code> 
+field, which will enable the field and a different name to be entered.
+
+<p/>
+<br/>
+To anonymize a series,
+click the <code>Anonymize</code> button to the
+right of the series.  When complete, the white on green plus sign will
+indicate that the series has been anonymized.
+
+<p/>
+<br/>
+
+One of the features of the program is to properly handle the anonymization of UIDs
+across files within a series and study.
+<moreinfo 
+title='This is true for many uses, but in
+particular for Radiotherapy where the
+relationships and cross-references between
+DICOM files is complex.'>(more info)</moreinfo>
+After anonymization, the generated files will have new UIDs and the relationships
+between files will be maintained, provided that the files were anonymized in the
+same session (program invocation).
+
+<p/>
+When files are anonymized, they are put in the <code>Destination</code> shown near the
+top of the main screen.  The destination may be changed by:
+<ul>
+    <li>Using the <code>Browse</code> button</li>
+    <li>Copy and pasting a folder name into the field</li>
+    <li>Typing into the field</li>
+</ul>
+If the <code>Destination</code> does not exist, it will be created before anonymization begins.
+If you do not have permission to write files, then anonymization will fail.
+Note that repeatedly anonymizations will create a new set of files on each invocation.
+
+<p/>
+To anonymize an entire patient may be anonymized by clicking the <code>Anonymize Patient</code>
+button in the uppor right hand corner of each patient's information.
+
+<p/>
+
+Multiple patients may be anonymized by clicking the <code>Anonymize All</code>
+button at the bottom of the main window.
+

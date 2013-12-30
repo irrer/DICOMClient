@@ -1,7 +1,7 @@
 
 oldSum=x
 while true ; do
-    newSum=$( cat *Content.html | sha1sum | sed 's/ .*//' )
+    newSum=$( cat *.html | sha1sum | sed 's/ .*//' )
     if [ $newSum != $oldSum ] ; then
        echo
        build.sh
