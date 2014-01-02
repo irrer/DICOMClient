@@ -167,17 +167,18 @@ public class Anonymize {
      * same UID is passed in, the same anonymized UID will be
      * returned.
      * 
-     * @param anonimizedPatientId anonymized (target) patient ID.
+     * @param anonymizedPatientId anonymized (target) patient ID.
      * 
      * @param oldUid Non-anonymized UID.
      * 
      * @return Anonymized UID that is being used instead
      * of the non-anonymized UID.
      */
-    private static synchronized String translateUid(String anonimizedPatientId, String oldUid) {
-        String newUid = uidHistory.get(new Uid(anonimizedPatientId, oldUid));
+    private static synchronized String translateUid(String anonymizedPatientId, String oldUid) {
+        String newUid = uidHistory.get(new Uid(anonymizedPatientId, oldUid));
         if (newUid == null) {
             newUid = Util.getUID();
+            uidHistory.put(new Uid(anonymizedPatientId, oldUid), newUid);
         }
         return newUid;
     }
@@ -218,7 +219,6 @@ public class Anonymize {
     }
 
 
-    @SuppressWarnings("unchecked")
     private static TreeMap<AttributeTag, Attribute> getAttributeListValues(AttributeList attributeList) {
         return (TreeMap<AttributeTag, Attribute>)attributeList;
     }

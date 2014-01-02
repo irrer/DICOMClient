@@ -42,6 +42,7 @@ import javax.swing.text.PlainDocument;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.TagFromName;
 
+import edu.umro.dicom.client.DicomClient.ProcessingMode;
 import edu.umro.util.Log;
 
 /**
@@ -95,8 +96,8 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
     /** If selected, then patient name can be different from patient id. */
     private JCheckBox enableDifferentPatientName = null;
 
-    /** Button that anonymizes all series for this patient. */
-    private JButton anonymizePatientButton = null; 
+    /** Button that process all series for this patient. */
+    private JButton processPatientButton = null; 
 
     private JComponent buildAnonymizingPatientId(String anonymousPatientId) {
         JPanel mainPanel = new JPanel();
@@ -133,13 +134,17 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         setDiffPatName();
 
         anonymizePanel.add(new JLabel("        "));
-        anonymizePatientButton = new JButton("Anonymize Patient");
-        anonymizePatientButton.setToolTipText("<html>Anonymize all series<br>for this patient</html>");
-        anonymizePatientButton.addActionListener(this);
-        anonymizePanel.add(anonymizePatientButton);
+        processPatientButton = new JButton("Anonymize Patient");
+        processPatientButton.setToolTipText("<html>Anonymize all series<br>for this patient</html>");
+        processPatientButton.addActionListener(this);
+        
+        JPanel betweenPanel = new JPanel();
+        betweenPanel.add(anonymizePanel);
+        betweenPanel.add(processPatientButton);
+        
 
         mainPanel.add(new JLabel(""), BorderLayout.CENTER);
-        mainPanel.add(anonymizePanel, BorderLayout.EAST);
+        mainPanel.add(betweenPanel, BorderLayout.EAST);
         return mainPanel;
     }
 
@@ -214,13 +219,32 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         Study study = new Study(file, attributeList);
         add(study);
     }
-
-
+    
+    
     /**
      * Set the mode (anonymize or upload) for this patient.
      */
-    public void setMode() {
-        anonymizePanel.setVisible(DicomClient.getInstance().getAnonymizeMode());
+    public void setMode(ProcessingMode mode) {
+        anonymizePanel.setVisible(mode != ProcessingMode.UPLOAD);
+        boolean uploadEnabled = DicomClient.getInstance().uploadEnabled();
+        boolean enabled = false;
+        String text = "?? Patient";
+        switch (mode) {
+        case ANONYMIZE:
+            text = "Anonymize Patient";
+            enabled = true;
+            break;
+        case UPLOAD:
+            text = "Upload Patient";
+            enabled = uploadEnabled;
+            break;
+        case ANONYMIZE_THEN_UPLOAD:
+            text = "Anonymize then Upload Patient";
+            enabled = uploadEnabled;
+            break;
+        }
+        processPatientButton.setEnabled(enabled);
+        processPatientButton.setText(text);
     }
 
 
@@ -407,12 +431,10 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
             updateAnonymizePatientFields();
         }
 
-        if (e.getSource() == anonymizePatientButton) {
-            if (DicomClient.getInstance().ensureAnonymizeDirectoryExists()) {
-                Log.get().info("Anonymizing all series for patient");
-                Series.processOk = true;
-                processAll(this);
-            }
+        if (e.getSource() == processPatientButton) {
+            Log.get().info("Processing all series for patient");
+            Series.processOk = true;
+            processAll(this);
         }
 
         if (e.getSource() == clearButton) {

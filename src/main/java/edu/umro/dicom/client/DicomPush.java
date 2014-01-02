@@ -41,6 +41,7 @@ public class DicomPush extends MultipleInstanceTransferStatusHandler {
     int failed = 0;
     int warning = 0;
     String sopInstanceUID = null;
+    MultipleInstanceTransferStatusHandler multipleInstanceTransferStatusHandler = null;
 
     @Override
     public void updateStatus(int nRemaining, int nCompleted, int nFailed, int nWarning, String nSopInstanceUID) {
@@ -50,12 +51,14 @@ public class DicomPush extends MultipleInstanceTransferStatusHandler {
         warning = nWarning;
         sopInstanceUID = nSopInstanceUID;
         Log.get().info("DICOM Push remaining: " + remaining + "  completed: " + completed + "  failed: " + failed + "  warning: " + warning);
+        if (multipleInstanceTransferStatusHandler != null) multipleInstanceTransferStatusHandler.updateStatus(nRemaining, nCompleted, nFailed, nWarning, nSopInstanceUID);
     }
 
 
-    public DicomPush(PACS pacs, AttributeList[] attrListList) {
+    public DicomPush(PACS pacs, AttributeList[] attrListList, MultipleInstanceTransferStatusHandler multipleInstanceTransferStatusHandler) {
         this.pacs = pacs;
         this.attrListList = attrListList;
+        this.multipleInstanceTransferStatusHandler = multipleInstanceTransferStatusHandler;
     }
 
 

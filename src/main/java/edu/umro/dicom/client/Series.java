@@ -46,6 +46,9 @@ import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.TagFromName;
+import com.pixelmed.network.MultipleInstanceTransferStatusHandler;
+
+import edu.umro.dicom.client.DicomClient.ProcessingMode;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
 
@@ -90,6 +93,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     /** True if this series has been anonymized. */
     private boolean isAnonymized = false;
+
+    /** True if this series has been anonymized and then uploaded. */
+    private boolean isAnonymizedThenUploaded = false;
 
     /** DICOM value for series number for the series. */
     private String seriesNumber = null;
@@ -149,9 +155,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     /**
      * Icon associated with upload button to indicate whether or not the series
-     * has been uploaded.
+     * has been uploaded, or anonymized, or both.
      */
-    private JLabel uploadButtonIcon = null;
+    private JLabel doneIcon = null;
 
     /** Shows preview. */
     private JButton previewButton = null;
@@ -261,21 +267,23 @@ public class Series extends JPanel implements ActionListener, Runnable {
     private HashSet<String> aeTitleUploadList = new HashSet<String>();
 
     /**
-     * Indicate whether or not the file is already in this series.
+     * Indicate whether or not the file is in this series.
      * 
-     * @param fileName
-     *            Full path name of file to test.
+     * @param file File for which to search.
      * 
      * @return True if file is in list.
      */
     public boolean containsFile(File file) {
-        return instanceList.fileList.contains(file);
+        String path = file.getAbsolutePath();
+        for (File f : instanceList.fileList) if (f.getAbsolutePath().equals(path)) return true;
+        return false;  
     }
 
     /**
      * Indicate whether or not the file is already in this series.
      * 
-     * @param sopInstanceUID SOP instance UID to search for
+     * @param sopInstanceUID
+     *            SOP instance UID to search for
      * 
      * @return True if instance is in list.
      */
@@ -335,10 +343,10 @@ public class Series extends JPanel implements ActionListener, Runnable {
         uploadAnonymizeButton = new JButton("Upload");
         uploadAnonymizeButton.addActionListener(this);
         uploadAnonymizeButton.setToolTipText("<html>Upload this series to<br>the given PACS server.</html>");
-        uploadButtonIcon = new JLabel(PreDefinedIcons.getEmpty());
+        doneIcon = new JLabel(PreDefinedIcons.getEmpty());
         JPanel uploadButtonPanel = new JPanel();
         uploadButtonPanel.add(uploadAnonymizeButton);
-        uploadButtonPanel.add(uploadButtonIcon);
+        uploadButtonPanel.add(doneIcon);
         uploadButtonPanel.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 0));
         return uploadButtonPanel;
     }
@@ -500,34 +508,52 @@ public class Series extends JPanel implements ActionListener, Runnable {
         previewProgressPanel.paintAll(graphics);
     }
 
+    private boolean isBeingPreviewed() {
+        Preview preview = DicomClient.getInstance().getPreview();
+        return (preview.getPreviewedSeries() == this) && (preview.isVisible());
+    }
+
     /**
      * Set the icon to reflect whether this series has been anonymized or
      * uploaded to the currently selected PACS.
      * 
      * @return True if it has been uploaded, false if not.
      */
-    public boolean setProcessedStatus() {
-        Color foregroundColor = (DicomClient.getInstance().getPreview().getPreviewedSeries() == this) ? Color.GREEN : DicomClient.COLOR_FONT;
+    public boolean setProcessedStatus(ProcessingMode mode) {
+        Color foregroundColor = isBeingPreviewed() ? Color.GREEN : DicomClient.COLOR_FONT;
         previewButton.setForeground(foregroundColor);
 
-        if (DicomClient.getInstance().getAnonymizeMode()) {
-            uploadButtonIcon.setIcon(isAnonymized ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty());
+        switch (mode) {
+        case ANONYMIZE: {
+            doneIcon.setIcon(isAnonymized ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty());
             uploadAnonymizeButton.setToolTipText(ANONYMIZE_BUTTON_TOOLTIP);
             uploadAnonymizeButton.setText("Anonymize");
             uploadAnonymizeButton.setEnabled(true);
-            return false;
+            return isAnonymized;
         }
-        else {
-            String aeTitle = DicomClient.getInstance().getSelectedAeTitle();
-            boolean isUploaded = aeTitleUploadList.contains(aeTitle);
+
+        case UPLOAD: {
+            boolean isUploaded = aeTitleUploadList.contains(DicomClient.getInstance().getSelectedAeTitle());
             Icon icon = isUploaded ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty();
-            uploadButtonIcon.setIcon(icon);
+            doneIcon.setIcon(icon);
             boolean enabled = DicomClient.getInstance().uploadEnabled();
             uploadAnonymizeButton.setEnabled(enabled);
             uploadAnonymizeButton.setToolTipText(enabled ? UPLOAD_BUTTON_TOOLTIP_TEXT_ENABLED : UPLOAD_BUTTON_TOOLTIP_TEXT_DISABLED);
             uploadAnonymizeButton.setText("Upload");
             return isUploaded;
         }
+
+        case ANONYMIZE_THEN_UPLOAD: {
+            Icon icon = isAnonymizedThenUploaded ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty();
+            doneIcon.setIcon(icon);
+            boolean enabled = DicomClient.getInstance().uploadEnabled();
+            uploadAnonymizeButton.setEnabled(enabled);
+            uploadAnonymizeButton.setToolTipText(enabled ? UPLOAD_BUTTON_TOOLTIP_TEXT_ENABLED : UPLOAD_BUTTON_TOOLTIP_TEXT_DISABLED);
+            uploadAnonymizeButton.setText("Anonymize then Upload");
+            return isAnonymizedThenUploaded;
+        }
+        }
+        return false;
     }
 
     /**
@@ -545,7 +571,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
         try {
             processLock.acquireUninterruptibly();
             PACS pacs = DicomClient.getInstance().getCurrentPacs();
-            DicomPush dicomPush = new DicomPush(pacs, attrListList);
+            DicomPush dicomPush = new DicomPush(pacs, attrListList, null);
             String pushError = dicomPush.push();
             if (pushError != null) {
                 processOk = false;
@@ -601,11 +627,19 @@ public class Series extends JPanel implements ActionListener, Runnable {
     }
 
     public void run() {
-        if (DicomClient.getInstance().getAnonymizeMode()) {
+        switch (DicomClient.getInstance().getProcessingMode()) {
+        case ANONYMIZE:
             anonymizeSeries();
-        }
-        else {
+            break;
+        case UPLOAD:
             uploadSeries();
+            break;
+        case ANONYMIZE_THEN_UPLOAD:
+            ArrayList<File> filesCreated = anonymizeSeries();
+            Series series = DicomClient.getInstance().findSeries(null, filesCreated);
+            if (series != null) series.uploadSeries();
+            isAnonymizedThenUploaded = true;
+            break;
         }
         DicomClient.getInstance().setProcessedStatus();
     }
@@ -665,7 +699,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         return replacementAttributeList;
     }
 
-
     /**
      * If in command line mode, save the anonymized DICOM as text and, if
      * possible, as an image.
@@ -677,66 +710,66 @@ public class Series extends JPanel implements ActionListener, Runnable {
      *            File where anonymized DICOM is to be written.
      */
     private void saveTextAndXmlAndImageFiles(AttributeList attributeList, File file) {
-            String fileName = file.getName();
-            String textFileName = null;
-            String imageFileName = null;
-            String xmlFileName = null;
-            File dir = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
-            int dotIndex = fileName.lastIndexOf('.');
-            if (dotIndex == -1) {
-                textFileName = fileName + Util.TEXT_SUFFIX;
-                imageFileName = fileName + Util.PNG_SUFFIX;
-                xmlFileName = fileName + Util.XML_SUFFIX;
-            }
-            else {
-                String baseName = fileName.substring(0, dotIndex);
-                textFileName = baseName + Util.TEXT_SUFFIX;
-                imageFileName = baseName + Util.PNG_SUFFIX;
-                xmlFileName = baseName + Util.XML_SUFFIX;
-            }
+        String fileName = file.getName();
+        String textFileName = null;
+        String imageFileName = null;
+        String xmlFileName = null;
+        File dir = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex == -1) {
+            textFileName = fileName + Util.TEXT_SUFFIX;
+            imageFileName = fileName + Util.PNG_SUFFIX;
+            xmlFileName = fileName + Util.XML_SUFFIX;
+        }
+        else {
+            String baseName = fileName.substring(0, dotIndex);
+            textFileName = baseName + Util.TEXT_SUFFIX;
+            imageFileName = baseName + Util.PNG_SUFFIX;
+            xmlFileName = baseName + Util.XML_SUFFIX;
+        }
 
-            File textFile = new File(dir, textFileName);
-            Log.get().info("Writing text file: " + textFile.getAbsolutePath());
-            try {
-                Util.writeTextFile(attributeList, textFile);
-            }
-            catch (UMROException e) {
-                System.err.println("Unable to write anonymized text file: " + Log.fmtEx(e));
-            }
-            catch (IOException e) {
-                System.err.println("Unable to create anonymized text file " + textFile.getAbsolutePath() + " : " + Log.fmtEx(e));
-            }
+        File textFile = new File(dir, textFileName);
+        Log.get().info("Writing text file: " + textFile.getAbsolutePath());
+        try {
+            Util.writeTextFile(attributeList, textFile);
+        }
+        catch (UMROException e) {
+            System.err.println("Unable to write anonymized text file: " + Log.fmtEx(e));
+        }
+        catch (IOException e) {
+            System.err.println("Unable to create anonymized text file " + textFile.getAbsolutePath() + " : " + Log.fmtEx(e));
+        }
 
-            File imageFile = new File(dir, imageFileName);
-            try {
-                Log.get().info("Writing PNG file: " + imageFile.getAbsolutePath());
-                Util.writePngFile(attributeList, imageFile);
-            }
-            catch (Exception e) {
-                Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath() + " : " + Log.fmtEx(e));
-            }
+        File imageFile = new File(dir, imageFileName);
+        try {
+            Log.get().info("Writing PNG file: " + imageFile.getAbsolutePath());
+            Util.writePngFile(attributeList, imageFile);
+        }
+        catch (Exception e) {
+            Log.get().warning("Unable to write image file as part of anonymization for file " + imageFile.getAbsolutePath() + " : " + Log.fmtEx(e));
+        }
 
-            File xmlFile = new File(dir, xmlFileName);
-            try {
-                Log.get().info("Writing XML file: " + xmlFile.getAbsolutePath());
-                Util.writeXmlFile(attributeList, xmlFile);
-            }
-            catch (ParserConfigurationException e) {
-                System.err.println("Unable to parse anonymized DICOM file " + xmlFile.getAbsolutePath() + " as XML: " + Log.fmtEx(e));
-            }
-            catch (Exception e) {
-                System.err.println("Unable to write anonymized " + xmlFile.getAbsolutePath() + " XML file: " + Log.fmtEx(e));
-            }
+        File xmlFile = new File(dir, xmlFileName);
+        try {
+            Log.get().info("Writing XML file: " + xmlFile.getAbsolutePath());
+            Util.writeXmlFile(attributeList, xmlFile);
+        }
+        catch (ParserConfigurationException e) {
+            System.err.println("Unable to parse anonymized DICOM file " + xmlFile.getAbsolutePath() + " as XML: " + Log.fmtEx(e));
+        }
+        catch (Exception e) {
+            System.err.println("Unable to write anonymized " + xmlFile.getAbsolutePath() + " XML file: " + Log.fmtEx(e));
+        }
     }
-    
 
     /**
      * AnonymizeGUI this series and write the results to new files.
      */
-    private synchronized void anonymizeSeries() {
+    private synchronized ArrayList<File> anonymizeSeries() {
+        ArrayList<File> filesCreated = new ArrayList<File>();
         try {
             processLock.acquireUninterruptibly();
-            if (!processOk) return;
+            if (!processOk) return filesCreated;
             File newFile = null;
             int count = 0;
             int tries = 0;
@@ -759,8 +792,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
                     // do the actual anonymization
                     Anonymize.anonymize(attributeList, getAnonymizingReplacementList());
-                    
-                    // Indicate that the file was touched by this application.  Also a subtle way to advertise.  :)
+
+                    // Indicate that the file was touched by this application. Also a subtle way to advertise. :)
                     FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, DicomClient.PROJECT_NAME);
 
                     if (DicomClient.inCommandLineMode()) {
@@ -774,11 +807,13 @@ public class Series extends JPanel implements ActionListener, Runnable {
                             suffixList.add(Util.PNG_SUFFIX);
                             suffixList.add(Util.XML_SUFFIX);
                             String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, suffixList);
-                            Log.get().info("Series dir: " + DicomClient.getInstance().getDestinationDirectory().getAbsolutePath());  // TODO remove
+                            Log.get().info("Series dir: " + DicomClient.getInstance().getDestinationDirectory().getAbsolutePath()); // TODO
+                                                                                                                                    // remove
                             newFile = new File(DicomClient.getInstance().getDestinationDirectory(), prefix + Util.DICOM_SUFFIX);
                         }
-                        System.out.println("newFile: " + newFile);  // TODO remove
-                        if (newFile != null) Log.get().info("newFile path: " + newFile.getAbsolutePath());  // TODO remove
+                        System.out.println("newFile: " + newFile); // TODO remove
+                        if (newFile != null) Log.get().info("newFile path: " + newFile.getAbsolutePath()); // TODO
+                                                                                                           // remove
                         if (!newFile.getParentFile().exists()) newFile.getParentFile().mkdirs();
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
                         saveTextAndXmlAndImageFiles(attributeList, newFile);
@@ -791,6 +826,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
                         String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, suffixList);
                         newFile = new File(dir, prefix + Util.DICOM_SUFFIX);
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
+                        // load the anonymized file automatically
+                        DicomClient.getInstance().addDicomFile(newFile, false);
+                        filesCreated.add(newFile);
                     }
 
                     count++;
@@ -829,7 +867,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             }
             if (count == instanceList.size()) {
                 isAnonymized = true;
-                setProcessedStatus();
+                setProcessedStatus(DicomClient.getInstance().getProcessingMode());
             }
             else {
                 String msg = "Unable to anonymize series " + toString() + " .  Only " + count + " slices of " + instanceList.size() + " were completed.";
@@ -839,6 +877,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
         finally {
             processLock.release();
         }
+        return filesCreated;
     }
 
     private boolean uploadKoFile() {
@@ -950,18 +989,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         Log.get().info("Uploaded " + fileIndex + " of " + instanceList.size() + " files.");
     }
 
-    /*
-     * @SuppressWarnings("unchecked") private void
-     * addAnonymousAttributes(AttributeList attributeList) { AttributeList
-     * anonList = ClientConfig.getInstance().getAnonymizingReplacementList();
-     * AttributeList newAttrs = new AttributeList();
-     * 
-     * for (AttributeTag tag : (Set<AttributeTag>)attributeList.keySet()) { if
-     * ((anonList.get(tag) != null) && (newAttrs.get(tag) == null)) {
-     * newAttrs.put(anonList.get(tag)); } }
-     * AnonymizeGUI.getInstance().updateTagList(newAttrs); }
-     */
-
     /**
      * Add the given file to this series.
      * 
@@ -1011,7 +1038,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
     public void actionPerformed(ActionEvent ev) {
         processOk = true;
         if (ev.getSource() == uploadAnonymizeButton) {
-            if (DicomClient.getInstance().getAnonymizeMode()) {
+            if (DicomClient.getInstance().getProcessingMode() != ProcessingMode.UPLOAD) {
                 if (DicomClient.getInstance().ensureAnonymizeDirectoryExists()) {
                     processSeries();
                 }

@@ -84,6 +84,7 @@ import com.pixelmed.dicom.SequenceItem;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
+import edu.umro.dicom.client.DicomClient.ProcessingMode;
 import edu.umro.util.Log;
 
 /**
@@ -1318,6 +1319,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
         DicomClient.getInstance().setProcessedStatus();
     }
+    
+    public boolean isVisible() {
+        return dialog.isVisible();
+    }
 
     /**
      * Show the current DICOM file to the user in either image or text mode,
@@ -1335,7 +1340,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             dialog.pack();
             needsPacking = false;
         }
-        if (!dialog.isVisible()) {
+        if (!isVisible()) {
             setVisible(true);
         }
     }
@@ -1416,23 +1421,27 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * Handle the user's request to close the dialog.
      */
     private void close() {
+        ProcessingMode mode = DicomClient.getInstance().getProcessingMode();
         if (editGui == null) {
             dialog.setVisible(false);
-            return;            
+            if (series != null) series.setProcessedStatus(mode);
         }
-                
-        if (!editGui.isModified()) {
-            editGui.setVisible(false);
-            editGui.reset();
-            dialog.setVisible(false);
-            return;            
+        else {
+            if (!editGui.isModified()) {
+                editGui.setVisible(false);
+                editGui.reset();
+                dialog.setVisible(false);
+            }
+            else {
+
+                if (editGui.letUserSaveIfTheyWantTo()) {
+                    editGui.reset();
+                    dialog.setVisible(false);
+                    editGui.setVisible(false);
+                }
+            }
         }
-                
-        if (editGui.letUserSaveIfTheyWantTo()) {
-            editGui.reset();
-            dialog.setVisible(false);
-            editGui.setVisible(false);
-        }
+        if (series != null) series.setProcessedStatus(mode);
     }
 
     @Override

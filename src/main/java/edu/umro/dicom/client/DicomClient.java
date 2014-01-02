@@ -27,6 +27,8 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -113,6 +115,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** Name that appears in title bar of window. */
     public static final String PROJECT_NAME = "DICOM+";
+    
+    /** Possible processing modes for main window. */
+    public static enum ProcessingMode {
+        ANONYMIZE,
+        UPLOAD,
+        ANONYMIZE_THEN_UPLOAD
+    }
 
     /** String indicating that no PACS were available for uploading to.  If the DICOM service fails
      * to provide a list of PACS, then this is shown and the user is not permitted to upload files.
@@ -139,12 +148,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** Foreground color for drawing text. */
     public static final Color COLOR_FONT = new Color(80, 80, 80);
-
-    /** Tool tip for Upload All button. */
-    private static final String UPLOAD_ALL_BUTTON_TOOLTIP_TEXT_ENABLED = "<html>Upload all series<br>listed to the<br>given PACS server.</html>";
-
-    /** Tool tip for Upload All button. */
-    private static final String UPLOAD_ALL_BUTTON_TOOLTIP_TEXT_DISABLED = "<html>Select a PACS server<br>to enable uploading.</html>";
 
     /** Scroll bar increment. */
     private static final int SCROLL_INCREMENT = 12;
@@ -192,11 +195,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** Button that exits the application. */
     private JButton exitButton = null;
 
-    /** Button that uploads all series that have been loaded into the program. */
-    private JButton uploadAllButton = null;
+    /** Button that processes all series that have been loaded into the program. */
+    private JButton processAllButton = null;
 
-    /** Label that shows whether or not all files have been uploaded. */
-    private JLabel uploadAllIcon = null;
+    /** Label that shows whether or not all files have been processed. */
+    private JLabel processAllIcon = null;
 
     /** Panel containing the list of patients. */
     private JPanel patientListPanel = null;
@@ -265,12 +268,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private JFrame frame = null;
 
     private JPanel modePanel = null;
-    private CardLayout modeCardLayout = null;
     private JRadioButton anonymizeRadioButton = null;
     private JRadioButton uploadRadioButton = null;
+    private JRadioButton anonymizeThenUploadRadioButton = null;
     private ButtonGroup modeButtonGroup = null;
-    private static final String CARD_ANONYMIZE = "anonymizeGui";
-    private static final String CARD_UPLOAD = "upload";
     private JTextField anonymizeDestinationText = null;
     private JButton anonymizeDestinationBrowseButton = null;
 
@@ -521,7 +522,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         outerPanel.add(southPanel);
 
 
-        outerPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
+        outerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
         return outerPanel;
     }
@@ -608,18 +609,17 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
     private JPanel buildAnonymizeDirectorySelector() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Destination: "));
+        JLabel label = new JLabel("Destination: ");
+
         anonymizeDestinationText = new JTextField(40);
         anonymizeDestinationText.setToolTipText("<html>Where anonymized files will be<br>put. Created if necessary</html>");
-        panel.add(anonymizeDestinationText);
         anonymizeDestinationText.getDocument().addDocumentListener(this);
         anonymizeDestinationBrowseButton = new JButton("Browse...");
         anonymizeDestinationBrowseButton.addActionListener(this);
         anonymizeDestinationBrowseButton.setToolTipText("<html>Choose a directory for anonymized files.<br>Directory will be created if necessary.</html>");
 
         directoryChooser = new JFileChooser();
-        
+
         directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         if (commandParameterOutputDirectory != null) {
@@ -631,9 +631,41 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             updateDestination();
         }
 
-        panel.add(anonymizeDestinationBrowseButton);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
+        JPanel panel = new JPanel();
+        GridBagLayout gridBagLayout = new GridBagLayout();
+        panel.setLayout(gridBagLayout);
 
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(label, c);
+        panel.add(label);
+
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 1;
+        c.gridy = 0;
+        c.weightx = 1;
+        gridBagLayout.setConstraints(anonymizeDestinationText, c);
+        panel.add(anonymizeDestinationText);
+
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 2;
+        c.gridy = 0;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(anonymizeDestinationBrowseButton, c);
+        panel.add(new JLabel(" "));
+
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 3;
+        c.gridy = 0;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(anonymizeDestinationBrowseButton, c);
+        panel.add(anonymizeDestinationBrowseButton);
+
+        panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
         return panel;
     }
 
@@ -644,6 +676,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * 
      * @return Anonymize panel.
      */
+    /*
     private JPanel buildAnonymize() {
         JPanel anonPanel = new JPanel();
         GridLayout gridLayout = new GridLayout(2, 1);
@@ -652,19 +685,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         anonPanel.setLayout(gridLayout);
         anonPanel.add(buildAnonymizeDirectorySelector());
 
-        anonymizeOptionsButton = new JButton("Anonymize Options...");
-        anonymizeOptionsButton.addActionListener(this);
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(anonymizeOptionsButton);
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
-        anonPanel.add(buttonPanel);
+        //anonPanel.add(buttonPanel);
 
         JPanel outerPanel = new JPanel();
         outerPanel.add(anonPanel);
 
         return outerPanel;
     }
-
+    */
 
     /**
      * Build the panel that contains the mode buttons for
@@ -687,44 +715,58 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         uploadRadioButton.setToolTipText("<html>Mode for uploading<br>DICOM files to the PACS<br>of your choice.</html>");
         modeButtonGroup.add(uploadRadioButton);
 
-        JPanel modePanel = new JPanel();
+        anonymizeThenUploadRadioButton = new JRadioButton("Anonymize then Upload");
+        anonymizeThenUploadRadioButton.setSelected(false);
+        anonymizeThenUploadRadioButton.addActionListener(this);
+        anonymizeThenUploadRadioButton.setToolTipText("<html>Anonymize then Upload files</html>");
+        modeButtonGroup.add(anonymizeThenUploadRadioButton);
+        
+        modePanel = new JPanel();
         modePanel.add(anonymizeRadioButton);
         modePanel.add(uploadRadioButton);
-
+        modePanel.add(anonymizeThenUploadRadioButton);
+        
         modePanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
         modePanel.setVisible(ClientConfig.getInstance().getShowUploadCapability());
         return modePanel;
     }
 
-
-    /**
-     * Build the panel that controls whether the user
-     * is in anonymizeGui or upload mode. 
-     * 
-     * @return
-     */
-    private JPanel buildModeCard() {
-        modePanel = new JPanel();
-        modeCardLayout = new CardLayout();
-        modePanel.setLayout(modeCardLayout);
-        modePanel.add(buildAnonymize(), CARD_ANONYMIZE);
-        modePanel.add(buildUpload(), CARD_UPLOAD);
-        modeCardLayout.show(modePanel, CARD_ANONYMIZE);
-        return modePanel;
+    
+    private JPanel buildAnonOptionsButton() {
+        anonymizeOptionsButton = new JButton("Anonymize Options...");
+        anonymizeOptionsButton.addActionListener(this);
+        JPanel panel = new JPanel();
+        panel.add(anonymizeOptionsButton);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
+        return panel;
     }
-
-
-    /**
-     * Build panel containing each operating mode.
-     * 
-     * @return Panel containing mode GUI.
-     */
-    private JPanel buildMode() {
+    
+    private JPanel buildModeSelectorAndAnonOptButton() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
+        panel.add(buildModeSelector(), BorderLayout.WEST);
+        panel.add(buildAnonOptionsButton(), BorderLayout.EAST);
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        return panel;
+    }
+    
 
-        panel.add(buildModeSelector(), BorderLayout.NORTH);
-        panel.add(buildModeCard(), BorderLayout.CENTER);
+    /**
+     * Build north (upper) sub-panel.
+     * 
+     * @return Panel containing top part of GUI.
+     */
+    private JPanel buildNorth() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new GridLayout(2, 1));
+        centerPanel.add(buildModeSelectorAndAnonOptButton());
+        centerPanel.add(buildAnonymizeDirectorySelector());
+
+        panel.add(centerPanel, BorderLayout.CENTER);
+        panel.add(buildUpload(), BorderLayout.EAST);
 
         return panel;
     }
@@ -812,11 +854,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         helpButton.addActionListener(this);
         buttonPanel.add(helpButton);
 
-        uploadAllButton = new JButton("Upload All");
-        uploadAllButton.setFont(FONT_MEDIUM);
-        uploadAllButton.addActionListener(this);
-        uploadAllButton.setToolTipText(UPLOAD_ALL_BUTTON_TOOLTIP_TEXT_DISABLED);
-        buttonPanel.add(uploadAllButton);
+        processAllButton = new JButton("Upload All");
+        processAllButton.setFont(FONT_MEDIUM);
+        processAllButton.addActionListener(this);
+        processAllButton.setToolTipText("<html>Select a PACS server<br>to enable uploading.</html>");
+        buttonPanel.add(processAllButton);
 
         clearButton = new JButton("Clear");
         clearButton.setFont(FONT_MEDIUM);
@@ -824,8 +866,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         clearButton.addActionListener(this);
         clearButton.setToolTipText("<html>Clear all patients<br>from display</html>");
 
-        uploadAllIcon = new JLabel(PreDefinedIcons.getEmpty());
-        buttonPanel.add(uploadAllIcon);
+        processAllIcon = new JLabel(PreDefinedIcons.getEmpty());
+        buttonPanel.add(processAllIcon);
 
         panel.add(buttonPanel);
 
@@ -886,7 +928,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private void buildHeadless() {
         headlessPanel = new JPanel();
 
-        headlessPanel.add(buildMode(), BorderLayout.NORTH);
+        headlessPanel.add(buildNorth(), BorderLayout.NORTH);
         headlessPanel.add(buildCenter(), BorderLayout.CENTER);
         headlessPanel.add(buildSouth(), BorderLayout.SOUTH);
 
@@ -938,7 +980,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             JPanel panel = new JPanel();
             panel.setLayout(new BorderLayout());
 
-            panel.add(buildMode(), BorderLayout.NORTH);
+            panel.add(buildNorth(), BorderLayout.NORTH);
             panel.add(buildCenter(), BorderLayout.CENTER);
             panel.add(buildSouth(), BorderLayout.SOUTH);
 
@@ -1041,7 +1083,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             new Help(ClientConfig.getInstance().getShowUploadCapability());
         }
 
-        if (source.equals(uploadAllButton)) {
+        if (source.equals(processAllButton)) {
             Series.processOk = true;
             if (ensureAnonymizeDirectoryExists()) { 
                 processAll(getMainContainer());
@@ -1066,7 +1108,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             AnonymizeGUI.getInstance().getDialog().setVisible(!inCommandLineMode());
         }
 
-        if (source.equals(anonymizeRadioButton) || source.equals(uploadRadioButton)) {
+        if (source.equals(anonymizeRadioButton) || source.equals(uploadRadioButton) || source.equals(anonymizeThenUploadRadioButton)) {
             setMode();
         }
 
@@ -1101,7 +1143,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     public boolean ensureAnonymizeDirectoryExists() {
         boolean ok = false;
-        if (DicomClient.getInstance().getAnonymizeMode()) {
+        if (DicomClient.getInstance().getProcessingMode() != ProcessingMode.UPLOAD) {
             File newDir = getDestinationDirectory();
             if (newDir.isDirectory()) ok = true;
             else {
@@ -1122,16 +1164,28 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
     /**
-     * Set the mode to reflect anonymizing or uploading.
+     * Set the mode to reflect anonymizing, uploading, or anonThenUpload.
      */
     private void setMode() {
-        modeCardLayout.show(modePanel, getAnonymizeMode() ? CARD_ANONYMIZE : CARD_UPLOAD);
-        uploadAllButton.setText(getAnonymizeMode() ? "Anonymize All" : "Upload All");
+        switch (getProcessingMode()) {
+        case ANONYMIZE:
+            processAllButton.setText("Anonymize All");
+            processAllButton.setEnabled(true);
+            break;
+        case UPLOAD:
+            processAllButton.setText("Upload All");
+            processAllButton.setEnabled(uploadEnabled());
+            break;
+        case ANONYMIZE_THEN_UPLOAD:
+            processAllButton.setText("Anonymize then Upload All");
+            processAllButton.setEnabled(uploadEnabled());
+            break;
+        }
         setProcessedStatus();
         // For convenience, if the user is switching to upload mode and has not yet authenticated, set
         // the mouse focus to the password field so they can just start typing without having to click
         // on it first.
-        if ((!getAnonymizeMode()) && (!isAuthenticated())) loginPasswordTextField.grabFocus();
+        if ((getProcessingMode() != ProcessingMode.ANONYMIZE) && (!isAuthenticated())) loginPasswordTextField.grabFocus();
     }
 
 
@@ -1168,12 +1222,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @param container
      */
     static private boolean setUploadStatusWorker(Container container, boolean all) {
+        ProcessingMode mode = getInstance().getProcessingMode();
         for (Component component : container.getComponents()) {
             if (component instanceof Series) {
-                all = ((Series)component).setProcessedStatus() && all;
+                all = ((Series)component).setProcessedStatus(mode) && all;
             }
             if (component instanceof Patient) {
-                ((Patient)component).setMode();
+                ((Patient)component).setMode(mode);
             }
             if (component instanceof Container) {
                 all = setUploadStatusWorker((Container)component, all) && all;
@@ -1198,14 +1253,39 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      */
     public void setProcessedStatus() {
         boolean all = setUploadStatusWorker(getMainContainer(), true) && !(patientList.isEmpty());
-        if (!getAnonymizeMode()) {
+        if (getProcessingMode() == ProcessingMode.UPLOAD) {
             AnonymizeGUI.getInstance().getDialog().setVisible(false);
         }
-        uploadAllIcon.setIcon(all ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty());
-        uploadAllButton.setEnabled(uploadEnabled() || getAnonymizeMode());
-        uploadAllButton.setToolTipText(uploadEnabled() ? UPLOAD_ALL_BUTTON_TOOLTIP_TEXT_ENABLED : UPLOAD_ALL_BUTTON_TOOLTIP_TEXT_DISABLED);
+        processAllIcon.setIcon(all ? PreDefinedIcons.getOk() : PreDefinedIcons.getEmpty());
+        boolean enabled = uploadEnabled() || (getProcessingMode() == ProcessingMode.ANONYMIZE);
+        processAllButton.setEnabled(enabled);
+        processAllButton.setToolTipText(enabled ? "" : "Select a PACS to enable");
         pacsLabel.setToolTipText(uploadEnabled() ? "<html>Files will be uploaded<br>to this PACS</html>" : "<html>Select a PACS to<br>enable upload buttons</html>");
-        loginPacsPanel.setVisible(!getAnonymizeMode());
+        setEnabledRecursively(loginPacsPanel, getProcessingMode() != ProcessingMode.ANONYMIZE);
+    }
+    
+    
+    /**
+     * Find the series containing one of the files.
+     * 
+     * @param container
+     * @param seriesInstanceUID
+     * @return
+     */
+    public Series findSeries(Container container, ArrayList<File> filesCreated) {
+        Series series = null;
+        if (container == null) container = getMainContainer();
+        for (Component component : container.getComponents()) {
+            if (component instanceof Series) {
+                series = (Series) component;
+                if (series.containsFile(filesCreated.get(0))) return series;
+            }
+            if (component instanceof Container) {
+                series = findSeries((Container) component, filesCreated);
+                if (series != null) return series;
+            }
+        }
+        return series;
     }
 
 
@@ -1245,7 +1325,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * 
      * @return The contents of the file
      */
-    private AttributeList readDicomFileX(String fileName) {
+    public AttributeList readDicomFileX(String fileName) {  // TODO should be private (avoid compiler warning)
         AttributeList attributeList = new AttributeList();
 
         FileInputStream fis = null;
@@ -1384,7 +1464,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * 
      * @param descend True if it should descend into subdirectories and process files there.
      */
-    private void addDicomFile(File file, boolean descend) {
+    public synchronized void addDicomFile(File file, boolean descend) {
         System.out.println();
         try {
             fileCount++;
@@ -1476,30 +1556,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     }
 
 
-    /**
-     * Recursively set the color of all containers to the same one
-     * so that the whole application looks consistent.
-     * 
-     * @param container
-
-    static private void repaintEverything(Container container) {
-
-        for (Component component : container.getComponents()) {
-            if (component instanceof Container) {
-                repaintEverything((Container)component);
-                component.validate();
-            }
-            if (component instanceof JComponent) {
-                //component.validate();
-                component.repaint();
-            }
-        }
-        container.paintAll(container.getGraphics());
-
-    }
-     */
-
-
     @Override
     public void filesDropped(File[] fileList) {
         class Add implements Runnable {
@@ -1566,12 +1622,18 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
     /**
-     * Determine if we are in anonymizeGui mode.
+     * Determine what kind processing the user intends to perform.
      * 
-     * @return True if anonymizeGui, false if upload.
+     * @return Type of processing.
      */
-    public boolean getAnonymizeMode() {
-        return anonymizeRadioButton.isSelected();
+    public ProcessingMode getProcessingMode() {
+        if (anonymizeRadioButton.isSelected())
+            return ProcessingMode.ANONYMIZE;
+        if (uploadRadioButton.isSelected())
+            return ProcessingMode.UPLOAD;
+        if (anonymizeThenUploadRadioButton.isSelected())
+            return ProcessingMode.ANONYMIZE_THEN_UPLOAD;
+        throw new RuntimeException("DicomClient.getProcessingMode: Unexpected processing mode state.");
     }
 
 
