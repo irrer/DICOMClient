@@ -124,7 +124,7 @@ public class ClientConfig {
         }
 
         if (dicomServiceUrl == null) {
-            Log.get().severe("ClientConfig.getServerBaseUrl: Unable to read configuration file " + CONFIG_FILE_NAME);
+            Log.get().severe("ClientConfig.getServerBaseUrl: Unable to read from configuration file " + CONFIG_FILE_NAME);
         }
         else {
             Log.get().info("Using DicomServiceUrl: " + dicomServiceUrl);
@@ -335,44 +335,6 @@ public class ClientConfig {
         }
         return anonymizingReplacementList;
     }
-
-
-    /**
-     * Determine the trust store file to use and set it up.
-     * First look at the javax.net.ssl.trustStore system property,
-     * and if it is pointing to a readable file then use it.
-     * If it is not set, then look through the javax.net.ssl.trustStore
-     * list in the configuration file and use the first one that
-     * points to a readable file.
-     * 
-     * @return The file to be used.
-     */
-    /*
-    public File setupTrustStore() {
-        NodeList nodeList = null;    
-        try {
-            nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/javax.net.ssl.trustStore/text()");
-        }
-        catch (UMROException e) {
-            Log.get().warning("Unable to parse list of javax.net.ssl.trustStore.  You will not be able to communicate with the DICOM service.  Details: " + e);
-        }
-        File file = null;
-        try {
-            file = Util.setupTrustStore(nodeList).getKeystoreFile();
-        }
-        catch (Exception e) {
-            file = null;
-        }
-        if (file == null) {
-            Log.get().warning("Unable to read trustStore file.  You will not be able to communicate with the DICOM service.");
-        }
-        else {
-            System.setProperty("javax.net.ssl.trustStore", file.getAbsolutePath());
-            System.setProperty("javax.net.ssl.trustStoreType", "JKS");
-        }
-        return file;
-    }
-     */
 
 
     /**

@@ -85,7 +85,8 @@ public class Help extends Alert {
                     text.append("<br>\n");
                 }
             }
-            text.append("Server: " + ClientConfig.getInstance().getServerBaseUrl() + "<br>\n<br>\n");
+            String url = ClientConfig.getInstance().getServerBaseUrl();
+            text.append("Server: " + (url == null ? "DicomServiceUrl not configured" : url) + "<br>\n<br>\n");
             text.append("User: " + System.getProperty("user.name") + "<br>\n");
         }
         catch (UMROException e) {

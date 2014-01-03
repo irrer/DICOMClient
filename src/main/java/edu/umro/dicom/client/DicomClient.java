@@ -353,6 +353,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      */
     private ArrayList<PACS> parsePacsList(String xml) {
         ArrayList<PACS> list = new ArrayList<PACS>();
+        String url = ClientConfig.getInstance().getServerBaseUrl();
+        String urlDesc = (url == null) ? "DicomServiceUrl not configured" : url;
         try {
             Document document = XML.parseToDocument(xml.toString());
 
@@ -366,10 +368,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
         }
         catch (UMROException ex) {
-            showMessage("Error interpreting list of PACS from DICOM ReST server at " + ClientConfig.getInstance().getServerBaseUrl() + " .  It may be down. : " + ex.getMessage());
+            showMessage("Error interpreting list of PACS from DICOM ReST server at " + urlDesc + " .  It may be down. : " + ex.getMessage());
         }
         catch (ResourceException ex) {
-            showMessage("Error requesting list of PACS from DICOM ReST server at " + ClientConfig.getInstance().getServerBaseUrl() + " .  It may be down. : " + ex.getMessage());
+            showMessage("Error requesting list of PACS from DICOM ReST server at " + urlDesc + " .  It may be down. : " + ex.getMessage());
         }
         list.add(new PACS(NO_PACS, "none", 0));
         return list;
@@ -377,12 +379,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
     /**
-     * Get the list of PACS from the DICOM service.
+     * Determine if the user has access rights to the PACS list, and if so,
+     * then they have rights to upload DICOM files.
      * 
-     * @return The list of PACS.  If there is a problem, a message
-     * is shown and an empty list is returned.
+     * @return True if the user has access.
      */
-    private ArrayList<PACS> getPacsList() {
+    private boolean checkPacsListAccess() {
         String baseUrl = ClientConfig.getInstance().getServerBaseUrl();
 
         String url = baseUrl + "/pacs?media_type=" + MediaType.TEXT_XML.getName() + "&user_id=" + loginNameTextField.getText().trim();
@@ -394,38 +396,30 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         Client client = new Client(Protocol.HTTP);
         client.setContext(context);
         Response response = client.handle(request);
+
         if (response.getStatus().getCode() == Status.SUCCESS_OK.getCode()) {
-            try {
-                return parsePacsList(Utility.readInputStream(response.getEntity().getStream()));
+            return true;
+        }
+
+        if (response.getStatus().getCode() == Status.CLIENT_ERROR_UNAUTHORIZED.getCode()) {
+            String msg = response.getEntityAsText();
+            if (!msg.startsWith("User")) {
+                msg = "User name or password is incorrect.";
             }
-            catch (IOException e) {
-                String msg = "Failed to read input stream from URL " + url + " to get XML formatted list of PACS: " + e;
-                showMessage(msg);
-                Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "getPacsList", null, msg);
-            }
+            showMessage(msg);
+            Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "getPacsList", null, msg);
+            loginStatusLabel.setText("<html><font style='color: red'>" + msg.replaceAll("\\n", "<br>") + "</font></html>");
         }
         else {
-            if (response.getStatus().getCode() == Status.CLIENT_ERROR_UNAUTHORIZED.getCode()) {
-                String msg = response.getEntityAsText();
-                if (!msg.startsWith("User")) {
-                    msg = "User name or password is incorrect.";
-                }
-                showMessage(msg);
-                Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "getPacsList", null, msg);
-                loginStatusLabel.setText("<html><font style='color: red'>" + msg.replaceAll("\\n", "<br>") + "</font></html>");
-            }
-            else {
-                String msg = "Bad response from server at " + url + " to get list of PACS   Error: " + response;
-                showMessage(msg);
-                Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "getPacsList", null, msg);
-                loginStatusLabel.setText("<html><font style='color: red'>" + msg + "</font></html>");
-
-            }
+            String msg = "Bad response from server at " + url + " to get list of PACS   Error: " + response;
+            showMessage(msg);
+            Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "getPacsList", null, msg);
+            loginStatusLabel.setText("<html><font style='color: red'>" + msg + "</font></html>");
         }
-        return null;
+
+        return false;
     }
-
-
+    
     /**
      * Set the challenge scheme, user name, and password in a HTTP request.  The
      * challenge scheme is the Basic HTTP scheme.
@@ -1001,55 +995,27 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
     }
 
-
-    // --------------------------------------------------------------------------------
-
-
     /**
      * Determine if the user has entered a valid user name and password.  If so,
      * show the list of PACS that allows them to upload.
      */
     private void authenticate() {
 
-        pacsList = getPacsList();
+        boolean authorized = (ClientConfig.getInstance().getServerBaseUrl() == null) || checkPacsListAccess();
 
-        /*
-        boolean authenticated = false;
-        loginStatusLabel.setText("");
-        Reference reference = new Reference(ClientConfig.getInstance().getServerBaseUrl());
-        org.restlet.Component component = new org.restlet.Component();
-        Context context = component.getContext();
-        Client client = new Client(Protocol.HTTPS);
-        client.setContext(context);
-        context.getParameters().add(new Parameter("readTimeout", AUTHENTICATE_TIMEOUT));
+        if (authorized) {
+            pacsList = PACSConfig.getInstance().getPacsList();
 
-        Request request = new Request(Method.GET, reference);
-        setChallengeResponse(request);
-        Response response = client.handle(request);
-        authenticated = Status.isSuccess(response.getStatus().getCode());
-
-        Log.get().info("authenticateResponse for user " + loginNameTextField.getText() + " : " + authenticated);
-         */
-
-        if (pacsList != null) {
-            loginPacsCardLayout.show(loginPacsPanel, CARD_PACS);
-            if (!inCommandLineMode()) {
-                frame.setTitle(PROJECT_NAME + "          User: " + loginNameTextField.getText());
+            if (pacsList != null) {
+                loginPacsCardLayout.show(loginPacsPanel, CARD_PACS);
+                if (!inCommandLineMode()) {
+                    frame.setTitle(PROJECT_NAME + "          User: " + loginNameTextField.getText());
+                }
+                currentPacs = pacsList.size() - 1;
+                pacsLabel.setText(pacsList.get(currentPacs).aeTitle);
+                setPacsLabelSize();
             }
-            currentPacs = pacsList.size() - 1;
-            pacsLabel.setText(pacsList.get(currentPacs).aeTitle);
-            setPacsLabelSize();
         }
-        /*
-        else {
-            String msg = ClientConfig.getInstance().getServerBaseUrl() + " : " + response.getStatus().toString();
-            int code = response.getStatus().getCode();
-            if (code == Status.CLIENT_ERROR_UNAUTHORIZED.getCode()) {
-                msg = "Level 2 user or password is incorrect.";
-            }
-            loginStatusLabel.setText("<html><font style='color: red'>" + msg + "</font></html>");
-        }
-         */
     }
 
 
@@ -1893,6 +1859,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
     private void setupTrustStore() {
+        if (ClientConfig.getInstance().getServerBaseUrl() == null) {
+            Log.get().info("No DICOM server URL specified, so Java key store not initialized");
+            return;
+        }
         ArrayList<File> javaKeyStoreList = ClientConfig.getInstance().getJavaKeyStoreList();
 
         for (File javaKeyStore : javaKeyStoreList) {

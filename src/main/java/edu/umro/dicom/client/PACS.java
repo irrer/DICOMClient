@@ -1,5 +1,9 @@
 package edu.umro.dicom.client;
 
+import org.w3c.dom.Node;
+
+import edu.umro.util.XML;
+
 /*
  * Copyright 2013 Regents of the University of Michigan
  *
@@ -95,6 +99,19 @@ public class PACS {
         this.aeTitle = aeTitle;
         this.host = host;
         this.port = port;
+        this.compression = Compression.UN;
+    }
+    
+    /**
+     * Construct a PACS from an XML node.
+     * 
+     * @param node Specifies PACS.
+     */
+    public PACS(Node node) {
+        aeTitle = XML.getAttributeValue(node, "AETitle");
+        host = XML.getAttributeValue(node, "Host");
+        String portText = XML.getAttributeValue(node, "Port");
+        port = Integer.parseInt(portText);
         this.compression = Compression.UN;
     }
 
