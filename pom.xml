@@ -80,43 +80,32 @@
 	</modules>
 	<build>
 		<plugins>
-		  <!-- maven compiler
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin> -->
+			<!-- maven compiler <plugin> <groupId>org.apache.maven.plugins</groupId> 
+				<artifactId>maven-compiler-plugin</artifactId> <version>2.3.2</version> <configuration> 
+				<source>1.6</source> <target>1.6</target> </configuration> </plugin> -->
 
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <!--
-                    <archive>
-                        <manifestFile>target/MANIFEST.MF</manifestFile>
-                    </archive>
-                    -->
-                </configuration>
-                <executions>
-                    <execution>
-                       <!-- <id>make-assembly</id> -->
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                    
-            </plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<!-- <archive> <manifestFile>target/MANIFEST.MF</manifestFile> </archive> -->
+				</configuration>
+				<executions>
+					<execution>
+						<!-- <id>make-assembly</id> -->
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+
+			</plugin>
 
 			<plugin>  <!-- source jar -->
 				<groupId>org.apache.maven.plugins</groupId>
@@ -124,64 +113,51 @@
 				<executions>
 					<execution>
 						<id>attach-sources</id>
-                        <phase>compiler:compile</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
+						<phase>compiler:compile</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
-            
-			<!-- <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version>
-				<configuration>
-					<archive>
-						<manifestFile>target/MANIFEST.MF</manifestFile>
-					</archive>
-				</configuration>
-			</plugin> -->
-			
+
+			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-jar-plugin</artifactId> 
+				<version>2.4</version> <configuration> <archive> <manifestFile>target/MANIFEST.MF</manifestFile> 
+				</archive> </configuration> </plugin> -->
+
 			<plugin>  <!-- build install package -->
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.6</version>
 				<!-- Copy the package files into the build repository. -->
 				<executions>
-				    
-				    <execution>
-                        <id>generate-manifest-with-timestamp</id>
-                        <phase>package</phase>
-                        <configuration>
-                            <tasks>
-                                <echo>Hello from generate-manifest-with-timestamp : ${TIMESTAMP}</echo>
-                                <delete file="target/MANIFEST.MF" />
-                                <copy file="MANIFEST.MF" tofile="target/MANIFEST.MF"/>
-                                <tstamp>
-                                    <format property="TIMESTAMP" pattern="yyyy-MMM-dd hh:mm:ss aa"
-                                        locale="en,US" />
-                                </tstamp>
-                                <replace file="target/MANIFEST.MF">
-                                    <replacefilter token="@@BUILD_DATE@@" value="${TIMESTAMP}" />
-                                    <replacefilter token="@@BUILDER@@" value="${user.name}" />
-                                    <replacefilter token="@@VERSION@@" value="${project.version}" />
-                                </replace>
-                                <jar update="true" destfile="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar" manifest="target/MANIFEST.MF"/>
-                                <jar update="true" destfile="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar" includes="target/MANIFEST.MF"/>
-                                <delete file="target/MANIFEST.MF" />
-                                <echo>Bye from generate-manifest-with-timestamp: ${TIMESTAMP}</echo>
-                        <!-- </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-				    
-				    
+
 					<execution>
+						<id>generate-manifest-with-timestamp</id>
 						<phase>package</phase>
 						<configuration>
-							<tasks> -->
+							<tasks>
+								<echo>Hello from generate-manifest-with-timestamp : ${TIMESTAMP}</echo>
+								<delete file="target/MANIFEST.MF" />
+								<copy file="MANIFEST.MF" tofile="target/MANIFEST.MF" />
+								<tstamp>
+									<format property="TIMESTAMP" pattern="yyyy-MMM-dd hh:mm:ss aa"
+										locale="en,US" />
+								</tstamp>
+								<replace file="target/MANIFEST.MF">
+									<replacefilter token="@@BUILD_DATE@@" value="${TIMESTAMP}" />
+									<replacefilter token="@@BUILDER@@" value="${user.name}" />
+									<replacefilter token="@@VERSION@@" value="${project.version}" />
+								</replace>
+								<jar update="true"
+									destfile="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
+									manifest="target/MANIFEST.MF" />
+								<jar update="true"
+									destfile="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
+									includes="target/MANIFEST.MF" />
+								<delete file="target/MANIFEST.MF" />
+								<echo>Bye from generate-manifest-with-timestamp: ${TIMESTAMP}</echo>
+								<!-- </tasks> </configuration> <goals> <goal>run</goal> </goals> 
+									</execution> <execution> <phase>package</phase> <configuration> <tasks> -->
 								<echo>maven-antrun-plugin build install package</echo>
 								<property name="project.dir"
 									value="Z:\Projects\Dicom\dicomclient\BuildRepository\${project.artifactId}-${project.version}" />
@@ -198,6 +174,7 @@
 									file="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
 									toDir="${dest.dir}" />
 								<copy file="${resource.dir}/DicomClientConfig.xml" toDir="${dest.dir}" />
+								<copy file="${resource.dir}/PACSConfig.xml" toDir="${dest.dir}" />
 								<copy file="${resource.dir}/dicomsvc.jks" toDir="${dest.dir}" />
 								<copy file="${resource.dir}/logging.propertiesWindows"
 									toDir="${dest.dir}" />
