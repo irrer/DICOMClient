@@ -400,7 +400,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         if (response.getStatus().getCode() == Status.SUCCESS_OK.getCode()) {
             return true;
         }
-
+        
         if (response.getStatus().getCode() == Status.CLIENT_ERROR_UNAUTHORIZED.getCode()) {
             String msg = response.getEntityAsText();
             if (!msg.startsWith("User")) {
