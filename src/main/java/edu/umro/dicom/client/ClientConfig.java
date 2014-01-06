@@ -124,7 +124,7 @@ public class ClientConfig {
         }
 
         if (dicomServiceUrl == null) {
-            Log.get().severe("ClientConfig.getServerBaseUrl: Unable to read from configuration file " + CONFIG_FILE_NAME);
+            Log.get().info("DicomServiceUrl is not configured.");
         }
         else {
             Log.get().info("Using DicomServiceUrl: " + dicomServiceUrl);

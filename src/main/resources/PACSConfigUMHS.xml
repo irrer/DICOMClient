@@ -6,7 +6,7 @@
 			known list of devices, but some do not. If you are unable to send files to 
 			a PACS, it is possible that it is because the one listed below is not configured 
 			on that system. -->
-		<PACS AETitle='CONQUESTSRVJIM' Host='141.214.125.68' Port='5678' />
+		<PACS AETitle='CONQUESTSRVJIM' Host='localhost' Port='5678' />
 	</Identity>
 
 	<!-- List of PACS that this program knows about. -->

@@ -173,9 +173,10 @@
 								<copy
 									file="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
 									toDir="${dest.dir}" />
-								<copy file="${resource.dir}/DicomClientConfig.xml" toDir="${dest.dir}" />
-								<copy file="${resource.dir}/PACSConfig.xml" toDir="${dest.dir}" />
-								<copy file="${resource.dir}/dicomsvc.jks" toDir="${dest.dir}" />
+									
+                                <copy file="${resource.dir}/DicomClientConfig.xml" toDir="${dest.dir}" />
+                                <copy file="${resource.dir}/PACSConfig.xml" toDir="${dest.dir}" />
+								
 								<copy file="${resource.dir}/logging.propertiesWindows"
 									toDir="${dest.dir}" />
 								<copy file="${resource.dir}/logging.propertiesLinux" toDir="${dest.dir}" />
@@ -185,10 +186,25 @@
 								<copy file="${resource.dir}/DICOMClient.sh" toDir="${dest.dir}" />
 								<replace file="${dest.dir}/DICOMClient.sh" token="@@with-dep-jar@@"
 									value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
-								<property name="zip.dest"
-									value="${project.dir}/${project.artifactId}-${project.version}_Install.zip" />
-								<zip basedir="${dest.dir}" destfile="${zip.dest}" />
-								<copy file="${zip.dest}" toDir="prebuilt_packages" />
+                                <property name="standard.zip.dest"
+                                    value="${project.dir}/${project.artifactId}-${project.version}_Install.zip" />
+                                <property name="UMHS.zip.dest"
+                                    value="${project.dir}/UMHS_${project.artifactId}-${project.version}_Install.zip" />
+									
+							    <!-- zip standard package -->
+								<zip basedir="${dest.dir}" destfile="prebuilt_packages/${project.artifactId}-${project.version}_Install.zip" />
+								
+                                <!-- set up UMHS specific files -->
+                                <delete file="${dest.dir}/DicomClientConfig.xml" />
+                                <delete file="${dest.dir}/PACSConfig.xml" />
+                                <delete file="${standard.zip.dest}" />
+                                
+								<copy file="${resource.dir}/DicomClientConfigUMHS.xml" toFile="${dest.dir}/DicomClientConfig.xml" />
+                                <copy file="${resource.dir}/PACSConfigUMHS.xml" toFile="${dest.dir}/PACSConfig.xml" />
+								<copy file="${resource.dir}/dicomsvc.jks" toDir="${dest.dir}" />
+								
+                                <!-- zip UMHS package -->
+                                <zip basedir="${dest.dir}" destfile="${UMHS.zip.dest}" />
 							</tasks>
 						</configuration>
 						<goals>

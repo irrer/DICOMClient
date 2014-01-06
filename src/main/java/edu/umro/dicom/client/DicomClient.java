@@ -35,7 +35,6 @@ import java.awt.event.ActionListener;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.TreeMap;
@@ -78,12 +77,7 @@ import org.restlet.data.ChallengeScheme;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
 import org.restlet.data.Protocol;
-import org.restlet.resource.ResourceException;
 import org.restlet.data.Status;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
@@ -93,9 +87,6 @@ import com.pixelmed.dicom.TagFromName;
 
 import edu.umro.util.Log;
 import edu.umro.util.OpSys;
-import edu.umro.util.UMROException;
-import edu.umro.util.Utility;
-import edu.umro.util.XML;
 import edu.umro.util.General;
 
 /**
@@ -162,9 +153,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** Number of regular files to process. */
     private int fileCount = 0;
-
-    /** List of available PACS, retrieved from the DICOM server. */
-    private ArrayList<PACS> pacsList = null;
 
     /** Index of currently selected PACS. */
     private int currentPacs = -1;
@@ -238,6 +226,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** Allows changing between login and PACS mode. */
     private CardLayout loginPacsCardLayout = null;
+
+    /** Value of most recently set card for <code>loginPacsCardLayout</code>. */
+    private String loginPacsCard = CARD_PACS;
 
     /** Puts the loginPacsCardLayout to login mode. */
     private static final String CARD_LOGIN = "login";
@@ -343,42 +334,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
 
     /**
-     * Parse XML text containing a list of PACS into PACS AETitles.
-     * If there is an error, a list containing only the 'no PACS'
-     * entry is returned.
-     * 
-     * @param xml Text containing a list of PACS into PACS AETitles.
-     * 
-     * @return List of PACS AETitles.
-     */
-    private ArrayList<PACS> parsePacsList(String xml) {
-        ArrayList<PACS> list = new ArrayList<PACS>();
-        String url = ClientConfig.getInstance().getServerBaseUrl();
-        String urlDesc = (url == null) ? "DicomServiceUrl not configured" : url;
-        try {
-            Document document = XML.parseToDocument(xml.toString());
-
-            NodeList nodeList = XML.getMultipleNodes(document, "/PacsList/PACS");
-            for (int n = 0; n < nodeList.getLength(); n++) {
-                Node node = nodeList.item(n);
-                String aeTitle = XML.getAttributeValue(node, "AETitle");
-                String host = XML.getAttributeValue(node, "Host");
-                String portText = XML.getAttributeValue(node, "Port");
-                list.add(new PACS(aeTitle, host, Integer.parseInt(portText)));
-            }
-        }
-        catch (UMROException ex) {
-            showMessage("Error interpreting list of PACS from DICOM ReST server at " + urlDesc + " .  It may be down. : " + ex.getMessage());
-        }
-        catch (ResourceException ex) {
-            showMessage("Error requesting list of PACS from DICOM ReST server at " + urlDesc + " .  It may be down. : " + ex.getMessage());
-        }
-        list.add(new PACS(NO_PACS, "none", 0));
-        return list;
-    }
-
-
-    /**
      * Determine if the user has access rights to the PACS list, and if so,
      * then they have rights to upload DICOM files.
      * 
@@ -449,7 +404,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         FontMetrics metrics = graphics.getFontMetrics(FONT_HUGE);
         int height = metrics.getHeight();
         int width = metrics.stringWidth(".");
-        for (PACS pacs : pacsList) {
+        for (PACS pacs : PACSConfig.getInstance().getPacsList()) {
             int w = metrics.stringWidth(pacs.aeTitle);
             width = (w > width) ? w : width;
         }
@@ -582,7 +537,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return panel;
     }
 
-
+    private void setLoginPacsCard(String card) {
+        loginPacsCard = card;
+        loginPacsCardLayout.show(loginPacsPanel, card);
+    }
+    
     /**
      * Build the northern (upper) part of the dialog that flips between login and PACS mode.
      * 
@@ -596,7 +555,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         loginPacsPanel.add(buildLoginPanel(), CARD_LOGIN);
         loginPacsPanel.add(buildPacsSelector(), CARD_PACS);
 
-        loginPacsCardLayout.show(loginPacsPanel, CARD_LOGIN);
+        String card = (ClientConfig.getInstance().getServerBaseUrl() == null) ? CARD_PACS : CARD_LOGIN;
+        setLoginPacsCard(card);
 
         return loginPacsPanel;
     }
@@ -1004,7 +964,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         boolean authorized = (ClientConfig.getInstance().getServerBaseUrl() == null) || checkPacsListAccess();
 
         if (authorized) {
-            pacsList = PACSConfig.getInstance().getPacsList();
+            ArrayList<PACS> pacsList = PACSConfig.getInstance().getPacsList();
 
             if (pacsList != null) {
                 loginPacsCardLayout.show(loginPacsPanel, CARD_PACS);
@@ -1013,7 +973,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
                 currentPacs = pacsList.size() - 1;
                 pacsLabel.setText(pacsList.get(currentPacs).aeTitle);
-                setPacsLabelSize();
             }
         }
     }
@@ -1057,7 +1016,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
 
         if (source.equals(pacsNorth) || source.equals(pacsSouth)) {
+            ArrayList<PACS> pacsList = PACSConfig.getInstance().getPacsList();
             if (pacsList.size() > 1) {
+                setPacsLabelSize();
                 int increment = source.equals(pacsNorth) ? -1 : 1;
                 currentPacs = (currentPacs + pacsList.size() + increment) % pacsList.size();
                 String pacs = pacsList.get(currentPacs).aeTitle;
@@ -1094,18 +1055,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     }
 
     public PACS getCurrentPacs() {
-        return pacsList.get(currentPacs);
+        return PACSConfig.getInstance().getPacsList().get(currentPacs);
     }
-
-    /**
-     * Determine if the user has authenticated with the server.
-     * 
-     * @return True if authenticated, false if not.
-     */
-    private boolean isAuthenticated(){
-        return pacsList != null;
-    }
-
 
     public boolean ensureAnonymizeDirectoryExists() {
         boolean ok = false;
@@ -1151,7 +1102,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         // For convenience, if the user is switching to upload mode and has not yet authenticated, set
         // the mouse focus to the password field so they can just start typing without having to click
         // on it first.
-        if ((getProcessingMode() != ProcessingMode.ANONYMIZE) && (!isAuthenticated())) loginPasswordTextField.grabFocus();
+        if ((getProcessingMode() != ProcessingMode.ANONYMIZE) && (loginPacsCard.equals(CARD_LOGIN))) loginPasswordTextField.grabFocus();
     }
 
 

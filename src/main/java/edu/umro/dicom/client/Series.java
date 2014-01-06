@@ -46,8 +46,6 @@ import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.TagFromName;
-import com.pixelmed.network.MultipleInstanceTransferStatusHandler;
-
 import edu.umro.dicom.client.DicomClient.ProcessingMode;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;

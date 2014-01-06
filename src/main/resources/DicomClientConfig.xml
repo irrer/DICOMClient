@@ -17,11 +17,10 @@
    limitations under the License.
 -->
 
-    <!-- URL for the service. -->
-    <XDicomServiceUrl>https://172.20.125.41:8091</XDicomServiceUrl>  <!-- rolxdeploy1 Never use the name, because DNS often fails. -->
-    <!-- <DicomServiceUrl>https://rolxdev1:8091</DicomServiceUrl> -->
+    <!-- URL for the DICOM service used for authenticating and authorizing users.  If
+    this is not specified, then no authentication or authorization will be done, and
+    any user may upload DICOM files. -->
     <!-- <DicomServiceUrl>https://localhost:8091</DicomServiceUrl> -->
-    <!-- <DicomServiceUrl>https://141.214.125.70:8091</DicomServiceUrl> -->    <!-- irrer desktop -->
 
     <!-- Used to generate the default patient id.  Special character meanings:
         * : a random (capital) alpha or digit : ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
@@ -53,10 +52,10 @@
     <!-- Location of java keystore file.  If this value is specified by the
     system property javax.net.ssl.trustStore then the system property will
     override these entries.  Multiple entries indicate that
-    multiple locations should be tried in the given order. -->
+    multiple locations should be tried in the given order.
     <javax.net.ssl.trustStore>dicomsvc.jks</javax.net.ssl.trustStore>
     <javax.net.ssl.trustStore>src/main/resources/dicomsvc.jks</javax.net.ssl.trustStore>
-    <javax.net.ssl.trustStore>C:\Program Files\UMRO\dicomsvc\dicomsvc.jks</javax.net.ssl.trustStore>
+    <javax.net.ssl.trustStore>C:\Program Files\UMRO\dicomsvc\dicomsvc.jks</javax.net.ssl.trustStore> -->
 
    <!-- If a value is given, search all text fields for the for the original values in these fields and replace them with 'replacement'. -->
    <AggressiveAnonymization replacement='anon'>PatientName</AggressiveAnonymization>
