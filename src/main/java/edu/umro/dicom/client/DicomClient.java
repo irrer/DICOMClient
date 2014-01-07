@@ -37,7 +37,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.TreeMap;
 import java.util.logging.Level;
 
 import javax.net.ssl.HostnameVerifier;
@@ -145,11 +144,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** Size of mode panel. */
     private static final Dimension MODE_PANEL_DIMENSION = new Dimension(200, 100);
-
-    /** List of patients that user has given for possible uploading.  This list
-     * is extracted from the DICOM files given by the user.
-     */
-    private TreeMap<String, Patient> patientList = new TreeMap<String, Patient>();
 
     /** Number of regular files to process. */
     private int fileCount = 0;
@@ -828,24 +822,22 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return panel;
     }
 
-
     /**
-     * Remove the given patient.
+     * Get the list of patients.
      * 
-     * @param patient
+     * @return List of patients.
      */
-    public void clearPatient(Patient patient) {
-        if (preview != null) preview.setVisible(false);
-        for (String id : patientList.keySet()) {
-            if (patientList.get(id) == patient) {
-                patient.setVisible(false);
-                patientList.remove(id);
-                break;
-            }
+    private ArrayList<Patient> getPatientList() {
+        ArrayList<Patient> patientList = new ArrayList<Patient>();
+        for (Component component : patientListPanel.getComponents()) {
+            if (component instanceof Patient) patientList.add((Patient)component);
         }
-        if (patientList.isEmpty()) {
-            resetAnonymizeDestination();
-        }
+        return patientList;
+    }
+    
+    private Patient findPatient(String patientId) {
+        for (Patient patient : getPatientList()) if (patient.getPatientId().equals(patientId)) return patient;
+        return null;
     }
 
 
@@ -983,6 +975,28 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         anonymizeDestination = null;
     }
 
+    
+    /**
+     * Remove the given patient.
+     * 
+     * @param patient
+     */
+    public void clearPatient(Patient patient) {
+        if (preview != null) preview.setVisible(false);
+        patient.setVisible(false);
+        patientListPanel.remove(patient);
+        if (patientListPanel.getComponentCount() == 0) {
+            resetAnonymizeDestination();
+        }
+        setProcessedStatus();
+    }
+
+
+    private void clearAll() {
+        for (Patient patient : getPatientList()) clearPatient(patient);
+        messageTextArea.setText("");
+        showMessageText.delete(0, showMessageText.length());
+    }
 
 
     @Override
@@ -994,14 +1008,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
 
         if (source.equals(clearButton)) {
-            if (preview != null) preview.setVisible(false);
-            for (Patient patient : patientList.values()) {
-                patient.setVisible(false);
-            }
-            resetAnonymizeDestination();
-            patientList = new TreeMap<String, Patient>();
-            messageTextArea.setText("");
-            showMessageText.delete(0, showMessageText.length());
+            clearAll();
         }
 
         if (source.equals(helpButton)) {
@@ -1011,7 +1018,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         if (source.equals(processAllButton)) {
             Series.processOk = true;
             if (ensureAnonymizeDirectoryExists()) { 
-                processAll(getMainContainer());
+                processAll();
             }
         }
 
@@ -1037,6 +1044,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         if (source.equals(anonymizeRadioButton) || source.equals(uploadRadioButton) || source.equals(anonymizeThenUploadRadioButton)) {
             setMode();
+            setProcessedStatus();
         }
 
         if (source.equals(anonymizeDestinationBrowseButton)) {
@@ -1169,7 +1177,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * Set the upload status (green circle with white plus) associated with the 'Upload All' button.
      */
     public void setProcessedStatus() {
-        boolean all = setUploadStatusWorker(getMainContainer(), true) && !(patientList.isEmpty());
+        boolean all = setUploadStatusWorker(getMainContainer(), true) && !(getPatientList().isEmpty());
         if (getProcessingMode() == ProcessingMode.UPLOAD) {
             AnonymizeGUI.getInstance().getDialog().setVisible(false);
         }
@@ -1177,7 +1185,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         boolean enabled = uploadEnabled() || (getProcessingMode() == ProcessingMode.ANONYMIZE);
         processAllButton.setEnabled(enabled);
         processAllButton.setToolTipText(enabled ? "" : "Select a PACS to enable");
-        pacsLabel.setToolTipText(uploadEnabled() ? "<html>Files will be uploaded<br>to this PACS</html>" : "<html>Select a PACS to<br>enable upload buttons</html>");
+        pacsLabel.setToolTipText(pacsLabel.isEnabled() ? "<html>Files will be uploaded<br>to this PACS</html>" : "<html>Select <b>Upload</b> or<br><b>Anonymize then Upload</b><br>to enable</html>");
         setEnabledRecursively(loginPacsPanel, getProcessingMode() != ProcessingMode.ANONYMIZE);
     }
     
@@ -1415,10 +1423,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             }
 
-            Patient patient = patientList.get(patientId);
+            Patient patient = findPatient(patientId);
             if (patient == null) {
                 patient = new Patient(file, attributeList, makeNewPatientId());
-                patientList.put(patientId, patient);
                 patientListPanel.add(patient);
                 setColor(patientListPanel);
                 JScrollBar scrollBar = patientScrollPane.getVerticalScrollBar();
@@ -1508,6 +1515,21 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
     }
 
+    
+    static public ArrayList<Series> getAllSeries(Container container, ArrayList<Series> seriesList) {
+        if (container == null) container = DicomClient.getInstance().getMainContainer();
+        if (seriesList == null) seriesList = new ArrayList<Series>();
+        for (Component component : container.getComponents()) {
+            if (component instanceof Series) {
+                seriesList.add((Series)component);
+            }
+            if (component instanceof Container) {
+                getAllSeries((Container)component, seriesList);
+            }
+        }
+        return seriesList;
+    }
+    
 
     /**
      * Process all series in the given container to the currently
@@ -1515,15 +1537,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * 
      * @param container GUI component to be searched for series.
      */
-    static private void processAll(Container container) {
-        for (Component component : container.getComponents()) {
-            if (component instanceof Series) {
-                ((Series)component).processSeries();
-            }
-            if (component instanceof Container) {
-                processAll((Container)component);
-            }
-        }
+    static private void processAll() {
+        for (Series series : getAllSeries(null, null)) series.processSeries();
         getInstance().setProcessedStatus();
     }
 
@@ -1874,7 +1889,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     dicomClient.addDicomFile(new File(fileName), true);
                 }
                 Series.processOk = true;
-                processAll(dicomClient.headlessPanel);
+                processAll();
                 System.exit(0);
             }
             else {

@@ -23,6 +23,7 @@ import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -279,7 +280,14 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
     public boolean equals(Object other) {
         return (other != null) && (other instanceof Patient) && patientId.equals(((Patient)other).patientId);
     }
-
+    
+    /**
+     * Get the patient ID.
+     * @return
+     */
+    public String getPatientId() {
+        return patientId;
+    }
 
     @Override
     public int compareTo(Patient other) {
@@ -411,16 +419,18 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
     }
 
 
-    private void processAll(Container container) {
+    private ArrayList<Series> getSeriesList(Container container, ArrayList<Series> seriesList) {
+        if (container == null) container = this;
+        if (seriesList == null) seriesList = new ArrayList<Series>();
         for (Component component : container.getComponents()) {
             if (component instanceof Series) {
-                ((Series)component).processSeries();
+                seriesList.add((Series)component);
             }
             if (component instanceof Container) {
-                processAll((Container)component);
+                getSeriesList((Container)component, seriesList);
             }
         }
-        DicomClient.getInstance().setProcessedStatus();
+        return seriesList;
     }
 
 
@@ -434,7 +444,8 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         if (e.getSource() == processPatientButton) {
             Log.get().info("Processing all series for patient");
             Series.processOk = true;
-            processAll(this);
+            for (Series series : getSeriesList(null, null)) series.processSeries();
+            DicomClient.getInstance().setProcessedStatus();
         }
 
         if (e.getSource() == clearButton) {
