@@ -983,6 +983,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      */
     public void clearPatient(Patient patient) {
         if (preview != null) preview.setVisible(false);
+        Anonymize.clearPatientHistory(patient.getPatientId());
+        // this is needed because it makes the patient disappear immediately, instead of waiting for the next redraw. 
         patient.setVisible(false);
         patientListPanel.remove(patient);
         if (patientListPanel.getComponentCount() == 0) {
@@ -994,6 +996,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     private void clearAll() {
         for (Patient patient : getPatientList()) clearPatient(patient);
+        Anonymize.clearHistory();
         messageTextArea.setText("");
         showMessageText.delete(0, showMessageText.length());
     }

@@ -51,38 +51,49 @@ import edu.umro.util.Log;
  */
 class Uid {
 
-    /** Non-anonymized patient ID. */
-    private String patientId;
+    /** Anonymized patient ID. */
+    private String anonymizedPatientId;
 
     /** Anonymized UID. */
     private String uid;
+    
+    /** Original patient ID, or null if none. */
+    private String originalPatientId;
 
-    public Uid(String patientId, String uid) {
-        this.patientId = patientId;
+    public String getOriginalPatientId() {
+        return originalPatientId;
+    }
+    
+    public String XgetAnonymizedPatientId() {
+        return anonymizedPatientId;
+    }
+    
+    public Uid(String anonymizedPatientId, String uid, String originalPatientId) {
+        this.anonymizedPatientId = anonymizedPatientId;
         this.uid = uid;
+        this.originalPatientId = originalPatientId;
     }
 
     @Override
     public boolean equals(Object obj) {
         Uid other = (Uid)obj;
-        return patientId.equals(other.patientId) && uid.equals(other.uid);
+        return anonymizedPatientId.equals(other.anonymizedPatientId) && uid.equals(other.uid);
     }
 
     @Override
     public int hashCode() {
-        return patientId.hashCode() ^ uid.hashCode();
+        return anonymizedPatientId.hashCode() ^ uid.hashCode();
     }
 }
 
 
 public class Anonymize {
 
-
     private static HashSet<String> patientList = new HashSet<String>();
 
     private static HashMap<Uid, String> uidHistory = new HashMap<Uid, String>();
 
-    /** Template to be used to generate anonymous patient IDs.  Use a default ID. */
+    /** Template to be used to generate anonymous patient IDs.  Use a default ID unless it is overridden. */
     private static String template = "$######";
 
 
@@ -95,6 +106,29 @@ public class Anonymize {
         if ((template != null) && (template.length() > 0)) {
             Anonymize.template = template;
         }
+    }
+    
+    
+    /**
+     * Remove all anonymizing history.
+     */
+    public static void clearHistory() {
+        uidHistory.clear();
+    }
+
+
+    /**
+     * Remove all anonymizing history for the given patient.  The patient ID
+     * given is for the patient's ID prior to anonymization.  Upper and lower
+     * case is ignored.
+     * 
+     * @param patientId Clear for this patient id.
+     * 
+     */
+    public static void clearPatientHistory(String patientId) {
+        ArrayList<Uid> removeList = new ArrayList<Uid>();
+        for (Uid uid : uidHistory.keySet()) if (uid.getOriginalPatientId().equalsIgnoreCase(patientId)) removeList.add(uid);
+        for (Uid uid : removeList) uidHistory.remove(uid);
     }
 
 
@@ -174,24 +208,24 @@ public class Anonymize {
      * @return Anonymized UID that is being used instead
      * of the non-anonymized UID.
      */
-    private static synchronized String translateUid(String anonymizedPatientId, String oldUid) {
-        String newUid = uidHistory.get(new Uid(anonymizedPatientId, oldUid));
+    private static synchronized String translateUid(String anonymizedPatientId, String oldUid, String originalPatientId) {
+        String newUid = uidHistory.get(new Uid(anonymizedPatientId, oldUid, originalPatientId));
         if (newUid == null) {
             newUid = Util.getUID();
-            uidHistory.put(new Uid(anonymizedPatientId, oldUid), newUid);
+            uidHistory.put(new Uid(anonymizedPatientId, oldUid, originalPatientId), newUid);
         }
         return newUid;
     }
 
 
-    private static void anonymizeNonSequenceAttribute(String patientId, Attribute attribute, Attribute replacement) {
+    private static void anonymizeNonSequenceAttribute(String anonymizedPatientId, Attribute attribute, Attribute replacement, String originalPatientId) {
         if (replacement != null) {
             String replacementValue = replacement.getSingleStringValueOrEmptyString();
 
             if (ValueRepresentation.isUniqueIdentifierVR(attribute.getVR())) {
                 String oldUid = attribute.getSingleStringValueOrNull();
                 if (oldUid != null) {
-                    String newUid = Util.isValidUid(replacementValue) ? replacementValue : translateUid(patientId, oldUid);
+                    String newUid = Util.isValidUid(replacementValue) ? replacementValue : translateUid(anonymizedPatientId, oldUid, originalPatientId);
                     try {
                         attribute.setValue(newUid);
                     }
@@ -296,20 +330,20 @@ public class Anonymize {
      * 
      * @param replacementAttributeList Reference this for what is to be anonymized.
      */
-    private static void anonymize(String patientId, AttributeList attributeList, AttributeList replacementAttributeList, HashMap<String,String> aggressiveReplaceList) {
+    private static void anonymize(String anonymizedPatientId, AttributeList attributeList, AttributeList replacementAttributeList, HashMap<String,String> aggressiveReplaceList, String originalPatientId) {
         for (Attribute attribute : getAttributeListValues(attributeList).values()) {
             AttributeTag tag = attribute.getTag();
             if (attribute instanceof SequenceAttribute) {
                 Iterator<?> si = ((SequenceAttribute)attribute).iterator();
                 while (si.hasNext()) {
                     SequenceItem item = (SequenceItem)si.next();
-                    anonymize(patientId, item.getAttributeList(), replacementAttributeList, aggressiveReplaceList);
+                    anonymize(anonymizedPatientId, item.getAttributeList(), replacementAttributeList, aggressiveReplaceList, originalPatientId);
                 }
             }
             else {
                 Attribute replacement = replacementAttributeList.get(tag);
                 if (replacement != null) {
-                    anonymizeNonSequenceAttribute(patientId, attribute, replacement);
+                    anonymizeNonSequenceAttribute(anonymizedPatientId, attribute, replacement, originalPatientId);
                 }
                 aggressivelyAnonymize(attribute, aggressiveReplaceList);
             }
@@ -332,7 +366,8 @@ public class Anonymize {
      */
     public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList) {
         HashMap<String, String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
-        anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList);
+        String originalPatientId = (attributeList.get(TagFromName.PatientID) == null) ? null : attributeList.get(TagFromName.PatientID).getSingleStringValueOrNull();
+        anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList, originalPatientId);
 
         // TODO temporary hack for fixing special case of damaged DICOM files
         if (System.out == null) {
