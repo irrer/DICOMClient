@@ -150,6 +150,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /** Color to indicate text that matches search pattern. */
     private static final Color TEXT_CURRENT_MATCH_COLOR = new Color(255, 150, 50);
 
+    /** Color to indicate text that has been anonymized. */
+    private static final Color TEXT_ANONYMIZED_COLOR = new Color(220, 255, 230);
+
+    /** Color to indicate text that matches search pattern. */
+    private static final Color TEXT_NOT_ANONYMIZED_COLOR = new Color(255, 220, 230);
+
     /** Values for setting up the contrast slider. */
     private static final int CONTRAST_MIN_VALUE = 0;
     private static final int CONTRAST_MAX_VALUE = 100;
@@ -225,6 +231,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /** Radio button to switch to image mode. */
     private JRadioButton imageRadioButton = null;
 
+    /** Radio button to switch to original content mode. */
+    private JRadioButton originalRadioButton = null;
+
+    /** Radio button to switch to anonymized content mode. */
+    private JRadioButton anonymizedRadioButton = null;
+
     /** Field for entering a search string when in text mode. */
     private JTextField searchField = null;
 
@@ -251,9 +263,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * scroll bar.
      */
     private int matchIndex = 0;
-
-    /** Number of lines of text in text display. */
-    private int numLines = 0;
 
     /** List of instances of text matching the searched text. */
     private ArrayList<TextMatch> matchList = new ArrayList<TextMatch>();
@@ -314,17 +323,13 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      */
     class TextMatch {
 
-        /** Line number within text. */
-        public int line = -1;
-
         /** Character position within text. */
         public int position = -1;
 
         /** JTextArea highlighter. */
-        public Object highlighter = null;
+        public Object textHighlighter = null;
 
-        public TextMatch(int l, int p) {
-            line = l;
+        public TextMatch(int p) {
             position = p;
         }
     }
@@ -363,6 +368,20 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         scrollPaneText = new JScrollPane(textPreview);
         scrollPaneText.setBorder(BorderFactory.createEmptyBorder());
 
+        originalRadioButton = new JRadioButton("Original");
+        originalRadioButton.addActionListener(this);
+        originalRadioButton.setToolTipText("Show original content");
+        originalRadioButton.setSelected(true);
+        
+        anonymizedRadioButton = new JRadioButton("Anonymized");
+        anonymizedRadioButton.addActionListener(this);
+        anonymizedRadioButton.setToolTipText("Show anonymized content");
+        ButtonGroup buttonGroup = new ButtonGroup();
+        anonymizedRadioButton.setSelected(false);
+        
+        buttonGroup.add(originalRadioButton);
+        buttonGroup.add(anonymizedRadioButton);
+
         showDetails = new JCheckBox();
         showDetails.addActionListener(this);
         showDetails.setText("Details");
@@ -387,6 +406,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         editButton.setToolTipText("<html>Edit a slice<br>or series</html>");
 
         JPanel subPanel = new JPanel();
+        subPanel.add(originalRadioButton);
+        subPanel.add(anonymizedRadioButton);
         subPanel.add(showDetails);
         subPanel.add(searchLabel);
         subPanel.add(searchField);
@@ -400,12 +421,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         subPanel.add(matchCountLabel);
         
-        //if (edu.umro.util.OpSys.getHostIPAddress().equals("141.214.125.68")) {  // TODO remove 'if' when support for editing is ready
-        //    System.out.println("Enabling DICOM editing...");
-            subPanel.add(new JLabel("             "));
-            subPanel.add(editButton);
-        //}
-
         panel.add(scrollPaneText, BorderLayout.CENTER);
         panel.add(subPanel, BorderLayout.SOUTH);
 
@@ -623,15 +638,15 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
                 if ((oldIndex >= 0) && (oldIndex < matchList.size())) {
                     TextMatch currentTextMatch = matchList.get(oldIndex);
-                    highlighter.removeHighlight(currentTextMatch.highlighter);
+                    highlighter.removeHighlight(currentTextMatch.textHighlighter);
                     MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_MATCH_COLOR);
-                    currentTextMatch.highlighter = highlighter.addHighlight(currentTextMatch.position, currentTextMatch.position + length, matchHighlightPainter);
+                    currentTextMatch.textHighlighter = highlighter.addHighlight(currentTextMatch.position, currentTextMatch.position + length, matchHighlightPainter);
                 }
                 if ((newIndex >= 0) && (newIndex < matchList.size())) {
                     TextMatch textMatch = matchList.get(newIndex);
-                    highlighter.removeHighlight(textMatch.highlighter);
+                    highlighter.removeHighlight(textMatch.textHighlighter);
                     MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_CURRENT_MATCH_COLOR);
-                    textMatch.highlighter = highlighter.addHighlight(textMatch.position, textMatch.position + length, matchHighlightPainter);
+                    textMatch.textHighlighter = highlighter.addHighlight(textMatch.position, textMatch.position + length, matchHighlightPainter);
                     textPreview.setCaretPosition(textMatch.position);
                 }
             }
@@ -644,48 +659,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             matchCountLabel.setText("  0 of 0");
         }
     }
-
-    /**
-     * Go to the previous matching text field.
-     */
-    private void prevMatch() {
-        if (matchList.size() > 0) {
-            int oldMatchIndex = matchIndex;
-            int position = textPreview.getCaretPosition();
-            boolean found = false;
-            for (int m = 0; m < matchList.size(); m++) {
-                TextMatch textMatch = matchList.get(m);
-                if (textMatch.position < position) {
-                    matchIndex = m;
-                    found = true;
-                }
-            }
-            if (!found) {
-                matchIndex = matchList.size() - 1;
-            }
-            setCurrentlySelectedMatch(oldMatchIndex, matchIndex);
-        }
-    }
-
-    /**
-     * Go to the next matching text field.
-     */
-    private void nextMatch() {
-        if (matchList.size() > 0) {
-            int oldMatchIndex = matchIndex;
-            int position = textPreview.getCaretPosition();
-            boolean found = false;
-            for (int m = 0; (!found) && (m < matchList.size()); m++) {
-                TextMatch textMatch = matchList.get(m);
-                if (textMatch.position > position) {
-                    matchIndex = m;
-                    found = true;
-                }
-            }
-            if (!found) {
-                matchIndex = 0;
-            }
-            setCurrentlySelectedMatch(oldMatchIndex, matchIndex);
+    
+    private void changeSearchMatch(int diff) {
+        if (matchList.size() > 1) {
+            matchIndex = (matchIndex + diff + matchList.size()) % matchList.size();
+            textPreview.setCaretPosition(matchList.get(matchIndex).position);
+            showDicom();
         }
     }
 
@@ -699,6 +678,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             showDicom();
         }
 
+        if (ev.getSource().equals(originalRadioButton) || ev.getSource().equals(anonymizedRadioButton)) {
+            showDicom();
+        }
+
         if (ev.getSource().equals(resetButton)) {
             contrastSlider.setValue(CONTRAST_INITIAL_VALUE);
             brightnessSlider.setValue(BRIGHTNESS_INITIAL_VALUE);
@@ -706,15 +689,15 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
 
         if (ev.getSource().equals(searchField)) {
-            nextMatch();
+            changeSearchMatch(1);
         }
 
         if (ev.getSource().equals(searchPrev)) {
-            prevMatch();
+            changeSearchMatch(-1);
         }
 
         if (ev.getSource().equals(searchNext)) {
-            nextMatch();
+            changeSearchMatch(1);
         }
 
         if (ev.getSource().equals(showDetails)) {
@@ -739,7 +722,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         // go to next search field
         if (key == '\n') {
-            nextMatch();
+            changeSearchMatch(1);
         }
 
         // use the selected text as search text
@@ -917,7 +900,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         return text.toString();
     }
     
-
     /**
      * Add a single line of text to the text view. If the text matches the
      * current search text, then add its location to the list of matches.
@@ -936,30 +918,9 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      */
     private void addLine(StringBuffer text, String line, String searchText, int indentLevel, AttributeLocation attributeLocation, int sequenceItemIndex, Attribute attribute) {
         int textStart = text.length();
-        int length = searchText.length();
-        line = indent(indentLevel) + line;
-        if (length > 0) {
-            int position = 0;
-            String lowerCase = line.toString().toLowerCase();
-
-            while ((position = lowerCase.indexOf(searchText, position)) >= 0) {
-                matchList.add(new TextMatch(numLines, text.length() + position));
-                position += length;
-            }
-        }
-        text.append(line + "\n");
+        text.append(indent(indentLevel) + line + "\n");
         int textEnd = text.length();
         if (attributeLocation != null) attributeLocation.setAttribute(text.length(), 0, attribute, textStart, textEnd);
-        /*
-        if (attributeLocation != null) {
-            if (attributeLocation.isLocated()) {
-                if (attributeLocation.getStartOfText() == -1) {
-
-                }
-            }
-        }
-        */
-        numLines++;
     }
 
     private String addDetails(AttributeTag tag, byte[] vr, String line) {
@@ -1192,7 +1153,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                 String line = CustomDictionary.getInstance().getNameFromTag(tag) + " : ";
                 line = addDetails(tag, CustomDictionary.getInstance().getValueRepresentationFromTag(tag), line);
                 addLine(text, line, searchText, indentLevel, attributeLocation, 0, attribute);
-                numLines++;
                 Iterator<?> si = ((SequenceAttribute) attribute).iterator();
                 int itemNumber = 1;
                 while (si.hasNext()) {
@@ -1235,62 +1195,130 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         return atList;
     }
+    
+    /**
+     * Highlight the differences between two versions of text, the original text and the anonymized text.
+     * 
+     * @param displayBuffer Text to be displayed.
+     * 
+     * @param referenceBuffer Alternate text.
+     * 
+     * @param highlightColor Color to use on lines that are different.
+     */
+    private void highlightDiffs(StringBuffer displayBuffer, StringBuffer referenceBuffer, Color highlightColor) {
+        String[] displayLines = displayBuffer.toString().split("\n");
+        String[] referenceLines = referenceBuffer.toString().split("\n");
+        Highlighter highlighter = textPreview.getHighlighter();
 
+        int index = 0;
+        for (int l = 0; l < displayLines.length; l++) {
+            String disp = displayLines[l];
+            String ref = referenceLines[l];
+            if (!disp.equals(ref)) {
+                MatchHighlightPainter painter = new MatchHighlightPainter(highlightColor);
+                int start = 0;
+                while ((disp.charAt(start) == ' ') && (start < disp.length())) start++;
+                try {
+                    highlighter.addHighlight(index+start, index+disp.length(), painter);
+                }
+                catch (BadLocationException e) {
+                    ;
+                }
+            }
+            index += (disp.length() + 1);
+        }
+    }
+
+    
+    private void highlightSearchText() {
+
+        // Find list of matches
+        String searchText = searchField.getText().toLowerCase();
+        int length = searchText.length();
+        
+        int oldMatchListSize = matchList.size();
+        int oldMatchIndex = matchIndex;
+        matchIndex = 0;
+        matchList = new ArrayList<TextMatch>();
+
+        if (length > 0) {
+            String[] lineList = textPreview.getText().toLowerCase().split("\n");
+            int index = 0;
+            
+            for (String line : lineList) {
+                int position = 0;
+                while ((position = line.indexOf(searchText, position)) >= 0) {
+                    matchList.add(new TextMatch(index + position));
+                    position += length;
+                }
+                index += (line.length() + 1);
+            }
+
+            Highlighter highlighter = textPreview.getHighlighter();
+            
+            // highlight all instances of the search text
+            if (matchList.size() > 0) {
+                MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_MATCH_COLOR);
+                try {
+                    for (TextMatch textMatch : matchList) {
+                        textMatch.textHighlighter = highlighter.addHighlight(textMatch.position, textMatch.position + length, matchHighlightPainter);
+                    }
+                }
+                catch (BadLocationException e) {
+                }
+
+                if (oldMatchListSize == matchList.size()) {
+                    matchIndex = oldMatchIndex;
+                }
+                else {
+                    matchIndex = 0;
+                }
+                setCurrentlySelectedMatch(oldMatchIndex, matchIndex);
+            }
+        }
+    }
+
+
+    
     /**
      * Display the current DICOM file as text to the user.
      */
     private void showText(AttributeLocation attributeLocation) {
         if (attributeList == null) return;
+        AttributeList attrList = null;
+        try {
+            attrList = Util.cloneAttributeList(attributeList);
+        }
+        catch (Exception e) {
+            return;
+        }
         matchCountLabel.setText("  0 of 0");
-        int oldMatchListSize = matchList.size();
-        int oldMatchIndex = matchIndex;
-        matchIndex = 0;
-        matchList = new ArrayList<TextMatch>();
-        numLines = 0;
         int scrollPosition = scrollPaneText.getVerticalScrollBar().getValue();
         int caretPosition = textPreview.getCaretPosition();
-
-        StringBuffer text = new StringBuffer();
-        addTextAttributes(performEdits(attributeList), text, 0, attributeLocation);
-        if (attributeLocation != null) Log.get().info("Selected for edit:\n" + attributeLocation.toString() + "\n");
-        textPreview.setText(text.toString());
-
-        if ((scrollPosition >= scrollPaneText.getVerticalScrollBar().getMinimum()) && (scrollPosition <= scrollPaneText.getVerticalScrollBar().getMaximum())) {
-            scrollPaneText.getVerticalScrollBar().setValue(scrollPosition);
-            if ((caretPosition < text.length())) {
-                textPreview.setCaretPosition(caretPosition);
-            }
-        }
-        else {
-            scrollPaneText.getVerticalScrollBar().setValue(0);
-            textPreview.setCaretPosition(0);
-        }
-
-        String searchText = searchField.getText().toLowerCase();
-        int length = searchText.length();
-
         Highlighter highlighter = textPreview.getHighlighter();
         highlighter.removeAllHighlights();
 
-        // highlight all instances of the search text
-        if (matchList.size() > 0) {
-            MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_MATCH_COLOR);
-            try {
-                for (TextMatch textMatch : matchList) {
-                    textMatch.highlighter = highlighter.addHighlight(textMatch.position, textMatch.position + length, matchHighlightPainter);
-                }
-            }
-            catch (BadLocationException e) {
-            }
+        AttributeList editedAttributeList = performEdits(attrList);
+        StringBuffer origText = new StringBuffer();
+        addTextAttributes(editedAttributeList, origText, 0, attributeLocation);
 
-            if (oldMatchListSize == matchList.size()) {
-                matchIndex = oldMatchIndex;
+        StringBuffer anonText = new StringBuffer();
+        try {
+            Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList());
+            addTextAttributes(editedAttributeList, anonText, 0, attributeLocation);
+            if (originalRadioButton.isSelected()) {
+                textPreview.setText(origText.toString());
             }
             else {
-                matchIndex = 0;
+                textPreview.setText(anonText.toString());
             }
-            setCurrentlySelectedMatch(oldMatchIndex, matchIndex);
         }
+        catch (DicomException e) {
+            textPreview.setText(origText.toString());
+        }
+
+        highlightSearchText();
+
         // highlight the attribute being edited
         if (attributeLocation != null) {
             MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_EDIT_COLOR);
@@ -1299,6 +1327,25 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             }
             catch (BadLocationException e) {
             }
+        }
+        if (attributeLocation != null) Log.get().info("Selected for edit:\n" + attributeLocation.toString() + "\n");
+
+        if (originalRadioButton.isSelected()) {
+            highlightDiffs(origText, anonText, TEXT_NOT_ANONYMIZED_COLOR);
+        }
+        else {
+            highlightDiffs(anonText, origText, TEXT_ANONYMIZED_COLOR);
+        }
+
+        if ((scrollPosition >= scrollPaneText.getVerticalScrollBar().getMinimum()) && (scrollPosition <= scrollPaneText.getVerticalScrollBar().getMaximum())) {
+            scrollPaneText.getVerticalScrollBar().setValue(scrollPosition);
+            if ((caretPosition < textPreview.getText().length())) {
+                textPreview.setCaretPosition(caretPosition);
+            }
+        }
+        else {
+            scrollPaneText.getVerticalScrollBar().setValue(0);
+            textPreview.setCaretPosition(0);
         }
 
         cardLayout.show(cardPanel, TEXT_VIEW);

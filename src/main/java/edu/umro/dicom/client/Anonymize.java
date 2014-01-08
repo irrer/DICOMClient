@@ -367,7 +367,8 @@ public class Anonymize {
     public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList) {
         HashMap<String, String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
         String originalPatientId = (attributeList.get(TagFromName.PatientID) == null) ? null : attributeList.get(TagFromName.PatientID).getSingleStringValueOrNull();
-        anonymize(establishNewPatientId(replacementAttributeList), attributeList, replacementAttributeList, aggressiveReplaceList, originalPatientId);
+        String anonymizedPatientId = establishNewPatientId(replacementAttributeList);
+        anonymize(anonymizedPatientId, attributeList, replacementAttributeList, aggressiveReplaceList, originalPatientId);
 
         // TODO temporary hack for fixing special case of damaged DICOM files
         if (System.out == null) {

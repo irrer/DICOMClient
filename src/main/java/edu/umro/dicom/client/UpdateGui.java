@@ -165,8 +165,6 @@ public class UpdateGui extends JPanel implements ActionListener {
         
         this.attributeLocation = isUpdateable(attributeLocation) ? attributeLocation : null;
 
-        if (attributeLocation == null)         // TODO remove
-            System.out.println("Null badness");
         Attribute attribute = this.attributeLocation.getAttribute();
         if (isUpdateable(attribute)) {
             if (CustomDictionary.getVM(attribute) == Multiplicity.M1)

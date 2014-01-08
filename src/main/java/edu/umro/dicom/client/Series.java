@@ -683,7 +683,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
      * @throws DicomException
      *             On invalid PatientID or PatientName
      */
-    private synchronized AttributeList getAnonymizingReplacementList() throws DicomException {
+    public synchronized AttributeList getAnonymizingReplacementList() throws DicomException {
         AttributeList replacementAttributeList = AnonymizeGUI.getInstance().getAttributeList();
 
         Attribute patientId = AttributeFactory.newAttribute(TagFromName.PatientID);
@@ -805,13 +805,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
                             suffixList.add(Util.PNG_SUFFIX);
                             suffixList.add(Util.XML_SUFFIX);
                             String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, suffixList);
-                            Log.get().info("Series dir: " + DicomClient.getInstance().getDestinationDirectory().getAbsolutePath()); // TODO
-                                                                                                                                    // remove
                             newFile = new File(DicomClient.getInstance().getDestinationDirectory(), prefix + Util.DICOM_SUFFIX);
                         }
-                        System.out.println("newFile: " + newFile); // TODO remove
-                        if (newFile != null) Log.get().info("newFile path: " + newFile.getAbsolutePath()); // TODO
-                                                                                                           // remove
                         if (!newFile.getParentFile().exists()) newFile.getParentFile().mkdirs();
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
                         saveTextAndXmlAndImageFiles(attributeList, newFile);

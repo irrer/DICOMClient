@@ -77,12 +77,6 @@ public class CreateGui extends JPanel implements ActionListener {
         if (e.getSource().equals(createButton) || e.getSource().equals(singleValueText)) {
             save();
             editGui.setToMainMode();
-            if (this == null) {  // TODO remove?
-                if (isModified())
-                    save();
-                else
-                    editGui.setToMainMode();
-            }
         }
 
         if ((tagChooser != null) && (e.getSource().equals(tagChooser.getComboBox()))) {
