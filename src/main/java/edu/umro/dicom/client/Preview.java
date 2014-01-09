@@ -23,6 +23,8 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -138,6 +140,30 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
+    /** The possible viewing modes with different highlighting */
+    public enum ViewMode {
+
+        /** No highlighting */
+        PLAIN("No Highlighting", "<html>Show original values<br/>with no highlighting.</html>"),
+
+        /** Show fields to be anonymized */
+        ORIGINAL("Not Anonymized", "<html>Show original values,<br/>highlighting those that will<br/>changed when anonymized.</html>"),
+
+        /** Show what it will look like when it is anonymized. */
+        ANONYMIZED("Anonymized", "<html>Show how values<br/>will be anonymized.</html>");
+
+        /** Name displayed to the user. */
+        String displayName;
+        
+        /** Tool tip to give user more information. */
+        String toolTip;
+
+        private ViewMode(String dn, String tt) {
+            displayName = dn;
+            toolTip = tt;
+        }
+    };
+
     /** Preferred size of screen. */
     private static final Dimension PREFERRED_SIZE = new Dimension(610, 830);
 
@@ -231,14 +257,17 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /** Radio button to switch to image mode. */
     private JRadioButton imageRadioButton = null;
 
-    /** Radio button to switch to original content mode. */
-    private JRadioButton originalRadioButton = null;
+    /** Arrow button to change how content is viewed. */
+    private BasicArrowButton viewingModeArrowButton = null;
 
-    /** Radio button to switch to anonymized content mode. */
-    private JRadioButton anonymizedRadioButton = null;
-
+    /** Indicates the current viewing mode. */
+    private JLabel viewingModeLabel = null;
+    
     /** Field for entering a search string when in text mode. */
     private JTextField searchField = null;
+
+    /** Current viewing mode. */
+    private ViewMode currentViewMode = ViewMode.PLAIN;
 
     /** Takes you to the previous instance of the text search pattern. */
     private BasicArrowButton searchPrev = null;
@@ -350,13 +379,34 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         return panel;
     }
 
-    /**
-     * Build the text previewer GUI and add it to the card panel.
-     */
-    private void buildTextPreview() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
+    private JComponent buildViewingMode() {
+        viewingModeArrowButton = new BasicArrowButton(BasicArrowButton.SOUTH);
+        viewingModeArrowButton.addActionListener(this);
+        viewingModeArrowButton.setToolTipText("<html>Select how content<br>is viewed</html>");
 
+        viewingModeLabel = new JLabel(currentViewMode.displayName);
+        viewingModeLabel.setToolTipText(currentViewMode.toolTip);
+        viewingModeLabel.setFont(DicomClient.FONT_MEDIUM);
+        JPanel viewingPanel = new JPanel(new BorderLayout());
+        viewingPanel.add(viewingModeArrowButton, BorderLayout.WEST);
+        viewingPanel.add(new JLabel("  "), BorderLayout.CENTER);
+        viewingPanel.add(viewingModeLabel, BorderLayout.EAST);
+        
+        int maxWidth = 0;
+        
+        Graphics graphics = DicomClient.getInstance().getMainContainer().getGraphics();
+        FontMetrics metrics = graphics.getFontMetrics(DicomClient.FONT_MEDIUM);
+        for (ViewMode vm : ViewMode.values()) {
+            int width = metrics.stringWidth(vm.displayName);
+            if (width > maxWidth) maxWidth = width;
+        }
+        
+        viewingModeLabel.setPreferredSize(new Dimension(maxWidth+15, metrics.getHeight()));
+
+        return viewingPanel;
+    }
+    
+    private JComponent buildTextScrollArea() {
         textPreview = new JTextArea();
         textPreview.setFont(DicomClient.FONT_MEDIUM);
         textPreview.setEditable(false);
@@ -367,29 +417,22 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         textPreview.setBorder(BorderFactory.createEmptyBorder(gap / 2, gap, gap / 2, gap));
         scrollPaneText = new JScrollPane(textPreview);
         scrollPaneText.setBorder(BorderFactory.createEmptyBorder());
-
-        originalRadioButton = new JRadioButton("Original");
-        originalRadioButton.addActionListener(this);
-        originalRadioButton.setToolTipText("Show original content");
-        originalRadioButton.setSelected(true);
-        
-        anonymizedRadioButton = new JRadioButton("Anonymized");
-        anonymizedRadioButton.addActionListener(this);
-        anonymizedRadioButton.setToolTipText("Show anonymized content");
-        ButtonGroup buttonGroup = new ButtonGroup();
-        anonymizedRadioButton.setSelected(false);
-        
-        buttonGroup.add(originalRadioButton);
-        buttonGroup.add(anonymizedRadioButton);
-
+        return scrollPaneText;
+    }
+    
+    private JComponent buildShowDetails() {
         showDetails = new JCheckBox();
         showDetails.addActionListener(this);
         showDetails.setText("Details");
+        showDetails.setFont(DicomClient.FONT_MEDIUM);
         showDetails.setToolTipText("<html>Show DICOM<br>attribute details</html>");
+        return showDetails;
+    }
 
+    private JComponent buildSearch() {
         JLabel searchLabel = new JLabel("Search: ");
         searchLabel.setFont(DicomClient.FONT_MEDIUM);
-        searchField = new JTextField(30);
+        searchField = new JTextField(10);
         searchField.getDocument().addDocumentListener(this);
         searchField.addActionListener(this);
 
@@ -400,28 +443,85 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         searchNext = new BasicArrowButton(BasicArrowButton.SOUTH);
         searchNext.addActionListener(this);
         searchNext.setToolTipText("<html>Next<br>match</html>");
-
-        editButton = new JButton("Edit...");
-        editButton.addActionListener(this);
-        editButton.setToolTipText("<html>Edit a slice<br>or series</html>");
-
-        JPanel subPanel = new JPanel();
-        subPanel.add(originalRadioButton);
-        subPanel.add(anonymizedRadioButton);
-        subPanel.add(showDetails);
-        subPanel.add(searchLabel);
-        subPanel.add(searchField);
-        subPanel.add(searchPrev);
-        subPanel.add(searchNext);
-        gap = 20;
-        subPanel.setBorder(BorderFactory.createEmptyBorder(gap, 0, gap, 0));
-
+        
         matchCountLabel = new JLabel();
         matchCountLabel.setFont(DicomClient.FONT_MEDIUM);
 
-        subPanel.add(matchCountLabel);
+        JPanel panel = new JPanel();
+        GridBagLayout gridBagLayout = new GridBagLayout();
+        panel.setLayout(gridBagLayout);
+
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(searchLabel, c);
+        panel.add(searchLabel);
         
-        panel.add(scrollPaneText, BorderLayout.CENTER);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 1;
+        c.gridy = 0;
+        c.weightx = 1;
+        gridBagLayout.setConstraints(searchField, c);
+        panel.add(searchField);
+        
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 2;
+        c.gridy = 0;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(searchPrev, c);
+        panel.add(searchPrev);
+        
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 3;
+        c.gridy = 0;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(searchNext, c);
+        panel.add(searchNext);
+        
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 4;
+        c.gridy = 0;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(matchCountLabel, c);
+        panel.add(matchCountLabel);
+        
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 20));
+
+        return panel;
+    }
+    
+    private JComponent buildEditButton() {
+        JPanel panel = new JPanel();
+        editButton = new JButton("Edit...");
+        editButton.addActionListener(this);
+        editButton.setToolTipText("<html>Edit a slice<br>or series</html>");
+        panel.add(editButton);
+        return panel;
+    }
+    
+    /**
+     * Build the text previewer GUI and add it to the card panel.
+     */
+    private void buildTextPreview() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+
+        JPanel westPanel = new JPanel();
+        westPanel.add(buildViewingMode());
+        westPanel.add(buildShowDetails());
+
+        JPanel subPanel = new JPanel(new BorderLayout());
+        subPanel.add(westPanel, BorderLayout.WEST);
+        subPanel.add(buildSearch(), BorderLayout.CENTER);
+        subPanel.add(buildEditButton(), BorderLayout.EAST);
+
+        int gap = 20;
+        subPanel.setBorder(BorderFactory.createEmptyBorder(0, gap, 0, gap));
+
+        panel.add(buildTextScrollArea(), BorderLayout.CENTER);
         panel.add(subPanel, BorderLayout.SOUTH);
 
         cardPanel.add(panel, TEXT_VIEW);
@@ -623,6 +723,22 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         return outerPanel;
     }
+    
+    
+    /**
+     * Change to the next viewing mode.
+     */
+    private void incrementViewingMode() {
+        String currentName = viewingModeLabel.getText();
+        int numModes = ViewMode.values().length;
+        for (int vm = 0; vm < numModes; vm++) {
+            if (ViewMode.values()[vm].displayName.equals(currentName)) {
+                currentViewMode = ViewMode.values()[(vm + 1) % numModes];
+                viewingModeLabel.setText(currentViewMode.displayName);
+                viewingModeLabel.setToolTipText(currentViewMode.toolTip);
+            }
+        }
+    }
 
     /**
      * Set the currently selected text to the given matching entry.
@@ -678,7 +794,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             showDicom();
         }
 
-        if (ev.getSource().equals(originalRadioButton) || ev.getSource().equals(anonymizedRadioButton)) {
+        if (ev.getSource().equals(viewingModeArrowButton)) {
+            incrementViewingMode();
             showDicom();
         }
 
@@ -1306,11 +1423,11 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         try {
             Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList());
             addTextAttributes(editedAttributeList, anonText, 0, attributeLocation);
-            if (originalRadioButton.isSelected()) {
-                textPreview.setText(origText.toString());
+            if (currentViewMode == ViewMode.ANONYMIZED) {
+                textPreview.setText(anonText.toString());
             }
             else {
-                textPreview.setText(anonText.toString());
+                textPreview.setText(origText.toString());
             }
         }
         catch (DicomException e) {
@@ -1330,11 +1447,17 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
         if (attributeLocation != null) Log.get().info("Selected for edit:\n" + attributeLocation.toString() + "\n");
 
-        if (originalRadioButton.isSelected()) {
+        switch (currentViewMode) {
+        case PLAIN:
+            break;
+            
+        case ORIGINAL:
             highlightDiffs(origText, anonText, TEXT_NOT_ANONYMIZED_COLOR);
-        }
-        else {
+            break;
+        case ANONYMIZED:
+            
             highlightDiffs(anonText, origText, TEXT_ANONYMIZED_COLOR);
+            break;
         }
 
         if ((scrollPosition >= scrollPaneText.getVerticalScrollBar().getMinimum()) && (scrollPosition <= scrollPaneText.getVerticalScrollBar().getMaximum())) {
