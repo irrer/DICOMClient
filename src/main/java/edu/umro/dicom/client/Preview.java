@@ -1404,9 +1404,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         if (attributeList == null) return;
         AttributeList attrList = null;
         try {
-            attrList = Util.cloneAttributeList(attributeList);
+            attrList = Util.cloneTopLevelAttributeList(attributeList);
         }
         catch (Exception e) {
+            e.printStackTrace();
             return;
         }
         matchCountLabel.setText("  0 of 0");

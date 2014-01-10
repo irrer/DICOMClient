@@ -335,11 +335,14 @@ public class Util {
      * 
      * @throws DicomException
      */
-    private static AttributeList cloneTopLevelAttributeList(AttributeList source) throws IOException, DicomException {
+    public static AttributeList cloneTopLevelAttributeList(AttributeList source) throws IOException, DicomException {
         AttributeList dest = new AttributeList();
 
+        Attribute transferSyntaxAttr = source.get(TagFromName.TransferSyntaxUID);
+        String transferSyntax = TransferSyntax.ExplicitVRLittleEndian; //  DEFAULT_TRANSFER_SYNTAX;
+        if (transferSyntaxAttr != null) transferSyntax = transferSyntaxAttr.getSingleStringValueOrDefault(DEFAULT_TRANSFER_SYNTAX);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, DEFAULT_TRANSFER_SYNTAX, DEFAULT_TRANSFER_SYNTAX);
+        DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, transferSyntax, transferSyntax);
         source.write(dicomOutputStream);
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
