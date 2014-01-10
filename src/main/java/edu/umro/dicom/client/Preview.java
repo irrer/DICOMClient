@@ -87,6 +87,7 @@ import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
 import edu.umro.dicom.client.DicomClient.ProcessingMode;
+import edu.umro.dicom.client.test.AutoTest;
 import edu.umro.util.Log;
 
 /**
@@ -1642,6 +1643,16 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     @Override
     public void windowDeactivated(WindowEvent e) {
+    }
+    
+    @AutoTest
+    public void doClickTextPreview() {
+        textRadioButton.doClick();
+    }
+    
+    @AutoTest    
+    public String getTextTest() {
+        return textPreview.getText();
     }
 
 }

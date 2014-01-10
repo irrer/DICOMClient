@@ -47,6 +47,7 @@ import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.TagFromName;
 import edu.umro.dicom.client.DicomClient.ProcessingMode;
+import edu.umro.dicom.client.test.AutoTest;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
 
@@ -1108,4 +1109,11 @@ public class Series extends JPanel implements ActionListener, Runnable {
         return instanceList.getFile(0).getParentFile();
     }
 
+    /**
+     * Support for testing.
+     */
+    @AutoTest
+    public void doClickPreviewButtonTest() {
+        previewButton.doClick();
+    }
 }
