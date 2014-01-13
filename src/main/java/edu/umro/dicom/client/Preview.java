@@ -392,7 +392,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         viewingPanel.add(viewingModeArrowButton, BorderLayout.WEST);
         viewingPanel.add(new JLabel("  "), BorderLayout.CENTER);
         viewingPanel.add(viewingModeLabel, BorderLayout.EAST);
-        
+        viewingModeLabel.addMouseListener(this);
+
         int maxWidth = 0;
         
         Graphics graphics = DicomClient.getInstance().getMainContainer().getGraphics();
@@ -867,11 +868,15 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if ((editGui != null) && (editGui.isVisible())) {
+        if ((editGui != null) && (editGui.isVisible() && (e.getSource() == textPreview))) {
             AttributeLocation attributeLocation = new AttributeLocation(textPreview.getCaretPosition());
             showText(attributeLocation);
             editGui.setAttributeLocation(attributeLocation);
         }
+        if (e.getSource() == viewingModeLabel) {
+            viewingModeArrowButton.doClick();
+        }
+
     }
 
     @Override
@@ -1150,7 +1155,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                                 first = false;
                             else
                                 line.append(VALUE_SEPARATOR);
-                            line.append(" " + value);
+                            line.append(" " + value.replace('\n', ' '));
                             if (line.length() > MAX_LINE_LENGTH) {
                                 break;
                             }
@@ -1329,9 +1334,11 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         Highlighter highlighter = textPreview.getHighlighter();
 
         int index = 0;
-        for (int l = 0; l < displayLines.length; l++) {
+        int len = (displayLines.length < referenceLines.length) ? displayLines.length : referenceLines.length;
+        for (int l = 0; l < len; l++) {
             String disp = displayLines[l];
             String ref = referenceLines[l];
+
             if (!disp.equals(ref)) {
                 MatchHighlightPainter painter = new MatchHighlightPainter(highlightColor);
                 int start = 0;
