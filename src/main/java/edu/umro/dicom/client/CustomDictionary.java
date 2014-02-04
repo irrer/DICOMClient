@@ -647,8 +647,8 @@ public class CustomDictionary extends DicomDictionary {
         valueMultiplicity.put(TagFromName.Allergies, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.PatientTelephoneNumbers, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.DeidentificationMethod, Multiplicity.M1_N);
-        valueMultiplicity.put(TagFromName.CADFileFormat, Multiplicity.M1_N);
-        valueMultiplicity.put(TagFromName.ComponentReferenceSystem, Multiplicity.M1_N);
+        //valueMultiplicity.put(TagFromName.CADFileFormat, Multiplicity.M1_N);
+        //valueMultiplicity.put(TagFromName.ComponentReferenceSystem, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.ComponentManufacturingProcedure, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.ComponentManufacturer, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.MaterialThickness, Multiplicity.M1_N);

@@ -32,6 +32,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -1253,14 +1254,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * 
      * @return The contents of the file
      */
-    public AttributeList readDicomFileX(String fileName) {  // TODO should be private (avoid compiler warning)
+    private AttributeList readDicomFileJim(File file) {
         AttributeList attributeList = new AttributeList();
 
-        FileInputStream fis = null;
+        BufferedInputStream inStream = null;
         try {
             if (inCommandLineMode()) {
                 // this does not show any annoying messages in the log
-                attributeList.read(fileName);
+                attributeList.read(file);
             }
             else {
                 // The following is faster than
@@ -1268,26 +1269,27 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 // the first part of every DICOM file, but
                 // it also produces a lot of error messages because of the
                 // 'ragged end' of each file.
-                // fis = new FileInputStream(new File(fileName));
-                // DicomInputStream dis = new DicomInputStream(fis);
+                inStream = new BufferedInputStream(new FileInputStream(file));
+                
+                DicomInputStream dis = new DicomInputStream(inStream);
 
-                // attributeList.read(dis,DicomClientReadStrategy.dicomClientReadStrategy);
+                attributeList.read(dis,DicomClientReadStrategy.dicomClientReadStrategy);
                 // attributeList.read(dis);
-                attributeList.read(new File(fileName));
+             // attributeList.read(new File(fileName));
             }
         }
         catch (Exception e) {
             // Exceptions do not matter because
             // 1: If reading a partial file, there will always be an exception
             // 2: The content is checked anyway
-            Log.get().severe("Error reading DICOM file " + fileName + " : " + e);
+            Log.get().severe("Error reading DICOM file " + file.getAbsolutePath() + " : " + e);
         }
         finally {
-            if (fis != null) try {
-                fis.close();
+            if (inStream != null) try {
+                inStream.close();
             }
             catch (Exception e) {
-                Log.get().warning("Unable to close stream for file " + fileName);
+                Log.get().warning("Unable to close stream for file " + file.getAbsolutePath());
             }
         }
         return attributeList;
@@ -1852,19 +1854,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return;
     }
 
-
-
     /**
      * @param args
      */
     public static void main(String[] args) {
         System.out.println("DICOM+ starting.  Using jar file: " + new java.io.File(DicomClient.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getName());
 
-        {
-            System.out.println("DicomPlus-------------------------");
-            System.getProperties().list(System.out);
-            System.out.println("\nDicomPlus-------------------------");
-        }
+        System.getProperties().list(System.out);
         try {
             logPrelude();
 

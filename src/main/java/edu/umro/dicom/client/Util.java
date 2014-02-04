@@ -383,6 +383,21 @@ public class Util {
         AttributeList dest = ((SequenceAttribute) newAttributeList.get(TagFromName.ContentSequence)).getItem(0).getAttributeList();
         return dest;
     }
+    
+    public static Attribute cloneAttribute(Attribute attribute) {
+        AttributeList attributeList = new AttributeList();
+        attributeList.put(attribute);
+        try {
+            return cloneAttributeList(attributeList).get(attribute.getTag());
+        }
+        catch (IOException e) {
+            Log.get().severe("cloneAttribute Unexpected IOException: " + Log.fmtEx(e));
+        }
+        catch (DicomException e) {
+            Log.get().severe("cloneAttribute Unexpected DicomException: " + Log.fmtEx(e));
+        }
+        return null;
+    }
 
     /**
      * Determine if the given UID is syntactically valid, which

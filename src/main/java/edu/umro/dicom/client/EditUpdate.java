@@ -26,12 +26,12 @@ class EditUpdate extends Edit {
     @Override
     public void doEdit(AttributeList attributeList) {
         AttributeList al = attributeLocation.getAttributeList(attributeList);
-        al.put(newAttribute);
+        al.put(Util.cloneAttribute(newAttribute));
     }
 
     public EditUpdate(AttributeLocation attributeLocation, Attribute attribute) {
         super(attributeLocation);
-        newAttribute = attribute;
+        newAttribute = Util.cloneAttribute(attribute);
     }
 
     @Override

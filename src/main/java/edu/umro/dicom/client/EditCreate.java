@@ -35,12 +35,13 @@ public class EditCreate extends Edit {
         if (ValueRepresentation.isSequenceVR(CustomDictionary.getInstance().getValueRepresentationFromTag(newAttribute.getTag()))) {
             ((SequenceAttribute)newAttribute).getItem(0).getAttributeList().clear();
         }
-        al.put(newAttribute);
+        al.put(Util.cloneAttribute(newAttribute));
     }
 
     public EditCreate(AttributeLocation attributeLocation, Attribute attribute) {
         super(attributeLocation);
-        newAttribute = attribute;
+        newAttribute = Util.cloneAttribute(attribute);
+
     }
 
     @Override
