@@ -36,8 +36,11 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
 import javax.net.ssl.HostnameVerifier;
@@ -81,6 +84,7 @@ import org.restlet.data.Status;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
+import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.TagFromName;
@@ -1294,6 +1298,51 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
         return attributeList;
     }
+    
+    /*
+     * Tags referenced application sorted by group and element.
+     * (0x0002,0x0002) MediaStorageSOPClassUID
+     * (0x0008,0x0012) InstanceCreationDate
+     * (0x0008,0x0012) InstanceCreationDate
+     * (0x0008,0x0013) InstanceCreationTime
+     * (0x0008,0x0013) InstanceCreationTime
+     * (0x0008,0x0021) SeriesDate
+     * (0x0008,0x0022) AcquisitionDate
+     * (0x0008,0x0023) ContentDate
+     * (0x0008,0x0031) SeriesTime
+     * (0x0008,0x0032) AcquisitionTime
+     * (0x0008,0x0033) ContentTime
+     * (0x0008,0x0060) Modality
+     * (0x0008,0x103e) SeriesDescription
+     * (0x0010,0x0010) PatientName
+     * (0x0010,0x0020) PatientID
+     * (0x0020,0x000e) SeriesInstanceUID
+     * (0x3006,0x0008) StructureSetDate
+     * (0x3006,0x0009) StructureSetTime
+     * (0x300a,0x0006) RTPlanDate
+     * (0x300a,0x0007) RTPlanTime
+     */
+
+    private AttributeList ensureMinimumMetadata(File file, AttributeList attributeList) {
+        // If no data was read by now, then this is probably not a DICOM file and there won't be any more data
+        if (attributeList.entrySet().isEmpty()) return attributeList;
+
+        AttributeTag lastTag = attributeList.lastKey();
+        if (lastTag.compareTo(TagFromName.SeriesInstanceUID) < 0) {
+        try {
+            AttributeList al = new AttributeList();
+            al.read(file);
+            attributeList = al;
+        }
+        catch (Exception e) {
+            String msg = "Unexpected error reading file " + file.getAbsolutePath() + " : " + Log.fmtEx(e);
+            Log.get().warning(msg);
+            showMessage(msg);
+        }
+        }
+
+        return attributeList;
+    }
 
     /**
      * Read at a minimum the first portion of the given DICOM file.  The
@@ -1342,6 +1391,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 Log.get().warning("Unable to close stream for file " + file.getAbsolutePath());
             }
         }
+        attributeList = ensureMinimumMetadata(file, attributeList);
         return attributeList;
     }
 
