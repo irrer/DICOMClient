@@ -13,6 +13,7 @@ import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.TagFromName;
 
 import edu.umro.dicom.client.Util;
+import edu.umro.util.Utility;
 
 public class FixCt {
 
@@ -110,9 +111,8 @@ public class FixCt {
 
     private File makeDestDir(File sourceDir) {
         File destDir = new File(sourceDir.getParentFile(), sourceDir.getName() + "_fixed");
+        Utility.deleteFileTree(destDir);
         destDir.mkdirs();
-        for (File file : destDir.listFiles())
-            file.delete();
         return destDir;
     }
 
@@ -200,6 +200,42 @@ public class FixCt {
         fixAttribute(al, TagFromName.TreatmentMachineName, UM_TREATMENT_MACHINE_NAME);
     }
         
+    
+    private void ifZeroSetToOne(AttributeList al, AttributeTag tag) throws DicomException {
+        Attribute a = al.get(tag);
+        if (a != null) {
+            Double value = a.getSingleDoubleValueOrDefault(0);
+            if (value == 0) {
+                a = AttributeFactory.newAttribute(tag);
+                a.addValue(1);
+                al.put(a);
+            }
+        }
+    }
+    
+
+    private void hackFractionGroupSequence(AttributeList al) throws DicomException {
+        SequenceAttribute FractionGroupSequence = (SequenceAttribute)(al.get(TagFromName.FractionGroupSequence));
+        int numItems = FractionGroupSequence.getNumberOfItems();
+        // If only 1 fraction group, then do nothing.  Otherwise, remove all but
+        // first fraction group.  This is necessary because Aria only supports one
+        // fraction group.
+        if (numItems > 1) {
+            SequenceAttribute fgs = new SequenceAttribute(TagFromName.FractionGroupSequence);
+            fgs.addItem(FractionGroupSequence.getItem(0));
+            al.put(fgs);
+            FractionGroupSequence = fgs;
+        }
+        
+        // Make sure that all of the BeamDose and BeamMeterSet values are not zero.  Any that are, set them to 1.
+        SequenceAttribute ReferencedBeamSequence = (SequenceAttribute)(FractionGroupSequence.getItem(0).getAttributeList().get(TagFromName.ReferencedBeamSequence));
+        for (int i = 0; i < ReferencedBeamSequence.getNumberOfItems(); i++) {
+            AttributeList rbs = ReferencedBeamSequence.getItem(i).getAttributeList();
+            //ifZeroSetToOne(rbs, TagFromName.BeamDose);
+            //ifZeroSetToOne(rbs, TagFromName.BeamMeterset);
+        }
+    }
+        
 
     private void writeAllFiles(File directory, ArrayList<String> ctUidList) throws IOException, DicomException {
         AttributeList basicDemographics = generateDemographics(directory);
@@ -213,9 +249,17 @@ public class FixCt {
                 fixMachineName(al);
                 fixAttribute(al, TagFromName.NominalBeamEnergy, "6");
                 fixAttribute(al, TagFromName.DoseRateSet, "600");
+                hackFractionGroupSequence(al);
             }
-            if (modality.equals(SOPClass.RTDoseStorage)) fixMachineName(al);
-            writeFile(new File(destDir, file.getName()), al, basicDemographics);
+            if (modality.equals(SOPClass.RTDoseStorage)) {
+                fixMachineName(al);
+                File rtDoseDir = new File(destDir, "rtdose");
+                rtDoseDir.mkdirs();
+                writeFile(new File(rtDoseDir, file.getName()), al, basicDemographics);
+            }
+            else {
+                writeFile(new File(destDir, file.getName()), al, basicDemographics);
+            }
         }
     }
 
