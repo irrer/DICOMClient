@@ -779,7 +779,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     }
     
     private void changeSearchMatch(int diff) {
-        if (matchList.size() > 1) {
+        if (matchList.size() >= 1) {
             matchIndex = (matchIndex + diff + matchList.size()) % matchList.size();
             textPreview.setCaretPosition(matchList.get(matchIndex).position);
             showDicom();
