@@ -230,7 +230,7 @@ public class Util {
         int count = Math.abs(Short.valueOf(st.nextToken(), 16).shortValue() + 0x8000);
 
         // concatenate values to make it into a DICOM UID.
-        String uid = rootUid + "." + macAddress + "." + unique + "." + time + "." + count;
+        String uid = rootUid + macAddress + "." + unique + "." + time + "." + count;
 
         return uid;
     }
