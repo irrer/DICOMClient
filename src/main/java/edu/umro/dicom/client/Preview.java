@@ -89,6 +89,7 @@ import com.pixelmed.display.ConsumerFormatImageMaker;
 import edu.umro.dicom.client.DicomClient.ProcessingMode;
 import edu.umro.dicom.client.test.AutoTest;
 import edu.umro.util.Log;
+import edu.umro.util.Utility;
 
 /**
  * Preview a DICOM file as either text or image, though only image type files
@@ -393,17 +394,17 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         viewingPanel.add(new JLabel("  "), BorderLayout.CENTER);
         viewingPanel.add(viewingModeLabel, BorderLayout.EAST);
         viewingModeLabel.addMouseListener(this);
-
-        int maxWidth = 0;
         
-        Graphics graphics = DicomClient.getInstance().getMainContainer().getGraphics();
-        FontMetrics metrics = graphics.getFontMetrics(DicomClient.FONT_MEDIUM);
-        for (ViewMode vm : ViewMode.values()) {
-            int width = metrics.stringWidth(vm.displayName);
-            if (width > maxWidth) maxWidth = width;
+        if (!DicomClient.inCommandLineMode()) {
+            int maxWidth = 0;
+            Graphics graphics = DicomClient.getInstance().getMainContainer().getGraphics();
+            FontMetrics metrics = graphics.getFontMetrics(DicomClient.FONT_MEDIUM);
+            for (ViewMode vm : ViewMode.values()) {
+                int width = metrics.stringWidth(vm.displayName);
+                if (width > maxWidth) maxWidth = width;
+            }
+            viewingModeLabel.setPreferredSize(new Dimension(maxWidth + 15, metrics.getHeight()));
         }
-        
-        viewingModeLabel.setPreferredSize(new Dimension(maxWidth+15, metrics.getHeight()));
 
         return viewingPanel;
     }

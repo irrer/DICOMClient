@@ -31,6 +31,7 @@ import org.junit.Test;
 import edu.umro.dicom.client.Util;
 import edu.umro.util.Log;
 import edu.umro.util.RunCommand;
+import edu.umro.util.UMROException;
 import edu.umro.util.Utility;
 import edu.umro.util.XML;
 import static org.junit.Assert.assertTrue;
@@ -72,10 +73,31 @@ public class TestCommandLine {
         destDir.mkdirs();
         return (new File(destDir, fileName)).getAbsolutePath();
     }
+    
+    private boolean compareXmlFiles(File a, File b) throws UMROException {
+        Document aDoc = XML.parseToDocument(Utility.readFile(a));
+        Document bDoc = XML.parseToDocument(Utility.readFile(b));
+        String aTxt = XML.domToString(aDoc).replaceAll("[ \r\t\n][ \r\t\n]*", "");
+        String bTxt = XML.domToString(bDoc).replaceAll("[ \r\t\n][ \r\t\n]*", "");
+        boolean same = aTxt.equals(bTxt);
+        if (!same)
+            System.out.println("Hey!");
+        return same;
+    }
+    
+    private boolean compareTxtFiles(File a, File b) throws UMROException {
+        String aTxt = Utility.readFile(a).replaceAll("<unknown>[^\n]*\n", "ignore unknown VRs\n");
+        String bTxt = Utility.readFile(b).replaceAll("<unknown>[^\n]*\n", "ignore unknown VRs\n");
+        return aTxt.equals(bTxt);
+    }
 
     private boolean compareFiles(File destDir, String fileName) {
+        File tst = new File(destDir, fileName);
+        File ref = new File(refPath(fileName));
         try {
-            return Utility.compareFiles(new File(destDir, fileName), new File(refPath(fileName)));
+            if (fileName.toLowerCase().endsWith(".xml")) return compareXmlFiles(tst, ref);
+            if (fileName.toLowerCase().endsWith(".txt")) return compareTxtFiles(tst, ref);
+            return Utility.compareFiles(tst, ref);
         }
         catch (Exception e) {
             System.out.println("Unexpected exception during comparison of files: " + Log.fmtEx(e));
@@ -85,14 +107,13 @@ public class TestCommandLine {
 
     private boolean compareAllFilesWithSuffixes(File destDir, String fileName) {
         if (fileName.endsWith(Util.DICOM_SUFFIX)) fileName = fileName.substring(0, fileName.length() - Util.DICOM_SUFFIX.length());
-        boolean ok = true;
-        for (String suf : new String[] {}) {
+        for (String suf : new String[] { ".DCM", ".XML", ".TXT", ".PNG" }) {
             File destFile = new File(destPath(destDir, fileName + suf));
-            if (destFile.exists()) {
-                ok = ok && compareFiles(destDir, fileName + suf);
-            }
+            if (destFile.exists()) 
+                if (!compareFiles(destDir, fileName + suf))
+                    return false;
         }
-        return ok;
+        return true;
     }
 
     private static int dirIndex = 0;
@@ -110,7 +131,7 @@ public class TestCommandLine {
      * @return
      */
     private int runMain(String... args) {
-        String[] baseArgs = { "java", "-Xmx256m", "-cp", "target/dicomclient-1.0.28-jar-with-dependencies.jar",
+        String[] baseArgs = { "java", "-Xmx256m", "-cp", "target/dicomclient-1.0.32-jar-with-dependencies.jar",
                 "-D" + Util.TESTING_PROPERTY + "=" + Util.TESTING_PROPERTY,
                 // "-Djava.util.logging.config.file=src\\test\\resources\\test\\logging.propertiesWindows",
                 "edu.umro.dicom.client.DicomClient", "-c" };
