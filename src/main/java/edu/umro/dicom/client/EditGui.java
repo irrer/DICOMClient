@@ -42,13 +42,11 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 
-import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SequenceAttribute;
-import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.TransferSyntax;
 import com.pixelmed.dicom.ValueRepresentation;
 

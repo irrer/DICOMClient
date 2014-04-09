@@ -36,11 +36,8 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.logging.Level;
 
 import javax.net.ssl.HostnameVerifier;
@@ -67,8 +64,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicArrowButton;
 
 import org.restlet.Client;
@@ -103,7 +98,7 @@ import edu.umro.util.General;
  * @author Jim Irrer  irrer@umich.edu 
  *
  */
-public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener, DocumentListener {
+public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener {
 
     /** The portion of a DICOM file that must be read to get the metadata required to get general information about it. */
     private static final int DICOM_METADATA_LENGTH = 4 * 1024;
@@ -254,6 +249,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** Put multiple anonymized files here. */
     private static File commandParameterOutputDirectory = null;
 
+    /** Once the user specified where files are to be put, do not use defaults to set the output directory. */
+    private volatile static boolean hasSpecifiedOutputDirectory = false;
     
     private JFrame frame = null;
 
@@ -262,14 +259,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private JRadioButton uploadRadioButton = null;
     private JRadioButton anonymizeThenUploadRadioButton = null;
     private ButtonGroup modeButtonGroup = null;
-    private JTextField anonymizeDestinationText = null;
+    private JLabel anonymizeDestinationText = null;
     private JButton anonymizeDestinationBrowseButton = null;
 
     /** Chooses directory for anonymized files. */
     private volatile JFileChooser directoryChooser = null;
 
     /** Destination directory for anonymized files. */
-    private volatile File anonymizeDestination = null;
+    //private volatile File anonymizeDestination = null;  TODO remove
 
 
     /** The preview dialog box that shows DICOM files as images or text. */
@@ -319,6 +316,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
     }
 
+    /**
+     * If user does not specify an output directory, then assume one.
+     */
+    private File defaultOutputDirectory() {
+        File dir = new File(System.getProperty("user.home"));
+        return new File(dir, "output");
+    }
 
     /**
      * Get the currently selected AE Title, or return
@@ -560,13 +564,15 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return loginPacsPanel;
     }
 
-
-    private JPanel buildAnonymizeDirectorySelector() {
+    private JPanel buildOutputDirectorySelector() {
+        String toolTip = "<html>Where anonymized files will be<br>put. Created if necessary</html>";
+        
         JLabel label = new JLabel("Destination: ");
+        label.setToolTipText(toolTip);
 
-        anonymizeDestinationText = new JTextField(40);
-        anonymizeDestinationText.setToolTipText("<html>Where anonymized files will be<br>put. Created if necessary</html>");
-        anonymizeDestinationText.getDocument().addDocumentListener(this);
+        anonymizeDestinationText = new JLabel("");
+        anonymizeDestinationText.setToolTipText(toolTip);
+        
         anonymizeDestinationBrowseButton = new JButton("Browse...");
         anonymizeDestinationBrowseButton.addActionListener(this);
         anonymizeDestinationBrowseButton.setToolTipText("<html>Choose a directory for anonymized files.<br>Directory will be created if necessary.</html>");
@@ -577,11 +583,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         if (commandParameterOutputDirectory != null) {
             directoryChooser.setSelectedFile(commandParameterOutputDirectory);
+            anonymizeDestinationText.setText(commandParameterOutputDirectory.getAbsolutePath());
         }
 
         if (commandParameterOutputFile != null) {
+            directoryChooser.setSelectedFile(commandParameterOutputFile.getParentFile());
             anonymizeDestinationText.setText(commandParameterOutputFile.getAbsolutePath());
-            updateDestination();
         }
 
         JPanel panel = new JPanel();
@@ -716,7 +723,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new GridLayout(2, 1));
         centerPanel.add(buildModeSelectorAndAnonOptButton());
-        centerPanel.add(buildAnonymizeDirectorySelector());
+        centerPanel.add(buildOutputDirectorySelector());
 
         panel.add(centerPanel, BorderLayout.CENTER);
         panel.add(buildUpload(), BorderLayout.EAST);
@@ -974,13 +981,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
     }
 
-
-    private void resetAnonymizeDestination() {
+    private void resetOutputDirectory() {
+        hasSpecifiedOutputDirectory = false;
         anonymizeDestinationText.setText("");
-        anonymizeDestination = null;
     }
 
-    
     /**
      * Remove the given patient.
      * 
@@ -989,15 +994,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public void clearPatient(Patient patient) {
         if (preview != null) preview.setVisible(false);
         Anonymize.clearPatientHistory(patient.getPatientId());
-        // this is needed because it makes the patient disappear immediately, instead of waiting for the next redraw. 
+        // this is needed because it makes the patient disappear immediately, instead of waiting for the next redraw.
         patient.setVisible(false);
         patientListPanel.remove(patient);
-        if (patientListPanel.getComponentCount() == 0) {
-            resetAnonymizeDestination();
-        }
+        if (patientListPanel.getComponentCount() == 0) resetOutputDirectory();
         setProcessedStatus();
     }
-
 
     private void clearAll() {
         for (Patient patient : getPatientList()) clearPatient(patient);
@@ -1056,12 +1058,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
 
         if (source.equals(anonymizeDestinationBrowseButton)) {
-            updateDestination();
+            if (!hasSpecifiedOutputDirectory) directoryChooser.setSelectedFile(defaultOutputDirectory());
             switch(directoryChooser.showOpenDialog(getMainContainer())) {
                 case JFileChooser.APPROVE_OPTION:
-                    anonymizeDestination = directoryChooser.getSelectedFile();
-                    anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
-                    Log.get().info("Destination for anonymized file: " + anonymizeDestination.getAbsolutePath());
+                    anonymizeDestinationText.setText(directoryChooser.getSelectedFile().getAbsolutePath());
+                    Log.get().info("Destination for anonymized file: " + anonymizeDestinationText.getText());
+                    hasSpecifiedOutputDirectory = true;
                     break;
                 case JFileChooser.CANCEL_OPTION:
                     break;
@@ -1121,24 +1123,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         if ((getProcessingMode() != ProcessingMode.ANONYMIZE) && (loginPacsCard.equals(CARD_LOGIN))) loginPasswordTextField.grabFocus();
     }
 
-
-
-    /**
-     * If the destination directory has not already been chosen, then use
-     * the given one.
-     * 
-     * @param directory Directory to make default.
-     */
-    public void setDefaultDestination(File directory) {
-        if (anonymizeDestination == null) {
-            anonymizeDestination = directory;
-        }
-        anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
-        directoryChooser.setSelectedFile(anonymizeDestination);
-    }
-
-
-
+    
     public synchronized void incrementUploadCount(int size) {
         uploadCount += size;
         uploadCountLabel.setText("Upload Count: " + uploadCount);
@@ -1329,16 +1314,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         AttributeTag lastTag = attributeList.lastKey();
         if (lastTag.compareTo(TagFromName.SeriesInstanceUID) < 0) {
-        try {
-            AttributeList al = new AttributeList();
-            al.read(file);
-            attributeList = al;
-        }
-        catch (Exception e) {
-            String msg = "Unexpected error reading file " + file.getAbsolutePath() + " : " + Log.fmtEx(e);
-            Log.get().warning(msg);
-            showMessage(msg);
-        }
+            try {
+                AttributeList al = new AttributeList();
+                al.read(file);
+                attributeList = al;
+            }
+            catch (Exception e) {
+                String msg = "Unexpected error reading file " + file.getAbsolutePath() + " : " + Log.fmtEx(e);
+                Log.get().warning(msg);
+                showMessage(msg);
+            }
         }
 
         return attributeList;
@@ -1367,7 +1352,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 fis = new FileInputStream(file);
                 byte[] buffer = new byte[DICOM_METADATA_LENGTH];
                 DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(buffer, 0, fis.read(buffer)));
-                attributeList.read(dis); // TODO change read to only get what is needed
+                attributeList.read(dis); // TODO change read to only get what is needed.  Requires new Pixelmed library.
                 // attributeList.read(dis, TagFromName.InstanceNumber); This
                 // (0x0020,0x0013) : InstanceNumber
                 // does not get:
@@ -1496,24 +1481,20 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 dragHereLabel = null;
             }
 
-            // We have a valid DICOM file, so use its directory in determining where to put files.
-            File parent = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
-            File anonymizedDirectory = new File(file.isDirectory() ? file : parent, "output");
-
-            synchronized (anonymizedDirectory) {
-                if (anonymizeDestination == null) {
-                    anonymizeDestination = anonymizedDirectory;
+            synchronized (this) {
+                if (!hasSpecifiedOutputDirectory) {
+                    // We have a valid DICOM file, so use its directory in determining where to put files.
+                    File parent = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
+                    File anonymizedDirectory = new File(file.isDirectory() ? file : parent, "output");
+                    hasSpecifiedOutputDirectory = true;
                     if (!inCommandLineMode()) {
-                        anonymizeDestinationText.setText(anonymizeDestination.getAbsolutePath());
-                        SwingUtilities.invokeLater(new Runnable() {
-                            public void run() {
-                                directoryChooser.setSelectedFile(anonymizeDestination);
-                            }
-                        }
-                        );
+                        directoryChooser.setSelectedFile(anonymizedDirectory);
+                        anonymizeDestinationText.setText(anonymizedDirectory.getAbsolutePath());
                     }
+                    
                 }
             }
+            
         }
         catch (Exception e) {
             Log.get().severe("Unexpected error in DicomClient.addDicomFile: " + Log.fmtEx(e));
@@ -1568,6 +1549,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             });
         }
+        if (this == null) readDicomFileJim(null);  // TODO remove when new Pixelmed library is available.
     }
 
     
@@ -1798,12 +1780,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         a++;
                         commandParameterOutputFile = new File(args[a]);
                         Log.get().info("Output file: " + commandParameterOutputFile.getAbsolutePath());
+                        hasSpecifiedOutputDirectory = true;
                     }
                     else {
                         if (args[a].equals("-d")) {
                             a++;
                             commandParameterOutputDirectory = new File(args[a]);
                             Log.get().info("Output directory: " + commandParameterOutputDirectory.getAbsolutePath());
+                            hasSpecifiedOutputDirectory = true;
                         }
                         else {
                             if (args[a].equals("-c")) {
@@ -1983,10 +1967,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /**
      * Update the anonymize destination to what the user specified.
      */
+    /*
     private void updateDestination() {
-        anonymizeDestinationText.getText();
         anonymizeDestination = new File(anonymizeDestinationText.getText());
-        directoryChooser.setCurrentDirectory(anonymizeDestination);
+        File ad = anonymizeDestination;
+        while (!ad.exists()) ad = ad.getParentFile();
+        if (ad.exists()) directoryChooser.setCurrentDirectory(ad);
     }
 
 
@@ -2006,6 +1992,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public void changedUpdate(DocumentEvent e) {
         updateDestination();
     }
+    */
     
     /**
      * Set the enabled state of the main dialog.

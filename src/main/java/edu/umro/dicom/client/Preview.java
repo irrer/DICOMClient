@@ -89,7 +89,6 @@ import com.pixelmed.display.ConsumerFormatImageMaker;
 import edu.umro.dicom.client.DicomClient.ProcessingMode;
 import edu.umro.dicom.client.test.AutoTest;
 import edu.umro.util.Log;
-import edu.umro.util.Utility;
 
 /**
  * Preview a DICOM file as either text or image, though only image type files

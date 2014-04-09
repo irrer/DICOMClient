@@ -18,8 +18,10 @@ package edu.umro.dicom.client.test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -123,6 +125,19 @@ public class TestCommandLine {
     }
 
     /**
+     * Get the latest generated jar file with dependencies.
+     */
+    private String jarWithDependencies() {
+        File target = new File("target");
+        TreeSet<String>jarList = new TreeSet<String>();
+        for (File jar : target.listFiles()) {
+            String name = jar.getName();
+            if (name.matches("dicomclient-.*-jar-with-dependencies.jar")) jarList.add(name);
+        }
+        return "target/" + jarList.last();
+    }
+    
+    /**
      * Run the main program as a command line.
      * 
      * @param args
@@ -131,7 +146,8 @@ public class TestCommandLine {
      * @return
      */
     private int runMain(String... args) {
-        String[] baseArgs = { "java", "-Xmx256m", "-cp", "target/dicomclient-1.0.32-jar-with-dependencies.jar",
+        
+        String[] baseArgs = { "java", "-Xmx256m", "-cp", jarWithDependencies(),
                 "-D" + Util.TESTING_PROPERTY + "=" + Util.TESTING_PROPERTY,
                 // "-Djava.util.logging.config.file=src\\test\\resources\\test\\logging.propertiesWindows",
                 "edu.umro.dicom.client.DicomClient", "-c" };
