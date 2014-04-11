@@ -1308,7 +1308,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         AttributeList atList = attributeList;
         if ((editGui != null) && (editGui.isVisible())) {
             try {
-                atList = Util.cloneAttributeList(attributeList);
+                atList = Util.cloneTopLevelAttributeList(attributeList);
                 editGui.performEdits(atList);
             }
             catch (Exception e) {
