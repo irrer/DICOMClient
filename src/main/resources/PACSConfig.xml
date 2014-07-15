@@ -13,5 +13,6 @@
 	<PacsList>
 		<PACS AETitle='MyPACS' Host='localhost' Port='1234' />
 		<PACS AETitle='SomePACS' Host='192.30.252.131' Port='104' />
+		<PACS AETitle='MRCT_DEV' Host='rolxdev1' Port='5680' />
 	</PacsList>
 </PacsConfiguration> 
