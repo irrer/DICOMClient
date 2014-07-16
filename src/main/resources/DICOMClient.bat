@@ -27,5 +27,5 @@ if exist log goto gotlog
     mkdir log
 :gotlog
 
-@rem The 1800 MB is about as large as the 32 bit JVM will allow.
-java -Xmx1800m -cp %dirname%@@with-dep-jar@@ -Djava.util.logging.config.file=%dirname%logging.propertiesWindows edu.umro.dicom.client.DicomClient %* > log\%DATE:~10,4%_%DATE:~4,2%_%DATE:~7,2%_%TIME:~0,2%_%TIME:~3,2%_%TIME:~6,2%_%TIME:~9,2%.log 2>&1
+@rem The 1024 MB is about as large as most 32 bit JVMs will allow.
+java -Xmx1024m -cp %dirname%@@with-dep-jar@@ -Djava.util.logging.config.file=%dirname%logging.propertiesWindows edu.umro.dicom.client.DicomClient %* > log\%DATE:~10,4%_%DATE:~4,2%_%DATE:~7,2%_%TIME:~0,2%_%TIME:~3,2%_%TIME:~6,2%_%TIME:~9,2%.log 2>&1
