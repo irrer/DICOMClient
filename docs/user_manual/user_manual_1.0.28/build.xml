@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="DCMEXP Build 2" basedir="." default="generate.docs">
+
+	<property name="dest.dir"                  value="output" />
+
+	<target name="clean">
+		<delete dir="${dest}" />
+	</target>
+
+	<target name="prepare">
+		<mkdir dir="${dest.dir}" />
+	</target>
+
+
+	<target name="makehtml">
+		<concat destfile="${dest.dir}/${htmlIn}">
+		    <filelist files="../../htmlSnippets/head.html,${htmlIn},../../htmlSnippets/tail.html"/>
+		</concat>
+	</target>
+
+	<target name="generate.docs" depends="clean,prepare">
+		<antcall target="makehtml"><param name="htmlIn" value="Anonymize-Options.html"    /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="Anonymizing-Files.html"    /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="faq.html"                  /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="index.html"                /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="Main-Window-Layout.html"   /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="Previewing-Files.html"     /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="Quick-Start-How-To-s.html" /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="Starting-the-program.html" /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="ValueMultiplicity.html"    /></antcall>
+	</target>
+</project>

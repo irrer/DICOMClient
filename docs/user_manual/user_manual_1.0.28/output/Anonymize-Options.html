@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+  <head>
+    <title>DICOM+ User Manual</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="../../../stylesheets/styles.css">
+    <link rel="stylesheet" href="../../../stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../../javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>DICOM+ User Manual</h1>
+        <p>Version 1.0.28</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/irrer/DICOMClient" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/irrer/DICOMClient/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/irrer/DICOMClient/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+
+<h3>Anonymize Options.html</h3>
+
+The <code>Anonymize Options ...</code> button near the top of the main
+window opens the window shown below:
+
+<p/>
+<br/>
+<img src='../anonymizeOptions.png' width='896'/>
+<br/>
+<p/>
+
+Attributes are only added to this list when they are encountered by
+loading a file.  <moreinfo
+title='There are over 4000 DICOM attributes,
+and displaying all of them would not be a
+pleasant user experience.'>(more info)</moreinfo>, so if this window
+is viewed before loading files, it will be empty.
+
+<br/>
+<p/>
+
+If an attribute is encountered multiple times within the same file, it will
+be anonymized with the same value.  The anonymization value for UIDs (eg: SOPInstanceUID)
+is ignored, and instead a new UID is generated.
+
+<br/>
+<p/>
+
+The purpose of this screen is to give the user more control over what
+is anonymized and the values used.  In particular, if the user notes
+that some fields unexpectedly contain <moreinfo> title='PHI : Protected Health Information'>PHI</moreInfo>
+that should be anonymized, then that field may be marked for anonymization.
+
+<br/>
+<p/>
+
+Changes made on this screen are only valid for the current program session.
+
+<br/>
+<p/>
+
+The default list of DICOM attributes to be anonymized was derived from
+the DICOM 2011 standard.  In general, information that identifies the
+patient, physicians, and treatment location are anonymized.  The list
+is defined in the configuration file.
+
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/irrer">irrer</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>

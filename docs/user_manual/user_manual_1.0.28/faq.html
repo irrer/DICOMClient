@@ -1,0 +1,41 @@
+<h3>Frequently Asked Questions</h3>
+
+<p/><br/>
+<strong>Will DICOM+ over-write my existing files?</strong><br/>
+No - The program is designed to preserve existing files.  Both anonymization and
+editing create new copies of the files.  Before a new file is written, the program
+checks to make sure that the name it is using is unique.
+<br/>
+Note that if the same series is anonymized multiple times, it will result in multiple
+sets of files.  This is by design, as a common use case is to anonymize the same set
+of files multiple times with different user IDs to create test data.
+
+<p/>
+
+The only exceptions are:
+
+<ul>
+
+<li>When editing a file, the user specifically indicates that the original file should be over-written.</li>
+
+<li>When the user repeatedly saves during an edit session, the same destination file is used.</li>
+
+</ul>
+
+
+
+<p/><br/>
+<strong>How does DICOM+ construct file names?</strong><br/>
+File names are constructed so as to be human readable, and are formatted
+with the following fields (if they are present in the source DICOM file) separated by underscore:
+
+<ul>
+<li>Patient ID</li>
+<li>Modality</li>
+<li>Series Number</li>
+<li>Instance Number</li>
+</ul>
+
+If the resulting file already exists, an integer is appended to the name to make it unique.
+
+

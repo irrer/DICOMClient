@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+  <head>
+    <title>DICOM+ User Manual</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="../../../stylesheets/styles.css">
+    <link rel="stylesheet" href="../../../stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../../javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>DICOM+ User Manual</h1>
+        <p>Version 1.0.28</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/irrer/DICOMClient" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/irrer/DICOMClient/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/irrer/DICOMClient/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+
+
+        <h3>Starting the Program</h3>
+        The program may be started by either:
+
+        <ul>
+          <li>on UMHS installations clicking Start --&gt; Accessories --&gt; DICOM+</li>
+          <li>dragging one or more DICOM files or directories onto the desktop icon</li>
+          <li>double clicking the icon</li>
+          <li>invoking the <code>DICOMClient.bat</code> file from the command line (Windows)</li>
+          <li>invoking the <code>DICOMClient.sh</code> file from the command line (Linux)</li>
+        </ul>
+
+        <p>
+        Arguments, including files to be loaded, may be appended as command line arguments.
+        See <a href="Running-as-a-command-line-program.html">Running as a command line program</a> for
+        more details on command line invocation.
+        </p>
+
+        <p>
+        After the program has been started, more files may be loaded by dragging them onto the
+        main window.  If a directory is dragged, then all the immediate files under that directory
+        will be loaded.  Directories under a dragged directory will not be loaded.  This is by design, to
+        prevent inadvertent dragging of a top level directory that would cause the program to traverse
+        a large number of files, possibly an entire disk.
+        </p>
+
+        <p>
+        Loading files does not change them, and the default behaviour is to never over-write an existing file.
+        </p>
+
+        <p>
+        Any file that is not a DICOM file (such as txt or zip files) will be ignored.  The
+        requirements for a file to be considered a DICOM file are very loose - it must have at least
+        one DICOM attribute.  This loose requirement was intentional so as to allow the user to examine
+        damaged or poorly constructed DICOM files.  
+        </p>
+
+
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/irrer">irrer</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>

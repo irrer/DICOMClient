@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+  <head>
+    <title>DICOM+ User Manual</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="../../../stylesheets/styles.css">
+    <link rel="stylesheet" href="../../../stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../../javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>DICOM+ User Manual</h1>
+        <p>Version 1.0.28</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/irrer/DICOMClient" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/irrer/DICOMClient/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/irrer/DICOMClient/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+
+<h3>DICOM Value Multiplicity Table</h3>
+
+<table>
+<tr> <th>Name</th> <th>Description</th> </tr>
+<tr><td>0</td><td>Does not contain values (such as a Sequence)</td></tr>
+<tr><td>1</td><td>Must have exactly one value</td></tr>
+<tr><td>1-2</td><td>Can have one or two values</td></tr>
+<tr><td>1-3</td><td>Can have from one to three values</td></tr>
+<tr><td>1-32</td><td>Can have from one to 32 values</td></tr>
+<tr><td>16</td><td>Must have exactly 16 values</td></tr>
+<tr><td>1-8</td><td>Can have from one to 8 values</td></tr>
+<tr><td>1-99</td><td>Can have from one to 99 values</td></tr>
+<tr><td>1-N</td><td>Can have from one to any number of values</td></tr>
+<tr><td>2</td><td>Must have exactly 2 values</td></tr>
+<tr><td>2-2N</td><td>Can have from 2 to any even number of values</td></tr>
+<tr><td>2-N</td><td>Can have from 2 to any number of values</td></tr>
+<tr><td>3</td><td>Must have exactly 3 values (often used for 3D coordinates)</td></tr>
+<tr><td>3-3N</td><td>Must have a at least 3 values up to any multiple of 3 values</td></tr>
+<tr><td>3-N</td><td>Can have from 3 to any number of values</td></tr>
+<tr><td>4</td><td>Must have exactly 4 values</td></tr>
+<tr><td>6</td><td>Must have exactly 6 values</td></tr>
+<tr><td>6-N</td><td>Can have from 6 to any number of values</td></tr>
+<tr><td>9</td><td>Must have exactly 9 values</td></tr>
+</table>
+
+
+
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/irrer">irrer</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>
