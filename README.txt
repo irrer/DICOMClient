@@ -16,6 +16,8 @@
 
 Developer: Jim Irrer  irrer@umich.edu
 
+Most recent documentation: http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.28/output/index.html
+
 The DICOM project.  This project provides support for:
     - anonymizing DICOM files
     - viewing DICOM files
