@@ -207,10 +207,10 @@ public class CustomDictionary extends DicomDictionary {
         extensions.add(new PrivateTag(TagFromName.OphthalmicAxialLengthMeasurementsSegmentNameCodeSequence, "OpthmlcAxlLenMeasSegmntNamCodSeq"));
         extensions.add(new PrivateTag(TagFromName.RefractiveErrorBeforeRefractiveSurgeryCodeSequence, "RefractErrBefRefractSurgryCodSeq"));
         extensions.add(new PrivateTag(TagFromName.AnteriorChamberDepthDefinitionCodeSequence, "AnteriorChamberDepthDefCodeSeq"));
-        extensions.add(new PrivateTag(TagFromName.SourceofLensThicknessDataCodeSequence, "SourceofLensThicknessDataCodeSeq"));
-        extensions.add(new PrivateTag(TagFromName.SourceofAnteriorChamberDepthDataCodeSequence, "SrcOfAnterChambrDepthDataCodeSeq"));
-        extensions.add(new PrivateTag(TagFromName.SourceofRefractiveMeasurementsSequence, "SourceofRefractMeasrmntsSequence"));
-        extensions.add(new PrivateTag(TagFromName.SourceofRefractiveMeasurementsCodeSequence, "SourceofRefractMeasrmntsCodeSeq"));
+        //extensions.add(new PrivateTag(TagFromName.SourceofLensThicknessDataCodeSequence, "SourceofLensThicknessDataCodeSeq"));
+        //extensions.add(new PrivateTag(TagFromName.SourceofAnteriorChamberDepthDataCodeSequence, "SrcOfAnterChambrDepthDataCodeSeq"));
+        //extensions.add(new PrivateTag(TagFromName.SourceofRefractiveMeasurementsSequence, "SourceofRefractMeasrmntsSequence"));
+        //extensions.add(new PrivateTag(TagFromName.SourceofRefractiveMeasurementsCodeSequence, "SourceofRefractMeasrmntsCodeSeq"));
         extensions.add(new PrivateTag(TagFromName.OphthalmicAxialLengthMeasurementModified, "OphthalmicAxlLenMeasrmntModified"));
         extensions.add(new PrivateTag(TagFromName.OphthalmicAxialLengthDataSourceCodeSequence, "OpthmlcAxlLenDataSourceCodeSeq"));
         extensions.add(new PrivateTag(TagFromName.OphthalmicAxialLengthDataSourceDescription, "OpthmlcAxlLenDataSrcDescription"));
@@ -229,11 +229,11 @@ public class CustomDictionary extends DicomDictionary {
         extensions.add(new PrivateTag(TagFromName.IntraocularLensCalculationsRightEyeSequence, "IntrclLensCalculationsRtEyeSeq"));
         extensions.add(new PrivateTag(TagFromName.IntraocularLensCalculationsLeftEyeSequence, "IntrclLensCalculationsLtEyeSeq"));
         extensions.add(new PrivateTag(TagFromName.ReferencedOphthalmicAxialLengthMeasurementQCImageSequence, "RefdOpthmlcAxlLenMesrmntQCImgSeq"));
-        extensions.add(new PrivateTag(TagFromName.AcquisitonMethodAlgorithmSequence, "AcquisitonMethodAlgSequence"));
+        //extensions.add(new PrivateTag(TagFromName.AcquisitonMethodAlgorithmSequence, "AcquisitonMethodAlgSequence"));
         extensions.add(new PrivateTag(TagFromName.OphthalmicThicknessMapTypeCodeSequence, "OpthmlcThicknessMapTypeCodeSeq"));
         extensions.add(new PrivateTag(TagFromName.OphthalmicThicknessMappingNormalsSequence, "OpthmlcThicknessMappingNormlsSeq"));
         extensions.add(new PrivateTag(TagFromName.RetinalThicknessDefinitionCodeSequence, "RetinalThickDefinitionCodeSeq"));
-        extensions.add(new PrivateTag(TagFromName.PixelValueMappingtoCodedConceptSequence, "PixValueMappingtoCodedConceptSeq"));
+        //extensions.add(new PrivateTag(TagFromName.PixelValueMappingtoCodedConceptSequence, "PixValueMappingtoCodedConceptSeq"));
         extensions.add(new PrivateTag(TagFromName.OphthalmicThicknessMapQualityThresholdSequence, "OpthmlcThickMapQualityThreshSeq"));
         extensions.add(new PrivateTag(TagFromName.OphthalmicThicknessMapThresholdQualityRating, "OpthmlcThickMapThreshQualRating"));
         extensions.add(new PrivateTag(TagFromName.OphthalmicThicknessMapQualityRatingSequence, "OpthmlcThickMapQualityRatingSeq"));

@@ -47,7 +47,6 @@ import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SequenceAttribute;
-import com.pixelmed.dicom.TransferSyntax;
 import com.pixelmed.dicom.ValueRepresentation;
 
 import edu.umro.dicom.client.CustomDictionary.Multiplicity;
@@ -553,8 +552,8 @@ public class EditGui implements ActionListener, WindowListener {
             try {
                 destFile.delete();
                 
-                FileMetaInformation.addFileMetaInformation(attributeList, TransferSyntax.ExplicitVRLittleEndian, DicomClient.PROJECT_NAME);
-                attributeList.write(destFile, TransferSyntax.ExplicitVRLittleEndian, true, true);
+                FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, DicomClient.PROJECT_NAME);
+                attributeList.write(destFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
             }
             catch (IOException e) {
                 return "Unable to write file " + destFile + " : " + e.toString();

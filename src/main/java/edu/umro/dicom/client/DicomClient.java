@@ -32,10 +32,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
@@ -81,7 +78,6 @@ import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
-import com.pixelmed.dicom.DicomInputStream;
 import com.pixelmed.dicom.TagFromName;
 
 import edu.umro.util.Log;
@@ -99,9 +95,6 @@ import edu.umro.util.General;
  *
  */
 public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener {
-
-    /** The portion of a DICOM file that must be read to get the metadata required to get general information about it. */
-    private static final int DICOM_METADATA_LENGTH = 4 * 1024;
 
     /** Name that appears in title bar of window. */
     public static final String PROJECT_NAME = "DICOM+";
@@ -304,16 +297,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      */
     public void showMessage(String message) {
         messageTextArea.setVisible(true);
-        String text = messageTextArea.getText();
         if (showMessageText.length() != 0) {
             showMessageText.append("\n");
         }
         showMessageText.append(message);
         messageTextArea.setText(showMessageText.toString());
-        text = messageTextArea.getText();
-        if (!inCommandLineMode()) {
-            System.out.println("----\n" + text + "\n----");
-        }
+        Log.get().info("User message: " + message);
     }
 
     /**
@@ -1243,6 +1232,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * 
      * @return The contents of the file
      */
+    /*
     private AttributeList readDicomFileJim(File file) {
         AttributeList attributeList = new AttributeList();
 
@@ -1283,6 +1273,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
         return attributeList;
     }
+    */
     
     /*
      * Tags referenced application sorted by group and element.
@@ -1328,6 +1319,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         return attributeList;
     }
+    
+    private DicomClientReadStrategy terminationStrategy = new DicomClientReadStrategy();
 
     /**
      * Read at a minimum the first portion of the given DICOM file.  The
@@ -1339,27 +1332,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      */
     private AttributeList readDicomFile(File file) {
         AttributeList attributeList = new AttributeList(); 
-
-        FileInputStream fis = null;
         try {
             if (inCommandLineMode()) {
                 // this does not show any annoying messages in the log
                 attributeList.read(file);
             }
             else {
-                // The following is faster than <code>attributeList.read(fileName);</code>, as it only reads the first part of every DICOM file, but
-                // it also produces a lot of error messages because of the 'ragged end' of each file.
-                fis = new FileInputStream(file);
-                byte[] buffer = new byte[DICOM_METADATA_LENGTH];
-                DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(buffer, 0, fis.read(buffer)));
-                attributeList.read(dis); // TODO change read to only get what is needed.  Requires new Pixelmed library.
-                // attributeList.read(dis, TagFromName.InstanceNumber); This
-                // (0x0020,0x0013) : InstanceNumber
-                // does not get:
-                //     (0x3006,0x0008) : StructureSetDate
-                //     (0x3006,0x0009) : StructureSetTime
-                //     (0x300a,0x0006) : RTPlanDate
-                //     (0x300a,0x0007) : RTPlanTime
+                attributeList.read(file, terminationStrategy);
             }
         }
         catch (Exception e) {
@@ -1367,14 +1346,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             //     1: If reading a partial file, there will always be an exception
             //     2: The content is checked anyway
             Log.get().severe("Error reading DICOM file " + file.getAbsolutePath() + " : " + e);
-        }
-        finally {
-            if (fis != null) try {
-                fis.close();
-            }
-            catch (Exception e) {
-                Log.get().warning("Unable to close stream for file " + file.getAbsolutePath());
-            }
         }
         attributeList = ensureMinimumMetadata(file, attributeList);
         return attributeList;
@@ -1430,7 +1401,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @param descend True if it should descend into subdirectories and process files there.
      */
     public synchronized void addDicomFile(File file, boolean descend) {
-        System.out.println();
         try {
             fileCount++;
             setPreviewEnableable(false);
@@ -1549,7 +1519,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             });
         }
-        if (this == null) readDicomFileJim(null);  // TODO remove when new Pixelmed library is available.
+        //if (this == null) readDicomFileJim(null);  // TODO remove when new Pixelmed library is available.
     }
 
     

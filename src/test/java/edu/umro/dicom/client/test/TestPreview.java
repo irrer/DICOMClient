@@ -16,23 +16,14 @@ package edu.umro.dicom.client.test;
  * limitations under the License.
  */
 
-import java.awt.AWTEvent;
-import java.awt.EventQueue;
-import java.awt.Toolkit;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 
-import javax.swing.SwingWorker;
-
 import org.junit.Test;
 
 import edu.umro.dicom.client.DicomClient;
-import edu.umro.dicom.client.Preview;
 import edu.umro.dicom.client.Series;
-import edu.umro.dicom.client.Util;
-import edu.umro.util.Exec;
-import edu.umro.util.OpSys;
 import static org.junit.Assert.assertTrue;
 
 /**

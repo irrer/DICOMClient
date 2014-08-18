@@ -19,10 +19,8 @@ package edu.umro.dicom.client;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
-import com.pixelmed.dicom.ReadStrategy;
 import com.pixelmed.dicom.SOPClass;
 import com.pixelmed.dicom.TagFromName;
-
 
 /*
  * Tags referenced application sorted by group and element.
@@ -49,19 +47,16 @@ import com.pixelmed.dicom.TagFromName;
  */
 
 
+public class DicomClientReadStrategy implements AttributeList.ReadTerminationStrategy {
 
-public class DicomClientReadStrategy implements ReadStrategy {
-    
-    private static final long MAX_READ = 1024 *4;
-    
+    private static final long MAX_READ = 1024 * 4;
+
     public static final DicomClientReadStrategy dicomClientReadStrategy = new DicomClientReadStrategy();
 
     @Override
-    public boolean terminate(AttributeList attributeList, Attribute attribute, long bytesRead) {
-        if (bytesRead >= MAX_READ)
-            return true;
+    public boolean terminate(AttributeList attributeList, AttributeTag tag, long bytesRead) {
+        if (bytesRead >= MAX_READ) return true;
         Attribute sopClassUID = attributeList.get(TagFromName.SOPClassUID);
-        AttributeTag tag = attribute.getTag();
         if (sopClassUID != null) {
             String classUID = sopClassUID.getSingleStringValueOrEmptyString();
             if (classUID.equals(SOPClass.RTStructureSetStorage) || classUID.equals(SOPClass.RTPlanStorage)) {
@@ -77,6 +72,8 @@ public class DicomClientReadStrategy implements ReadStrategy {
                     return true;
             }
         }
+
         return false;
     }
 }
+

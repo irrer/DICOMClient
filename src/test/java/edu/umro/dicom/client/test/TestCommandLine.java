@@ -18,7 +18,6 @@ package edu.umro.dicom.client.test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TreeSet;
