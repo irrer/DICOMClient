@@ -23,7 +23,15 @@ The DICOM project.  This project provides support for:
     - viewing DICOM files
     - uploading DICOM files to a PACS (requires separate DICOM Service program)
 
-Run using the *.sh or *.bat scripts on Linux or Windows respectively.
+To run:
+
+     DICOM+.bat        : Windows 32 bit
+     
+     DICOM+64.bat      : Windows 64 bit (same as 32 but allows larger DICOM file sets)
+     
+     DICOMClient.bat   : Windows, within Univ Mich Rad Onc department
+     
+     DICOMClient.sh    : Linux
 
 
 From the command line to build everything and put the jars into the repository:

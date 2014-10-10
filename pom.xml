@@ -19,7 +19,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.umro.DICOM</groupId>
 	<artifactId>dicomclient</artifactId>
-	<version>1.0.34</version>
+	<version>1.0.35</version>
 	<packaging>jar</packaging>
 	<name>${project.artifactId}</name>
 	<properties>
@@ -181,11 +181,19 @@
 								<copy file="${resource.dir}/logging.propertiesWindows"
 									toDir="${dest.dir}" />
 								<copy file="${resource.dir}/logging.propertiesLinux" toDir="${dest.dir}" />
-								<copy file="${resource.dir}/DICOMClient.bat" toDir="${dest.dir}" />
-								<replace file="${dest.dir}/DICOMClient.bat" token="@@with-dep-jar@@"
-									value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
-								<copy file="${resource.dir}/DICOMClient.sh" toDir="${dest.dir}" />
+                                
+                                <copy file="${resource.dir}/DICOMClient.bat" toDir="${dest.dir}" />
+                                <replace file="${dest.dir}/DICOMClient.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
+                                
+                                <copy file="${resource.dir}/DICOM+.bat" toDir="${dest.dir}" />
+                                <replace file="${dest.dir}/DICOM+.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
+                                
+                                <copy file="${resource.dir}/DICOM+64.bat" toDir="${dest.dir}" />
+                                <replace file="${dest.dir}/DICOM+64.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
+								
+                                <copy file="${resource.dir}/DICOMClient.sh" toDir="${dest.dir}" />
 								<replace file="${dest.dir}/DICOMClient.sh" token="@@with-dep-jar@@"
+                                
 									value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
                                 <property name="standard.zip.dest"
                                     value="${project.dir}/${project.artifactId}-${project.version}_Install.zip" />
