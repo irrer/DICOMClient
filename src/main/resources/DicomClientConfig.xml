@@ -47,7 +47,20 @@
     <ShowUploadHelp>true</ShowUploadHelp>
 
     <!-- The flag that indicates whether KO manifest files should be sent by default.  The user can override this via the GUI. -->
+    <!-- Deprecated in version 1.0.36. -->
     <KOManifestDefault>false</KOManifestDefault>
+    
+    <!-- When using aggressive anonymization, if DICOM field contains any one of these characters, then it is not considered PHI. 
+    For example, if this field is 0123456789, and a DICOM field is TEST5, then it would not be anonymized because it contains the
+    character '5'.  This is an attempt to fix operational problems with aggressive anonymization where a patient name was already
+    anonymized to 123, and then a subsequent anonymization anonymized all occurrences of 123, which wreaked havoc on UIDs.
+    
+    If this value is not specified in this config file, then it defaults to:
+
+        0123456789$%
+
+    -->
+    <PhiDisqualifyingCharacters>0123456789$%</PhiDisqualifyingCharacters>
 
     <!-- Location of java keystore file.  If this value is specified by the
     system property javax.net.ssl.trustStore then the system property will
@@ -60,10 +73,11 @@
    <!-- If a value is given, search all text fields for the for the original values in these fields and replace them with 'replacement'. -->
    <AggressiveAnonymization replacement='anon'>PatientName</AggressiveAnonymization>
    <AggressiveAnonymization replacement='anon'>PatientID</AggressiveAnonymization>
-   
+
    <!-- The following words will not be aggressively anonymized. -->
    <ReservedWordList>
         abdomen
+        anon
         anonymous
         auto
         axial
@@ -125,6 +139,7 @@
         lt_node
         lung
         lymph
+        medical
         mm
         monochrome
         mr
@@ -132,6 +147,7 @@
         neck
         node
         nodes
+        none
         only
         optext
         optext_pelv
@@ -173,6 +189,8 @@
         struct
         structure
         supine
+        system
+        systems
         target
         target_2mm
         template
@@ -182,6 +200,7 @@
         tumor
         tumor_1mm
         tumor_2mm
+        varian
         version
         vesicles
         volume
@@ -190,10 +209,10 @@
         xml
    </ReservedWordList>
 
-	<!-- List of tags whose contents should be anonymized.  Note that for UIDs, the replacement
-	value is ignored, and instead a new unique UID is constructed (with a Univ of Mich Radiation
-	Oncology prefix) -->
-	<AnonymizeDefaultList>
+    <!-- List of tags whose contents should be anonymized.  Note that for UIDs, the replacement
+    value is ignored, and instead a new unique UID is constructed (with a Univ of Mich Radiation
+    Oncology prefix) -->
+    <AnonymizeDefaultList>
         <Tag Name='PatientID'                           >11111111</Tag>
         <Tag Name='PatientName'                         ></Tag>
         <Tag Name='PatientBirthDate'                    >18000101</Tag>
@@ -214,16 +233,16 @@
         <Tag Name='ReferringPhysicianTelephoneNumbers'  >none</Tag>
         <Tag Name='ReferringPhysicianTelephoneNums'     >none</Tag>  <!-- check for shortened version also -->
         <Tag Name='StationName'                         >none</Tag>
-        <Tag Name='StudyDescription'                    >none</Tag>
-        <Tag Name='SeriesDescription'                   >none</Tag>
+   <!-- <Tag Name='StudyDescription'                    >none</Tag> -->
+   <!-- <Tag Name='SeriesDescription'                   >none</Tag> -->
         <Tag Name='InstitutionalDepartmentName'         >none</Tag>
         <Tag Name='PhysiciansOfRecord'                  >none</Tag>
         <Tag Name='PerformingPhysicianName'             >none</Tag>
         <Tag Name='NameOfPhysiciansReadingStudy'        >none</Tag>
         <Tag Name='OperatorsName'                       >none</Tag>
-        <Tag Name='AdmittingDiagnosesDescription'       >none</Tag>
+   <!-- <Tag Name='AdmittingDiagnosesDescription'       >none</Tag> -->
         <Tag Name='ReferencedSOPInstanceUID'            ></Tag>
-        <Tag Name='DerivationDescription'               >none</Tag>
+   <!-- <Tag Name='DerivationDescription'               >none</Tag> -->
         <Tag Name='MedicalRecordLocator'                >none</Tag>
         <Tag Name='EthnicGroup'                         >none</Tag>
         <Tag Name='Occupation'                          >none</Tag>
@@ -247,7 +266,7 @@
         <Tag Name='RTPlanName'                          >none</Tag>  <!-- UMPlan sometimes puts patient info here -->
         <Tag Name='DoseReferenceUID'                    ></Tag>
         <Tag Name='ReferencedPrimaryDoseRefUID'         ></Tag>
-	</AnonymizeDefaultList>
+    </AnonymizeDefaultList>
 
     <!-- The following list defines private tags that are not in the DICOM standard.
     Modify this list as needed so that private tag data can be viewed and anonymized.
@@ -269,7 +288,7 @@
             <TypeOfData5010  group='5010' element='0020' vr='CS' fullName='Type Of Data 5010'/>
 
     -->
-	<PrivateTagList>
+    <PrivateTagList>
 
         <!-- Varian private tags -->
         <ExtendedInterfaceData                      group='3253' element='1000' vr='OB' fullName='Varian XML Stream'/>
@@ -319,5 +338,5 @@
         <CurveLabel              group='5000:50fe:2' element='2500' vr='LO' fullName='Curve Label'              />
         <CurveData               group='5000:50fe:2' element='3000' vr='OX' fullName='Curve Data'               />
 
-	</PrivateTagList>
+    </PrivateTagList>
 </DicomClientConfig>

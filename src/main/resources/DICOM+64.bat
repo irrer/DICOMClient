@@ -28,6 +28,6 @@ set dirname=%~dp0
 echo Starting DICOM+
 
 @rem Large Xmx values are only supported on 64 bit versions of java 
-java -Xmx4096m -cp %dirname%@@with-dep-jar@@ -Djava.util.logging.config.file=%dirname%logging.propertiesWindows edu.umro.dicom.client.DicomClient %*
+java -Xmx8192m -cp %dirname%@@with-dep-jar@@ -Djava.util.logging.config.file=%dirname%logging.propertiesWindows edu.umro.dicom.client.DicomClient %*
 
 :javabad

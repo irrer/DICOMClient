@@ -130,7 +130,7 @@ public class Study extends JPanel {
         seriesInstanceUid = (seriesInstanceUid == null) ? "" : seriesInstanceUid;
         ArrayList<Series> existingSeriesList = findMatchingSeriesUID(attributeList);
 
-        String sopInstanceUID = attributeList.get(TagFromName.SOPInstanceUID).getSingleStringValueOrEmptyString();
+        String sopInstanceUID = new String(attributeList.get(TagFromName.SOPInstanceUID).getSingleStringValueOrEmptyString());
         for (Series existingSeries : existingSeriesList) {
             if (existingSeries.getDirectory().equals(file.getParentFile())) {
                 if (existingSeries.containsFile(file)) {
@@ -186,6 +186,21 @@ public class Study extends JPanel {
                 series.zeroProgressBar();
             }
         }
+    }
+    
+    /**
+     * Get a list of all series in this study.
+     * 
+     * @return List of series in this study.
+     */
+    public ArrayList<Series> seriesList() {
+        ArrayList<Series> list = new ArrayList<Series>();
+        for (Component component : seriesListPanel.getComponents()) {
+            if (component instanceof Series) {
+                list.add((Series)component);
+            }
+        }
+        return list;
     }
 
 }

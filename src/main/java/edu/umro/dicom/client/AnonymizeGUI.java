@@ -55,6 +55,7 @@ import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
+import com.pixelmed.dicom.AttributeTagAttribute;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
@@ -629,6 +630,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
      */
     @SuppressWarnings("unchecked")
     public synchronized void updateTagList(AttributeList attributeList) {
+       // if (this != null) return;   // TODO remove
         AttributeList newAttributeList = new AttributeList();
 
         for (Object oAttr : attributeList.values()) {
@@ -641,6 +643,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
                     try { newAttr.addValue(value); } catch (Exception e) {}
                     newAttributeList.put(newAttr);
                     knownAttributes.put(newAttr);
+                    tag = new AttributeTag(tag.getGroup(), tag.getElement());  // avoid memory leaks
                     if (defaultList.get(tag) != null) {
                         value = defaultList.get(tag).getSingleStringValueOrEmptyString();
                     }

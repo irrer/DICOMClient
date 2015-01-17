@@ -19,7 +19,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.umro.DICOM</groupId>
 	<artifactId>dicomclient</artifactId>
-	<version>1.0.35</version>
+	<version>1.0.36</version>
 	<packaging>jar</packaging>
 	<name>${project.artifactId}</name>
 	<properties>
@@ -176,6 +176,7 @@
 									toDir="${dest.dir}" />
 									
                                 <copy file="${resource.dir}/DicomClientConfig.xml" toDir="${dest.dir}" />
+                                <copy file="${resource.dir}/DicomClientConfigMROQC.xml" toDir="${dest.dir}" />
                                 <copy file="${resource.dir}/PACSConfig.xml" toDir="${dest.dir}" />
 								
 								<copy file="${resource.dir}/logging.propertiesWindows"
@@ -197,23 +198,17 @@
 									value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
                                 <property name="standard.zip.dest"
                                     value="${project.dir}/${project.artifactId}-${project.version}_Install.zip" />
-                                <property name="UMHS.zip.dest"
-                                    value="${project.dir}/UMHS_${project.artifactId}-${project.version}_Install.zip" />
 									
 							    <!-- zip standard package -->
-								<zip basedir="${dest.dir}" destfile="prebuilt_packages/${project.artifactId}-${project.version}_Install.zip" />
-								
-                                <!-- set up UMHS specific files -->
-                                <delete file="${dest.dir}/DicomClientConfig.xml" />
-                                <delete file="${dest.dir}/PACSConfig.xml" />
-                                <delete file="${standard.zip.dest}" />
+                                <echo>Gonna zip ${dest.dir} ==>  prebuilt_packages/${project.artifactId}-${project.version}_Install.zip</echo>
                                 
-								<copy file="${resource.dir}/DicomClientConfigUMHS.xml" toFile="${dest.dir}/DicomClientConfig.xml" />
-                                <copy file="${resource.dir}/PACSConfigUMHS.xml" toFile="${dest.dir}/PACSConfig.xml" />
-								<copy file="${resource.dir}/dicomsvc.jks" toDir="${dest.dir}" />
-								
-                                <!-- zip UMHS package -->
-                                <zip basedir="${dest.dir}" destfile="${UMHS.zip.dest}" />
+                                <property name="zip.file" value="prebuilt_packages/${project.artifactId}-${project.version}_Install.zip" />
+								<zip basedir="${dest.dir}" destfile="${zip.file}" />
+                                <copy file="${zip.file}" toDir="${project.dir}" />
+                                <copy file="${resource.dir}/PACSConfigUMHS.xml" toDir="${dest.dir}" />
+                                
+                                <!-- <copy file="${resource.dir}/PACSConfigUMHS.xml" toDir="${project.dir}/${project.artifactId}-${project.version}" /> -->
+                                <copy file="${resource.dir}/PACSConfigUMHS.xml" toDir="${dest.dir}" />
 							</tasks>
 						</configuration>
 						<goals>

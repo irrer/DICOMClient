@@ -235,6 +235,10 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
             text = "Anonymize Patient";
             enabled = true;
             break;
+        case ANONYMIZE_THEN_LOAD:
+            text = "Anonymize then Load Patient";
+            enabled = true;
+            break;
         case UPLOAD:
             text = "Upload Patient";
             enabled = uploadEnabled;
@@ -431,6 +435,21 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
             }
         }
         return seriesList;
+    }
+    
+    /**
+     * Get a list of all studies.
+     * 
+     * @return List of studies.
+     */
+    public ArrayList<Study> getStudyList() {
+        ArrayList<Study> list = new ArrayList<Study>();
+        for (Component component : getComponents()) {
+            if (component instanceof Study) {
+                list.add((Study) component);
+            }
+        }
+        return list;
     }
 
 

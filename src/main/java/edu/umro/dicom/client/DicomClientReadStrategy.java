@@ -68,7 +68,7 @@ public class DicomClientReadStrategy implements AttributeList.ReadTerminationStr
             else {
                 if (tag.getGroup() > TagFromName.SeriesInstanceUID.getGroup())
                     return true;
-                if ((tag.getGroup() == TagFromName.SeriesInstanceUID.getGroup()) && (tag.getElement() >= TagFromName.SeriesInstanceUID.getElement()))
+                if ((tag.getGroup() == TagFromName.SeriesInstanceUID.getGroup()) && (tag.getElement() > TagFromName.SeriesInstanceUID.getElement()))
                     return true;
             }
         }

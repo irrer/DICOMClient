@@ -43,19 +43,23 @@ import edu.umro.util.XML;
 /**
  * Get the configuration information.
  * 
- * @author Jim Irrer  irrer@umich.edu 
- *
+ * @author Jim Irrer irrer@umich.edu
+ * 
  */
 public class ClientConfig {
 
     /** Name of configuration file. */
     private static final String CONFIG_FILE_NAME = "DicomClientConfig.xml";
 
+    /** Default characters to check for disqualifying content as PHI. */
+    private static final String DEFAULT_PHI_DISQUALIFYING_CHARACTERS = "0123456789$%";
+    private HashSet<Character> phiDisqualifyingCharacters = null;
+
     /** List of all possible configuration files. */
     private static final String[] CONFIG_FILE_LIST = {
-        System.getProperty("dicomclient.config"),
-        CONFIG_FILE_NAME,
-        "src\\main\\resources\\" + CONFIG_FILE_NAME
+            System.getProperty("dicomclient.config"),
+            CONFIG_FILE_NAME,
+            "src\\main\\resources\\" + CONFIG_FILE_NAME
     };
 
     /** Instance of this object. */
@@ -64,14 +68,13 @@ public class ClientConfig {
     /** Configuration information from file. */
     private volatile Document config = null;
 
-
     /** List of private tags. */
     private ArrayList<PrivateTag> privateTagList = null;
 
     private AttributeList anonymizingReplacementList = null;
 
     /**
-     * Read in the configuration for the client from the configuration file.  Try
+     * Read in the configuration for the client from the configuration file. Try
      * all files on the list and use the first one that parses.
      */
     private void parseConfigFile() {
@@ -93,7 +96,6 @@ public class ClientConfig {
         }
     }
 
-
     /**
      * Construct a configuration object.
      */
@@ -101,10 +103,9 @@ public class ClientConfig {
         parseConfigFile();
     }
 
-
     /**
      * Get the base URL for the DICOM Service with any terminating /'s removed
-     *  
+     * 
      * @return Base URL for DICOM service, or null if not initialized.
      */
     public String getServerBaseUrl() {
@@ -120,7 +121,7 @@ public class ClientConfig {
             catch (UMROException e) {
                 Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "AriaVerifier", null,
                         "Failed to get DICOM service URL from configuration file " + CONFIG_FILE_NAME, e);
-            }     
+            }
         }
 
         if (dicomServiceUrl == null) {
@@ -132,11 +133,10 @@ public class ClientConfig {
         return dicomServiceUrl;
     }
 
-
     /**
-     * Get the flag indicating whether or not the upload capability should be shown.  If there is a problem,
+     * Get the flag indicating whether or not the upload capability should be shown. If there is a problem,
      * return true.
-     *  
+     * 
      * @return True if all help, false if only anonymize help.
      */
     public boolean getShowUploadCapability() {
@@ -151,10 +151,9 @@ public class ClientConfig {
         return true;
     }
 
-
     /**
      * Get the template that controls how new patient IDs are generated for anonymization.
-     *  
+     * 
      * @return Template that controls how new patient IDs are generated for anonymization.
      */
     public String getAnonPatientIdTemplate() {
@@ -168,10 +167,9 @@ public class ClientConfig {
         return null;
     }
 
-
     /**
-     * Get the default state for sending the KO manifest.  If there is a config problem, default to TRUE.
-     *  
+     * Get the default state for sending the KO manifest. If there is a config problem, default to TRUE.
+     * 
      * @return Default state for sending the KO manifest.
      */
     public boolean getKoManifestDefault() {
@@ -188,14 +186,47 @@ public class ClientConfig {
         return true;
     }
 
+    private HashSet<Character> getPhiDisqualifyingCharacters() {
+        if (phiDisqualifyingCharacters == null) {
+            String pdcText = DEFAULT_PHI_DISQUALIFYING_CHARACTERS;
+            try {
+                String text = XML.getValue(config, "/DicomClientConfig/PhiDisqualifyingCharacters/text()");
+                pdcText = text;
+            }
+            catch (Exception e) {
+                pdcText = DEFAULT_PHI_DISQUALIFYING_CHARACTERS;
+            }
+            phiDisqualifyingCharacters = new HashSet<Character>();
+            for (int i = 0; i < pdcText.length(); i++)
+                phiDisqualifyingCharacters.add(pdcText.charAt(i));
+        }
+        return phiDisqualifyingCharacters;
+    }
+
+    /**
+     * Return TRUE if this value might be PHI.  Values are not considered PHI if they
+     * contain special characters.  For example, TEST5 would not be PHI because it
+     * contains the digit 5.
+     * 
+     * @param text
+     * @return
+     */
+    private boolean mightBePHI(String text) {
+        HashSet<Character> phiDisq = getPhiDisqualifyingCharacters();
+        for (int i = 0; i < text.length(); i++) {
+            if (phiDisq.contains(text.charAt(i)))
+                return false;
+        }
+        return true;
+    }
 
     /**
      * Get the values that should be replaced for aggressive patient anonymization.
-     *  
-     * @return List of values (in lower case) and their replacement values.  
+     * 
+     * @return List of values (in lower case) and their replacement values.
      */
-    public HashMap<String,String> getAggressiveAnonymization(AttributeList attributeList, DicomDictionary dictionary) {
-        HashMap<String,String> replaceList = new HashMap<String, String>();
+    public HashMap<String, String> getAggressiveAnonymization(AttributeList attributeList, DicomDictionary dictionary) {
+        HashMap<String, String> replaceList = new HashMap<String, String>();
         if (!DicomClient.getAggressivelyAnonymize()) return replaceList;
         getReservedWordList();
         try {
@@ -214,10 +245,12 @@ public class ClientConfig {
                     String[] origValueList = attribute.getOriginalStringValues();
                     if ((origValueList != null) && (origValueList.length > 0)) {
                         for (String value : origValueList) {
-                            String[] tokenList = value.toLowerCase().split("[^a-z0-9]");
-                            for (String token : tokenList) {
-                                if ((token.length() > 1) && (!reservedWordList.contains(token))) {
-                                    replaceList.put(token, replacement);
+                            if (mightBePHI(value)) {
+                                String[] tokenList = value.toLowerCase().split("[^a-z0-9]");
+                                for (String token : tokenList) {
+                                    if ((token.length() > 1) && (!reservedWordList.contains(token))) {
+                                        replaceList.put(token, replacement);
+                                    }
                                 }
                             }
                         }
@@ -251,7 +284,7 @@ public class ClientConfig {
                 @SuppressWarnings("rawtypes")
                 Iterator i = dictionary.getTagIterator();
                 while (i.hasNext()) {
-                    AttributeTag tag = (AttributeTag)i.next();
+                    AttributeTag tag = (AttributeTag) i.next();
                     String fullName = dictionary.getFullNameFromTag(tag);
                     String[] wordList = fullName.toLowerCase().split(" ");
                     for (String word : wordList) {
@@ -265,13 +298,12 @@ public class ClientConfig {
         return reservedWordList;
     }
 
-
     /**
      * Get the template that controls how new patient IDs are generated for anonymization.
-     *  
+     * 
      * @return Template that controls how new patient IDs are generated for anonymization.
      * 
-     * @throws UMROException 
+     * @throws UMROException
      */
     public String getRootUid() throws UMROException {
         try {
@@ -283,13 +315,13 @@ public class ClientConfig {
         }
     }
 
-
     /**
-     * Only let user control certain types of attributes.  It does not make
+     * Only let user control certain types of attributes. It does not make
      * sense to manually control values of UIDs, and sequence attributes do
      * not have values.
      * 
-     * @param tag Tag to check.
+     * @param tag
+     *            Tag to check.
      * 
      * @return
      */
@@ -297,9 +329,8 @@ public class ClientConfig {
         return (!ValueRepresentation.isSequenceVR(CustomDictionary.getInstance().getValueRepresentationFromTag(tag)));
     }
 
-
     /**
-     * Get the list of attributes to anonymize and their values.  All UIDs are
+     * Get the list of attributes to anonymize and their values. All UIDs are
      * anonymized using a manufactured UID.
      * 
      * @return
@@ -336,7 +367,6 @@ public class ClientConfig {
         return anonymizingReplacementList;
     }
 
-
     /**
      * Determine which java key stores are available and return a
      * list of them.
@@ -358,7 +388,6 @@ public class ClientConfig {
         return list;
     }
 
-
     public synchronized ArrayList<PrivateTag> getPrivateTagList() {
         if (privateTagList == null) {
             privateTagList = new ArrayList<PrivateTag>();
@@ -376,9 +405,9 @@ public class ClientConfig {
                         int firstGroup = Integer.parseInt(parts[0].toUpperCase(), 16);
                         int lastGroup = Integer.parseInt(parts[1].toUpperCase(), 16);
                         int incr = (parts.length < 2) ? 1 : Integer.parseInt(parts[2].toUpperCase(), 16);
-                        for(int g = firstGroup; g <= lastGroup; g += incr) {
+                        for (int g = firstGroup; g <= lastGroup; g += incr) {
                             String gHex = String.format("%04x", g);
-                            privateTagList.add(new PrivateTag(g, element, valueRepresentation, name+gHex, fullName + " " + gHex));
+                            privateTagList.add(new PrivateTag(g, element, valueRepresentation, name + gHex, fullName + " " + gHex));
                         }
                     }
                     else {
@@ -395,7 +424,6 @@ public class ClientConfig {
         }
         return privateTagList;
     }
-
 
     public static ClientConfig getInstance() {
         if (clientConfig == null) {

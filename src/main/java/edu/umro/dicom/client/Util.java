@@ -62,13 +62,15 @@ import edu.umro.util.XML;
 /**
  * General purpose methods.
  * 
- * @author Jim Irrer  irrer@umich.edu 
- *
+ * @author Jim Irrer irrer@umich.edu
+ * 
  */
 public class Util {
 
-    /** Number of bytes in a single buffer used for
-     * transferring data to and from server. */
+    /**
+     * Number of bytes in a single buffer used for
+     * transferring data to and from server.
+     */
     private final static int TRANSFER_BUFFER_SIZE = 64 * 1024;
 
     /** The root UID which is used to prefix files constructed by the University of Michigan. */
@@ -80,12 +82,13 @@ public class Util {
     /** Default transfer syntax for serializing DICOM files. */
     public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ImplicitVRLittleEndian;
     public static final String DEFAULT_STORAGE_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
-    //public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
+    // public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
 
     /** For getting values from the MANIFEST.MF file in the jar. */
     private static JarInfo jarInfo = null;
 
-    /** The MAC address of this machine.  This is used to make
+    /**
+     * The MAC address of this machine. This is used to make
      * the UID unique across machines.
      */
     private static long macAddress = 0;
@@ -95,7 +98,7 @@ public class Util {
 
     /** Root UID used as a prefix when building UIDs. */
     private static String rootUid = null;
-    
+
     /** DICOM postal address. */
     public static final String UMRO_POSTAL_ADDRESS = "University of Michigan Health System, 1500 E. Medical Center Drive Ann Arbor, MI 48109";
 
@@ -104,27 +107,29 @@ public class Util {
     public static final String PNG_SUFFIX = ".PNG";
     public static final String XML_SUFFIX = ".XML";
     public static final String DICOM_SUFFIX = ".DCM";
-    
+
     private static boolean testing() {
         return System.getProperties().contains(TESTING_PROPERTY);
     }
 
     /**
-     * Get an attribute value, or null if anything goes wrong.  Also, if there is a value,
+     * Get an attribute value, or null if anything goes wrong. Also, if there is a value,
      * replace all null characters with blanks, and trim whitespace.
      * 
-     * @param attributeList Get it from this list.
+     * @param attributeList
+     *            Get it from this list.
      * 
-     * @param tag The attribute to get.
+     * @param tag
+     *            The attribute to get.
      * 
      * @return The value of the attribute as a string, or null if either the
-     * value is not on the list or the attribute does not have a value.
+     *         value is not on the list or the attribute does not have a value.
      */
     public static String getAttributeValue(AttributeList attributeList, AttributeTag tag) {
         Attribute attribute = attributeList.get(tag);
         String value = (attribute == null) ? null : attribute.getSingleStringValueOrNull();
         if (value != null) {
-            value = value.replace('\0', ' ').trim();
+            value = (new String(value)).replace('\0', ' ').trim(); // try to plug memory leak
             byte[] vr = attribute.getVR();
 
             Class<?> vrClass = AttributeFactory.getClassOfAttributeFromValueRepresentation(tag, vr, true, TRANSFER_BUFFER_SIZE, true);
@@ -164,7 +169,6 @@ public class Util {
         return value;
     }
 
-
     /**
      * Initialize UID parameters.
      */
@@ -201,13 +205,13 @@ public class Util {
             }
         }
     }
-    
+
     /**
      * Generate a DICOM compliant UID using the UMRO root.
-     *
+     * 
      * @return A DICOM compliant UID using the UMRO root.
-     * @throws SocketException 
-     * @throws UnknownHostException 
+     * @throws SocketException
+     * @throws UnknownHostException
      */
     public static synchronized String getUID() {
 
@@ -235,7 +239,6 @@ public class Util {
         return uid;
     }
 
-
     /**
      * Determine the trust store file to use and set it up.
      * First look at the javax.net.ssl.trustStore system property,
@@ -244,35 +247,37 @@ public class Util {
      * list in the configuration file and use the first one that
      * points to a readable file.
      * 
-     * @param nodeList List of nodes containing file names.
-     * @return File to be used for javax.net.ssl.trustStore.  Null indicates failure.
+     * @param nodeList
+     *            List of nodes containing file names.
+     * @return File to be used for javax.net.ssl.trustStore. Null indicates failure.
      */
     /*
-    public static synchronized TrustStore setupTrustStore(NodeList nodeList) {
-        TrustStore trustStore = new TrustStore();
-
-        for (int ts = 0; ts < nodeList.getLength() && (!trustStore.viable()); ts++) {
-            trustStore = new TrustStore(nodeList.item(ts));
-        }
-
-
-
-        if (!trustStore.viable()) {
-            Log.get().warning("Unable to find a javax.net.ssl.trustStore file");            
-        }
-        else {
-            Log.get().info("Using file " + trustStore.getKeystoreFile().getAbsolutePath() + " for the javax.net.ssl.trustStore file.");
-        }
-        return trustStore;
-    }
+     * public static synchronized TrustStore setupTrustStore(NodeList nodeList) {
+     * TrustStore trustStore = new TrustStore();
+     * 
+     * for (int ts = 0; ts < nodeList.getLength() && (!trustStore.viable()); ts++) {
+     * trustStore = new TrustStore(nodeList.item(ts));
+     * }
+     * 
+     * 
+     * 
+     * if (!trustStore.viable()) {
+     * Log.get().warning("Unable to find a javax.net.ssl.trustStore file");
+     * }
+     * else {
+     * Log.get().info("Using file " + trustStore.getKeystoreFile().getAbsolutePath() +
+     * " for the javax.net.ssl.trustStore file.");
+     * }
+     * return trustStore;
+     * }
      */
 
-
     /**
-     * Get parameter value from jar of the given key.  If there is
+     * Get parameter value from jar of the given key. If there is
      * an error, return "unknown" instead.
      * 
-     * @param key Tag for parameter.
+     * @param key
+     *            Tag for parameter.
      * 
      * @return
      */
@@ -283,7 +288,6 @@ public class Util {
         return jarInfo.getMainManifestValue(key, "unknown");
     }
 
-
     /**
      * Get the vendor organization of this application.
      * 
@@ -292,7 +296,6 @@ public class Util {
     public static String getImplementationVendor() {
         return getJarInfo("Implementation-Vendor");
     }
-
 
     /**
      * Get the version of this application.
@@ -303,7 +306,6 @@ public class Util {
         return getJarInfo("Implementation-Version");
     }
 
-
     /**
      * Get the build date of this application.
      * 
@@ -312,7 +314,6 @@ public class Util {
     public static String getBuildDate() {
         return getJarInfo("BuildDate");
     }
-
 
     /**
      * Get the build date of this application.
@@ -323,11 +324,11 @@ public class Util {
         return getJarInfo("Built-By");
     }
 
-
     /**
      * Make a new copy of an attribute list, not sharing any data with the original.
      * 
-     * @param source List to copy.
+     * @param source
+     *            List to copy.
      * 
      * @return Copy of list.
      * 
@@ -339,7 +340,7 @@ public class Util {
         AttributeList dest = new AttributeList();
 
         Attribute transferSyntaxAttr = source.get(TagFromName.TransferSyntaxUID);
-        String transferSyntax = TransferSyntax.ExplicitVRLittleEndian; //  DEFAULT_TRANSFER_SYNTAX;
+        String transferSyntax = TransferSyntax.ExplicitVRLittleEndian; // DEFAULT_TRANSFER_SYNTAX;
         if (transferSyntaxAttr != null) transferSyntax = transferSyntaxAttr.getSingleStringValueOrDefault(DEFAULT_TRANSFER_SYNTAX);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, transferSyntax, transferSyntax);
@@ -354,7 +355,8 @@ public class Util {
     /**
      * Make a new copy of an attribute list, not sharing any data with the original.
      * 
-     * @param source List to copy.
+     * @param source
+     *            List to copy.
      * 
      * @return Copy of list.
      * 
@@ -383,7 +385,7 @@ public class Util {
         AttributeList dest = ((SequenceAttribute) newAttributeList.get(TagFromName.ContentSequence)).getItem(0).getAttributeList();
         return dest;
     }
-    
+
     public static Attribute cloneAttribute(Attribute attribute) {
         AttributeList attributeList = new AttributeList();
         attributeList.put(attribute);
@@ -404,17 +406,18 @@ public class Util {
      * means that it must start and end with a digit and contain
      * only digits and periods (.) .
      * 
-     * Example of valid UID:  98.09877.897.908.9
+     * Example of valid UID: 98.09877.897.908.9
+     * 
      * @param uid
      * @return
      */
     public static boolean isValidUid(String uid) {
         int len = uid.length();
         boolean ok =
-            (uid.trim().length() > 0) &&
-            uid.matches("[0-9\\.]*") &&
-            uid.substring(0, 1).matches("[0-9]") &&
-            uid.substring(len-1, len).matches("[0-9]");
+                (uid.trim().length() > 0) &&
+                        uid.matches("[0-9\\.]*") &&
+                        uid.substring(0, 1).matches("[0-9]") &&
+                        uid.substring(len - 1, len).matches("[0-9]");
         return ok;
 
     }
@@ -467,10 +470,10 @@ public class Util {
      * 
      * @param xmlFile
      *            XML file to create.
-     *            
+     * 
      * @throws IOException
-     * @throws UMROException 
-     * @throws ParserConfigurationException 
+     * @throws UMROException
+     * @throws ParserConfigurationException
      */
     public static void writeXmlFile(AttributeList attributeList, File xmlFile) throws IOException, UMROException, ParserConfigurationException {
         Document document = new XMLRepresentationOfDicomObjectFactory().getDocument(attributeList);
@@ -481,6 +484,33 @@ public class Util {
         xmlFile.delete();
         Utility.writeFile(xmlFile, xmlText.getBytes());
         Log.get().info("Wrote xml file " + xmlFile.getAbsolutePath());
+    }
+
+    /**
+     * Read a DICOM file after checking that there is sufficient heap space to read it.
+     * 
+     * @param File
+     *            to read
+     * @return Parsed DICOM.
+     * @throws IOException
+     * @throws DicomException
+     */
+    public static AttributeList readDicomFile(File file) throws IOException, DicomException {
+        AttributeList attributeList = new AttributeList();
+        byte filler[] = null;
+        try {
+            int length = (int) file.length();
+            filler = new byte[length * 10];
+            filler[length - 1] = 5;
+            if (filler[length - 1] != 5) throw new RuntimeException("readDicomFile unable to allocate space on heap to read DICOM file " + file.getAbsolutePath());
+        }
+        catch (OutOfMemoryError t) {
+            filler = null;
+            Runtime.getRuntime().gc();
+            throw t;
+        }
+        attributeList.read(file);
+        return attributeList;
     }
 
 }
