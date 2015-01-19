@@ -49,13 +49,10 @@ import com.pixelmed.dicom.TagFromName;
 
 public class DicomClientReadStrategy implements AttributeList.ReadTerminationStrategy {
 
-    private static final long MAX_READ = 1024 * 4;
-
     public static final DicomClientReadStrategy dicomClientReadStrategy = new DicomClientReadStrategy();
 
     @Override
     public boolean terminate(AttributeList attributeList, AttributeTag tag, long bytesRead) {
-        if (bytesRead >= MAX_READ) return true;
         Attribute sopClassUID = attributeList.get(TagFromName.SOPClassUID);
         if (sopClassUID != null) {
             String classUID = sopClassUID.getSingleStringValueOrEmptyString();
