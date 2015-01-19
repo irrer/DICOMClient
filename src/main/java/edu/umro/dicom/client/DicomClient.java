@@ -28,6 +28,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -116,7 +117,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public static final Font FONT_LARGE = new Font("SansSerif", Font.PLAIN, 18);
 
     /** Large font that makes things stand out. */
-    public static final Font FONT_HUGE = new Font("SansSerif", Font.PLAIN, 24);
+    public static final Font FONT_HUGE = new Font("SansSerif", Font.PLAIN, 20);
 
     /** Italicized version of huge font. */
     public static final Font FONT_HUGE_ITALICS = new Font("SansSerif", Font.ITALIC, 30);
@@ -369,17 +370,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         JPanel outerPanel = new JPanel();
         outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
 
-        JLabel uploadLabel = new JLabel("Upload DICOM files to");
-        uploadLabel.setFont(FONT_TINY);
-        uploadLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
         JPanel southPanel = new JPanel();
 
-        outerPanel.add(uploadLabel);
         outerPanel.add(panel);
         outerPanel.add(southPanel);
-
-        outerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
         return outerPanel;
     }
@@ -465,7 +459,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         panel.add(anonymizeDestinationBrowseButton);
 
         // panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
-        panel.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
         return panel;
     }
 
@@ -532,7 +525,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         modePanel.add(uploadRadioButton);
         modePanel.add(anonymizeThenUploadRadioButton);
 
-        modePanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 0, 0));
+        //modePanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 0, 0));
         modePanel.setVisible(ClientConfig.getInstance().getShowUploadCapability());
         return modePanel;
     }
@@ -544,7 +537,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(anonymizeOptionsButton, BorderLayout.CENTER);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         return panel;
     }
 
@@ -557,7 +549,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         loadedStatisticsLabel.setToolTipText("Summary of loaded files.");
         panel.add(loadedStatisticsLabel, BorderLayout.WEST);
 
-        panel.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 0));
         return panel;
     }
 
@@ -582,23 +573,26 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         panel.setLayout(gridBagLayout);
 
         GridBagConstraints c = new GridBagConstraints();
+        
 
         {
             c.fill = GridBagConstraints.NONE;
             c.gridx = 0;
             c.gridy = 0;
             c.weightx = 0;
+            c.insets = new Insets(15, 10, 0, 0);
             c.anchor = GridBagConstraints.LINE_START;
             JComponent jc = buildModeSelector();
             gridBagLayout.setConstraints(jc, c);
             panel.add(jc);
         }
-
+        
         {
             c.fill = GridBagConstraints.NONE;
             c.gridx = 0;
             c.gridy = 1;
             c.weightx = 0;
+            c.insets = new Insets(0, 20, 0, 0);
             c.anchor = GridBagConstraints.LINE_START;
             JComponent jc = buildLoadStatisticsPanel();
             gridBagLayout.setConstraints(jc, c);
@@ -610,6 +604,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             c.gridx = 0;
             c.gridy = 2;
             c.weightx = 1;
+            c.insets = new Insets(0, 20, 0, 0);
             c.anchor = GridBagConstraints.LINE_START;
             JComponent jc = buildOutputDirectorySelector();
             gridBagLayout.setConstraints(jc, c);
@@ -624,9 +619,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             c.gridx = 1;
             c.gridy = 0;
             c.weightx = 0;
-            c.anchor = GridBagConstraints.LINE_START;
-            c.gridheight = 2;
-            c.gridwidth = 2;
+            c.insets = new Insets(20, 20, 0, 0);
+            c.anchor = GridBagConstraints.CENTER;
+            c.gridheight = 1;
+            c.gridwidth = 1;
             JComponent jc = buildPacsSelector();
             gridBagLayout.setConstraints(jc, c);
             panel.add(jc);
@@ -637,21 +633,23 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         {
             c.fill = GridBagConstraints.NONE;
             c.gridx = 1;
-            c.gridy = 2;
+            c.gridy = 1;
             c.weightx = 0;
-            c.anchor = GridBagConstraints.LINE_START;
-            JComponent jc = buildProcessedStatisticsPanel();
+            c.insets = new Insets(20, 20, 0, 0);
+            c.anchor = GridBagConstraints.CENTER;
+            JComponent jc = buildAnonOptionsButtonPanel();
             gridBagLayout.setConstraints(jc, c);
             panel.add(jc);
         }
 
         {
             c.fill = GridBagConstraints.NONE;
-            c.gridx = 2;
+            c.gridx = 1;
             c.gridy = 2;
             c.weightx = 0;
-            c.anchor = GridBagConstraints.LINE_START;
-            JComponent jc = buildAnonOptionsButtonPanel();
+            c.insets = new Insets(20, 20, 15, 0);
+            c.anchor = GridBagConstraints.CENTER;
+            JComponent jc = buildProcessedStatisticsPanel();
             gridBagLayout.setConstraints(jc, c);
             panel.add(jc);
         }
