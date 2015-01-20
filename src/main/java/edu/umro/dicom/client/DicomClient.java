@@ -31,6 +31,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -85,7 +87,7 @@ import edu.umro.util.General;
  * @author Jim Irrer irrer@umich.edu
  * 
  */
-public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener {
+public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener, MouseMotionListener {
 
     /** Name that appears in title bar of window. */
     public static final String PROJECT_NAME = "DICOM+";
@@ -525,7 +527,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         modePanel.add(uploadRadioButton);
         modePanel.add(anonymizeThenUploadRadioButton);
 
-        //modePanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 0, 0));
+        // modePanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 0, 0));
         modePanel.setVisible(ClientConfig.getInstance().getShowUploadCapability());
         return modePanel;
     }
@@ -573,7 +575,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         panel.setLayout(gridBagLayout);
 
         GridBagConstraints c = new GridBagConstraints();
-        
 
         {
             c.fill = GridBagConstraints.NONE;
@@ -586,7 +587,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             gridBagLayout.setConstraints(jc, c);
             panel.add(jc);
         }
-        
+
         {
             c.fill = GridBagConstraints.NONE;
             c.gridx = 0;
@@ -879,6 +880,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             if (!inCommandLineMode()) {
                 frame.pack();
                 frame.setVisible(true);
+                getMainContainer().addMouseMotionListener(this);
             }
             setMode();
         }
@@ -1009,6 +1011,20 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         statisticsQueue.add(new Object());
     }
 
+    private void repaintMain() {
+        getMainContainer().paintAll(getMainContainer().getGraphics());
+    }
+
+    private LinkedBlockingQueue<Object> repaintQueue = new LinkedBlockingQueue<Object>();
+
+    public void mouseDragged(MouseEvent ev) {
+        repaintQueue.add(new Object());
+    }
+
+    public void mouseMoved(MouseEvent ev) {
+        repaintQueue.add(new Object());
+    }
+
     /**
      * Periodically refresh the main screen to fix display problems. This should
      * not really have to be done, but it seems to help on some displays.
@@ -1019,7 +1035,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 while (true) {
                     try {
                         Exec.sleep(2000);
-                        getMainContainer().paintAll(getMainContainer().getGraphics());
+                        if (!repaintQueue.isEmpty()) {
+                            repaintQueue.clear();
+                            repaintMain();
+                        }
                     }
                     catch (Exception e) {
                         Exec.sleep(10 * 1000);
