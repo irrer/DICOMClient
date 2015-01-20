@@ -618,6 +618,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             isAnonymizedThenUploaded = true;
             break;
         }
+        DicomClient.getInstance().markScreenAsModified();
         DicomClient.getInstance().setProcessedStatus();
     }
 
@@ -634,11 +635,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             Thread thread = new Thread(this);
             thread.start();
         }
-        /*
-         * try { thread.join(); } catch (InterruptedException e) {
-         * Log.get().warning
-         * ("Unexpected error from background processing thread: " + e); }
-         */
+        DicomClient.getInstance().markScreenAsModified();
     }
 
     /**
@@ -810,6 +807,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     count++;
                     setProgress(count);
                     Log.get().info("Anonymized to file: " + newFile.getAbsolutePath());
+                    DicomClient.getInstance().markScreenAsModified();
                 }
             }
             catch (DicomException e) {
@@ -936,6 +934,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             ArrayList<File> fileList = new ArrayList<File>();
             for (int f = 0; f < instanceList.size(); f++) {
                 fileList.add(instanceList.getFile(f));
+                DicomClient.getInstance().markScreenAsModified();
             }
                 
             uploadFiles(fileList);
@@ -945,6 +944,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
         finally {
             previewProgressLayout.show(previewProgressPanel, CARD_SLIDER);
+            DicomClient.getInstance().markScreenAsModified();
         }
     }
 
@@ -1013,7 +1013,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
             slice = (slice < 1) ? 1 : slice;
             showPreview(slice);
         }
+        DicomClient.getInstance().markScreenAsModified();
     }
+    
 
     @Override
     public String toString() {

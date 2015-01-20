@@ -31,8 +31,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -87,7 +85,7 @@ import edu.umro.util.General;
  * @author Jim Irrer irrer@umich.edu
  * 
  */
-public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener, MouseMotionListener {
+public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener {
 
     /** Name that appears in title bar of window. */
     public static final String PROJECT_NAME = "DICOM+";
@@ -880,7 +878,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             if (!inCommandLineMode()) {
                 frame.pack();
                 frame.setVisible(true);
-                getMainContainer().addMouseMotionListener(this);
             }
             setMode();
         }
@@ -920,6 +917,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     @Override
     public void actionPerformed(ActionEvent ev) {
+        markScreenAsModified();
         Object source = ev.getSource();
 
         if (source.equals(exitButton)) {
@@ -977,6 +975,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
         }
 
+        markScreenAsModified();
     }
 
     public PACS getCurrentPacs() {
@@ -1009,6 +1008,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     public void indicateThatStatisticsHaveChanged() {
         statisticsQueue.add(new Object());
+        markScreenAsModified();
     }
 
     private void repaintMain() {
@@ -1017,11 +1017,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     private LinkedBlockingQueue<Object> repaintQueue = new LinkedBlockingQueue<Object>();
 
-    public void mouseDragged(MouseEvent ev) {
-        repaintQueue.add(new Object());
-    }
-
-    public void mouseMoved(MouseEvent ev) {
+    public void markScreenAsModified() {
         repaintQueue.add(new Object());
     }
 
@@ -1036,6 +1032,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     try {
                         Exec.sleep(2000);
                         if (!repaintQueue.isEmpty()) {
+                            Exec.sleep(2000);
                             repaintQueue.clear();
                             repaintMain();
                         }
