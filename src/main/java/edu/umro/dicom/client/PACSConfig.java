@@ -35,11 +35,21 @@ public class PACSConfig {
     /** Name of configuration file. */
     private static final String CONFIG_FILE_NAME = "PACSConfig.xml";
 
+    private volatile static boolean configHasBeenTried = false;
+
+    private static String jarConf() {
+        String path = PACSConfig.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        File dir = (new File(path)).getParentFile();
+        File configFile = new File(dir, CONFIG_FILE_NAME);
+        return configFile.getAbsolutePath();
+    }
+
     /** List of all possible configuration files. */
     private static final String[] CONFIG_FILE_LIST = {
             System.getProperty("pacsconfig"),
             CONFIG_FILE_NAME,
-            "src\\main\\resources\\" + CONFIG_FILE_NAME
+            "src\\main\\resources\\" + CONFIG_FILE_NAME,
+            jarConf()
     };
 
     /** Instance of this object. */
@@ -59,9 +69,9 @@ public class PACSConfig {
             try {
                 Log.get().info("Trying configuration file " + (new File(configFileName)).getAbsolutePath());
                 config = XML.parseToDocument(Utility.readFile(new File(configFileName)));
-                
+
                 identity = new PACS(XML.getSingleNode(config, "/PacsConfiguration/Identity/PACS"));
-                
+
                 pacsList = new ArrayList<PACS>();
                 NodeList nodeList = XML.getMultipleNodes(config, "/PacsConfiguration/PacsList/PACS");
                 for (int n = 0; n < nodeList.getLength(); n++) {
@@ -78,14 +88,16 @@ public class PACSConfig {
             }
         }
         if (config == null) {
-            Log.get().severe("Unable to read and parse any configuration file of: " + CONFIG_FILE_LIST);
+            String msg = "Unable to read and parse any PACS configuration file of: " + CONFIG_FILE_LIST;
+            Log.get().severe(msg);
+            //DicomClient.getInstance().showMessage(msg);
         }
     }
 
     /**
      * Construct a configuration object.
      */
-    public PACSConfig() {
+    private PACSConfig() {
         parseConfigFile();
     }
 
@@ -113,19 +125,14 @@ public class PACSConfig {
      * @return This configuration.
      */
     public static PACSConfig getInstance() {
-        if (pacsConfig == null) {
-            pacsConfig = new PACSConfig();
+        if (configHasBeenTried)
+            return pacsConfig;
+        else {
+            configHasBeenTried = true;
+            if (pacsConfig == null) {
+                pacsConfig = new PACSConfig();
+            }
+            return pacsConfig;
         }
-        return pacsConfig;
-    }
-
-    /**
-     * Force the PACS configuration to be refreshed from the file.
-     * 
-     * @return The new PACS configuration.
-     */
-    public static PACSConfig refresh() {
-        pacsConfig = new PACSConfig();
-        return pacsConfig;
     }
 }

@@ -20,7 +20,7 @@ set PATH=%JAVA_HOME%\bin;%PATH%
 set dirname=%~dp0
 echo Starting DICOM+
 
-FOR %%M IN (16384 8192 4096 2048 1536 1280 1024 768 512 384 256 128 64 32) DO echo Using memory: %%M && java -Xmx%%Mm -cp %dirname%dicomclient-1.0.36-jar-with-dependencies.jar edu.umro.dicom.client.DicomClient %* && EXIT /B
+FOR %%M IN (16384 8192 4096 2048 1536 1280 1024 768 512 384 256 128 64 32) DO echo Using memory: %%M && java -Xmx%%Mm -cp %dirname%@@with-dep-jar@@ edu.umro.dicom.client.DicomClient %* && EXIT /B
 
 @rem The script gets here if something went wrong.  Let the user look at the screen to get information to fix the problem.
 pause

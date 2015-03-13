@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.logging.Level;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -65,6 +64,8 @@ public class ClientConfig {
     /** Instance of this object. */
     private volatile static ClientConfig clientConfig = null;
 
+    private volatile static boolean configHasBeenTried = false;
+
     /** Configuration information from file. */
     private volatile Document config = null;
 
@@ -73,34 +74,80 @@ public class ClientConfig {
 
     private AttributeList anonymizingReplacementList = null;
 
+    private Document parseConfigFile(String configFileName) {
+        try {
+            Log.get().info("Trying configuration file " + configFileName);
+            config = XML.parseToDocument(Utility.readFile(new File(configFileName)));
+            Log.get().info("Using configuration file " + configFileName);
+            return config;
+        }
+        catch (Exception e) {
+            ;
+        }
+        return null;
+    }
+
+    /*
+     * Try to get the configuration file by looking for it in
+     * same directory as the jar file that contains this class.
+     * 
+     * @return Either configuration file or null on failure.
+     */
+    private Document getConfigFromJarPath() {
+        File dir = null;
+        try {
+            String path = ClientConfig.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            File file = new File(path);
+            dir = file.getParentFile();
+            File configFile = new File(dir, CONFIG_FILE_NAME);
+            return parseConfigFile(configFile.getAbsolutePath());
+        }
+        catch (Exception e) {
+            Log.get().warning("Could not get configuration file by looking in the same directory '" + dir.getAbsolutePath() + "' as the jar file: " + e);
+        }
+
+        return null;
+    }
+
     /**
      * Read in the configuration for the client from the configuration file. Try
      * all files on the list and use the first one that parses.
      */
-    private void parseConfigFile() {
+    private void tryConfigDirs() {
         for (String configFileName : CONFIG_FILE_LIST) {
-            try {
-                Log.get().info("Trying configuration file " + (new File(configFileName)).getAbsolutePath());
-                config = XML.parseToDocument(Utility.readFile(new File(configFileName)));
-            }
-            catch (Exception e) {
-                ;
-            }
+            config = parseConfigFile(configFileName);
             if (config != null) {
-                Log.get().info("Using configuration file " + (new File(configFileName)).getAbsolutePath());
                 break;
             }
         }
+
+        if (config == null) config = getConfigFromJarPath();
+
         if (config == null) {
-            Log.get().severe("Unable to read and parse any configuration file of: " + CONFIG_FILE_LIST);
+            String message = "Unable to read and parse any configuration file of: " + CONFIG_FILE_LIST;
+            Log.get().severe(message);
+            if (!DicomClient.inCommandLineMode()) {
+                String msg = "<html>The application could not find a configuration file.<br>&nbsp<p>\n" +
+                        "The configuration is an XML file and must be named <br>\n" + CONFIG_FILE_NAME + " ." +
+                        "Without this file anonymization can not be performed.<br>&nbsp<p>\n" +
+                        "The file should be in the same folder as the jar file." +
+                        "</html>";
+                new Alert(msg, "No Configuration File", null, null, true);
+            }
         }
     }
 
     /**
      * Construct a configuration object.
      */
-    public ClientConfig() {
-        parseConfigFile();
+    private ClientConfig() {
+        if (configHasBeenTried)
+            return;
+        else {
+            configHasBeenTried = true;
+
+            tryConfigDirs();
+        }
     }
 
     /**
@@ -108,7 +155,8 @@ public class ClientConfig {
      * 
      * @return Base URL for DICOM service, or null if not initialized.
      */
-    public String getServerBaseUrl() {
+    /*
+    private String getServerBaseUrl() {
         String dicomServiceUrl = null;
         // This special property is mostly used in development environment for using a private server.
         if (System.getProperty("DicomServiceUrl") != null) {
@@ -132,6 +180,7 @@ public class ClientConfig {
         }
         return dicomServiceUrl;
     }
+    */
 
     /**
      * Get the flag indicating whether or not the upload capability should be shown. If there is a problem,
@@ -204,8 +253,8 @@ public class ClientConfig {
     }
 
     /**
-     * Return TRUE if this value might be PHI.  Values are not considered PHI if they
-     * contain special characters.  For example, TEST5 would not be PHI because it
+     * Return TRUE if this value might be PHI. Values are not considered PHI if they
+     * contain special characters. For example, TEST5 would not be PHI because it
      * contains the digit 5.
      * 
      * @param text

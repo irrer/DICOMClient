@@ -525,7 +525,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         modePanel.add(uploadRadioButton);
         modePanel.add(anonymizeThenUploadRadioButton);
 
-        // modePanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 0, 0));
+        if (ClientConfig.getInstance().getAnonymizingReplacementList().size() == 0) {
+            anonymizeRadioButton.setEnabled(false);
+            anonymizeThenLoadRadioButton.setEnabled(false);
+            anonymizeThenUploadRadioButton.setEnabled(false);
+            uploadRadioButton.setSelected(true);
+        }
+
         modePanel.setVisible(ClientConfig.getInstance().getShowUploadCapability());
         return modePanel;
     }
@@ -1919,6 +1925,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         Log.get().info("Organization: " + Util.getImplementationVendor());
     }
 
+    /*
     private void setupTrustStore() {
         if (ClientConfig.getInstance().getServerBaseUrl() == null) {
             Log.get().info("No DICOM server URL specified, so Java key store not initialized");
@@ -1943,6 +1950,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 ClientConfig.getInstance().getServerBaseUrl() + " so you will not be able to upload files.");
         return;
     }
+    */
 
     /**
      * @param args
@@ -1969,7 +1977,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             Anonymize.setTemplate(ClientConfig.getInstance().getAnonPatientIdTemplate());
 
             DicomClient dicomClient = getInstance();
-            dicomClient.setupTrustStore();
+            //dicomClient.setupTrustStore();
 
             // If in command line mode, then anonymize all files and exit
             // happily
