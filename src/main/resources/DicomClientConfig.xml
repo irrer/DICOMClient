@@ -257,9 +257,9 @@
         <Tag Name='SynchronizationFrameOfReferenceUID'  ></Tag>
         <Tag Name='SynchronizationFrameOfRefUID'        ></Tag>   <!-- check for shortened version also -->
         <Tag Name='ImageComments'                       >none</Tag>
-        <Tag Name='RequestAttributesSequence'           ></Tag>
+        <!-- <Tag Name='RequestAttributesSequence'           ></Tag>  -->
         <Tag Name='UID'                                 ></Tag>
-        <Tag Name='ContentSequence'                     >remove</Tag>
+        <!-- <Tag Name='ContentSequence'                     >remove</Tag>  -->
         <Tag Name='StorageMediaFileSetUID'              ></Tag>
         <Tag Name='ReferencedFrameOfReferenceUID'       ></Tag>
         <Tag Name='RelatedFrameOfReferenceUID'          ></Tag>

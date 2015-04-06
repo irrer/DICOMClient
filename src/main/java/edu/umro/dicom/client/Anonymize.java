@@ -63,10 +63,6 @@ class Uid {
         return originalPatientId;
     }
     
-    public String XgetAnonymizedPatientId() {
-        return anonymizedPatientId;
-    }
-    
     public Uid(String anonymizedPatientId, String uid, String originalPatientId) {
         this.anonymizedPatientId = anonymizedPatientId;
         this.uid = uid;

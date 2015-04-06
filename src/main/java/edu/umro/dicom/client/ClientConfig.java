@@ -393,24 +393,26 @@ public class ClientConfig {
                     Node node = nodeList.item(ad);
                     String tagText = XML.getValue(node, "@Name");
                     if (tagText != null) {
-                        AttributeTag tag = CustomDictionary.getInstance().getTagFromName(tagText);
-                        if (tag != null) {
-                            String value = XML.getValue(node, "text()");
-                            value = (value == null) ? "" : value;
-                            Attribute attribute = AttributeFactory.newAttribute(tag);
-                            if (canControlAnonymizing(tag)) {
-                                attribute.addValue(value);
-                                anonymizingReplacementList.put(attribute);
+                        try {
+                            AttributeTag tag = CustomDictionary.getInstance().getTagFromName(tagText);
+                            if (tag != null) {
+                                String value = XML.getValue(node, "text()");
+                                value = (value == null) ? "" : value;
+                                Attribute attribute = AttributeFactory.newAttribute(tag);
+                                if (canControlAnonymizing(tag)) {
+                                    attribute.addValue(value);
+                                    anonymizingReplacementList.put(attribute);
+                                }
                             }
+                        }
+                        catch (Exception e) {
+                            Log.get().warning("Unable to parse list of default attributes to anonymize.  User will have to supply them manually.");
                         }
                     }
                 }
             }
             catch (UMROException e) {
                 Log.get().warning("Unable to parse list of default attributes to anonymize.  User will have to supply them manually.");
-            }
-            catch (DicomException e) {
-                Log.get().warning(this.getClass().getName() + ".getAnonymizingReplacementList : Failed to construct DICOM Attribute: " + e);
             }
         }
         return anonymizingReplacementList;
