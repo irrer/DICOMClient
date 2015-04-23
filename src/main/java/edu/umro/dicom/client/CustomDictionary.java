@@ -529,8 +529,6 @@ public class CustomDictionary extends DicomDictionary {
         extensions.add(new PrivateTag(TagFromName.ReferencedLateralSpreadingDeviceNumber, "ReferencedLatSpreadingDevcNumber"));
         extensions.add(new PrivateTag(TagFromName.InterpretationDiagnosisDescription, "InterpDiagnosisDescription"));
         extensions.add(new PrivateTag(TagFromName.InterpretationDiagnosisCodeSequence, "InterpDiagnosisCodeSequence"));
-        extensions.add(new PrivateTag(TagFromName.ThreatDetectionAlgorithmAndVersion, "ThreatDetectionAlgandVersion"));
-
     }
 
 
@@ -1010,7 +1008,6 @@ public class CustomDictionary extends DicomDictionary {
         valueMultiplicity.put(TagFromName.CenterOfPTO, Multiplicity.M3);
         valueMultiplicity.put(TagFromName.BoundingPolygon, Multiplicity.M6_N);
         valueMultiplicity.put(TagFromName.AbortReason, Multiplicity.M1_N);
-        valueMultiplicity.put(TagFromName.ThreatDetectionAlgorithmAndVersion, Multiplicity.M1_N);
         valueMultiplicity.put(TagFromName.OOISize, Multiplicity.M3);
         valueMultiplicity.put(TagFromName.SourceOrientation, Multiplicity.M3);
         valueMultiplicity.put(TagFromName.SourcePosition, Multiplicity.M3);

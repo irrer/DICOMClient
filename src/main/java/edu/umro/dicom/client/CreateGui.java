@@ -71,7 +71,6 @@ public class CreateGui extends JPanel implements ActionListener {
     
     private Preview preview = null;
     
-    @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(cancelButton)) editGui.setToMainMode();
         if (e.getSource().equals(createButton) || e.getSource().equals(singleValueText)) {

@@ -293,7 +293,6 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
         return patientId;
     }
 
-    @Override
     public int compareTo(Patient other) {
         return patientId.compareTo(other.patientId);
     }
@@ -395,19 +394,16 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
     }
 
 
-    @Override
     public void insertUpdate(DocumentEvent e) {
         updateAnonymizePatientFields();
     }
 
 
-    @Override
     public void removeUpdate(DocumentEvent e) {
         updateAnonymizePatientFields();
     }
 
 
-    @Override
     public void changedUpdate(DocumentEvent e) {
         updateAnonymizePatientFields();
     }
@@ -453,7 +449,6 @@ public class Patient extends JPanel implements Comparable<Patient>, DocumentList
     }
 
 
-    @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == enableDifferentPatientName) {
             setDiffPatName();

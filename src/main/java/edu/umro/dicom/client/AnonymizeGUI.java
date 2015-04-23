@@ -171,12 +171,10 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         }
 
 
-        @Override
         public void itemStateChanged(ItemEvent e) {
         }
 
 
-        @Override
         public void actionPerformed(ActionEvent e) {
             textField.setEnabled(getActive());
             attrNameLabel.setEnabled(getActive());
@@ -319,7 +317,6 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
     }
 
 
-    @Override
     public void actionPerformed(ActionEvent ev) {
         if (ev.getSource().equals(closeButton)) {
             dialog.setVisible(false);
@@ -429,17 +426,14 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
     }
 
 
-    @Override
     public void insertUpdate(DocumentEvent e) {
         search();
     }
 
-    @Override
     public void removeUpdate(DocumentEvent e) {
         search();
     }
 
-    @Override
     public void changedUpdate(DocumentEvent e) {
         search();
     }

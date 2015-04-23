@@ -105,7 +105,6 @@ public class Alert extends JDialog implements ActionListener {
     }
 
 
-    @Override
     public void actionPerformed(ActionEvent ev) {
         Object source = ev.getSource();
         int b = 0;

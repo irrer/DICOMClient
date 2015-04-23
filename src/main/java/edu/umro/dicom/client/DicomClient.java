@@ -47,7 +47,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -60,9 +59,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicArrowButton;
 
-import org.restlet.Request;
-import org.restlet.data.ChallengeResponse;
-import org.restlet.data.ChallengeScheme;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
@@ -191,9 +187,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** Field where user enters their login id. */
     private JTextField loginNameTextField = null;
 
-    /** Field where user enters their password. */
-    private JPasswordField loginPasswordTextField = null;
-
     /** True if the application is in command line mode (no GUI) */
     private static boolean commandLineMode = false;
 
@@ -296,18 +289,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public String getSelectedAeTitle() {
         String aeTitle = ((String) (pacsLabel.getText())).trim();
         return aeTitle.equals(NO_PACS) ? null : aeTitle;
-    }
-
-    /**
-     * Set the challenge scheme, user name, and password in a HTTP request. The
-     * challenge scheme is the Basic HTTP scheme.
-     * 
-     * @param request
-     *            Request to set up.
-     */
-    public void setChallengeResponse(Request request) {
-        ChallengeResponse authentication = new ChallengeResponse(ChallengeScheme.HTTP_BASIC, loginNameTextField.getText(), loginPasswordTextField.getPassword());
-        request.setChallengeResponse(authentication);
     }
 
     /**
@@ -921,7 +902,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         showMessageText.delete(0, showMessageText.length());
     }
 
-    @Override
     public void actionPerformed(ActionEvent ev) {
         markScreenAsModified();
         Object source = ev.getSource();
@@ -1238,7 +1218,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return preview;
     }
 
-    @Override
     public void stateChanged(ChangeEvent ev) {
         setProcessedStatus();
     }
@@ -1251,107 +1230,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public int getFileCount() {
         return fileCount;
     }
-
-    /**
-     * Read at a minimum the first portion of the given DICOM file. The
-     * 'portion' is defined to be long enough to get the basic meta-data.
-     * 
-     * @param fileName
-     * 
-     * @return The contents of the file
-     */
-    /*
-     * private AttributeList readDicomFileJim(File file) {
-     * AttributeList attributeList = new AttributeList();
-     * 
-     * BufferedInputStream inStream = null;
-     * try {
-     * if (inCommandLineMode()) {
-     * // this does not show any annoying messages in the log
-     * attributeList.read(file);
-     * }
-     * else {
-     * // The following is faster than
-     * // <code>attributeList.read(fileName);</code>, as it only reads
-     * // the first part of every DICOM file, but
-     * // it also produces a lot of error messages because of the
-     * // 'ragged end' of each file.
-     * inStream = new BufferedInputStream(new FileInputStream(file));
-     * 
-     * DicomInputStream dis = new DicomInputStream(inStream);
-     * 
-     * attributeList.read(dis,DicomClientReadStrategy.dicomClientReadStrategy);
-     * // attributeList.read(dis);
-     * // attributeList.read(new File(fileName));
-     * }
-     * }
-     * catch (Exception e) {
-     * // Exceptions do not matter because
-     * // 1: If reading a partial file, there will always be an exception
-     * // 2: The content is checked anyway
-     * Log.get().severe("Error reading DICOM file " + file.getAbsolutePath() + " : " + e);
-     * }
-     * finally {
-     * if (inStream != null) try {
-     * inStream.close();
-     * }
-     * catch (Exception e) {
-     * Log.get().warning("Unable to close stream for file " + file.getAbsolutePath());
-     * }
-     * }
-     * return attributeList;
-     * }
-     */
-
-    /*
-     * Tags referenced application sorted by group and element.
-     * (0x0002,0x0002) MediaStorageSOPClassUID
-     * (0x0008,0x0012) InstanceCreationDate
-     * (0x0008,0x0012) InstanceCreationDate
-     * (0x0008,0x0013) InstanceCreationTime
-     * (0x0008,0x0013) InstanceCreationTime
-     * (0x0008,0x0021) SeriesDate
-     * (0x0008,0x0022) AcquisitionDate
-     * (0x0008,0x0023) ContentDate
-     * (0x0008,0x0031) SeriesTime
-     * (0x0008,0x0032) AcquisitionTime
-     * (0x0008,0x0033) ContentTime
-     * (0x0008,0x0060) Modality
-     * (0x0008,0x103e) SeriesDescription
-     * (0x0010,0x0010) PatientName
-     * (0x0010,0x0020) PatientID
-     * (0x0020,0x000e) SeriesInstanceUID
-     * (0x3006,0x0008) StructureSetDate
-     * (0x3006,0x0009) StructureSetTime
-     * (0x300a,0x0006) RTPlanDate
-     * (0x300a,0x0007) RTPlanTime
-     */
-
-    /*
-     * private AttributeList ensureMinimumMetadata(File file, AttributeList attributeList) {
-     * // If no data was read by now, then this is probably not a DICOM file and there won't be any more data
-     * if (attributeList.entrySet().isEmpty()) return attributeList;
-     * 
-     * AttributeTag lastTag = attributeList.lastKey();
-     * AttributeTag sTag = TagFromName.SeriesInstanceUID;
-     * if (lastTag.compareTo(TagFromName.SeriesInstanceUID) > 0) {
-     * try {
-     * AttributeList al = new AttributeList();
-     * al.read(file);
-     * attributeList = al;
-     * }
-     * catch (Exception e) {
-     * String msg = "Unexpected error reading file " + file.getAbsolutePath() + " : " + Log.fmtEx(e);
-     * Log.get().warning(msg);
-     * showMessage(msg);
-     * }
-     * }
-     * 
-     * return attributeList;
-     * }
-     */
-
-    private DicomClientReadStrategy terminationStrategy = new DicomClientReadStrategy();
 
     private AttributeList minimalAttributeList(AttributeList attributeList) {
         AttributeTag tagList[] = {
@@ -1422,7 +1300,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 attributeList.read(file);
             }
             else {
-                attributeList.read(file, terminationStrategy);
+                attributeList.read(file, DicomClientReadStrategy.dicomClientReadStrategy);
                 attributeList = minimalAttributeList(attributeList);
             }
         }
@@ -1578,7 +1456,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
     }
 
-    @Override
     public void filesDropped(File[] fileList) {
         class Add implements Runnable {
             File[] fileList = null;
@@ -1587,7 +1464,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 this.fileList = fileList;
             }
 
-            @Override
             public void run() {
                 for (File file : fileList) {
                     try {

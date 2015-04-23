@@ -45,6 +45,7 @@ import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClassDescriptions;
+import com.pixelmed.dicom.SetOfDicomFiles;
 import com.pixelmed.dicom.TagFromName;
 import edu.umro.dicom.client.DicomClient.ProcessingMode;
 import edu.umro.dicom.client.test.AutoTest;
@@ -186,7 +187,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 this.attributeList = attributeList;
             }
 
-            @Override
             public int compareTo(Instance o) {
                 return this.instanceNumber - o.instanceNumber;
             }
@@ -574,11 +574,11 @@ public class Series extends JPanel implements ActionListener, Runnable {
      * 
      * @return True on success.
      */
-    private void pushDicom(AttributeList[] attrListList) {
+    private void pushDicom(SetOfDicomFiles setOfDicomFiles) {
         try {
             processLock.acquireUninterruptibly();
             PACS pacs = DicomClient.getInstance().getCurrentPacs();
-            DicomPush dicomPush = new DicomPush(pacs, attrListList, null);
+            DicomPush dicomPush = new DicomPush(pacs, setOfDicomFiles, null);
             String pushError = dicomPush.push();
             if (pushError != null) {
                 processOk = false;
@@ -867,41 +867,64 @@ public class Series extends JPanel implements ActionListener, Runnable {
     private void uploadFiles(ArrayList<File> fileList) {
         int fileIndex = 0;
 
-        AttributeList[] tempList = new AttributeList[fileList.size()];
-        while ((fileIndex < fileList.size()) && (processOk)) {
-            int f = 0;
-            while ((fileIndex < fileList.size()) && processOk && (f < UPLOAD_BUFFER_SIZE)) {
-                File file = fileList.get(fileIndex);
-                AttributeList attributeList = new CustomAttributeList();
-                try {
-                    attributeList = Util.readDicomFile(file);
-                }
-                catch (Exception e) {
-                    String msg = seriesSummary + " Unable to read DICOM file " + file.getAbsolutePath() + " : " + e;
-                    Log.get().warning(msg);
-                    DicomClient.getInstance().showMessage(msg);
-                    new Alert(msg, "Upload Failure");
-                    processOk = false;
-                    return;
-                }
-                tempList[f] = attributeList;
-                f++;
-                fileIndex++;
-            }
-            AttributeList[] attrListList = null;
-            if (tempList.length == f)
-                attrListList = tempList;
-            else {
-                attrListList = new AttributeList[f];
-                for (int ff = 0; ff < f; ff++)
-                    attrListList[ff] = tempList[ff];
-            }
+        /*
+         * AttributeList[] tempList = new AttributeList[fileList.size()];
+         * while ((fileIndex < fileList.size()) && (processOk)) {
+         * int f = 0;
+         * while ((fileIndex < fileList.size()) && processOk && (f < UPLOAD_BUFFER_SIZE)) {
+         * File file = fileList.get(fileIndex);
+         * AttributeList attributeList = new CustomAttributeList();
+         * try {
+         * attributeList = Util.readDicomFile(file);
+         * }
+         * catch (Exception e) {
+         * String msg = seriesSummary + " Unable to read DICOM file " + file.getAbsolutePath() + " : " + e;
+         * Log.get().warning(msg);
+         * DicomClient.getInstance().showMessage(msg);
+         * new Alert(msg, "Upload Failure");
+         * processOk = false;
+         * return;
+         * }
+         * tempList[f] = attributeList;
+         * f++;
+         * fileIndex++;
+         * }
+         * AttributeList[] attrListList = null;
+         * if (tempList.length == f)
+         * attrListList = tempList;
+         * else {
+         * attrListList = new AttributeList[f];
+         * for (int ff = 0; ff < f; ff++)
+         * attrListList[ff] = tempList[ff];
+         * }
+         */
 
-            pushDicom(attrListList);
+        String failText = "";
+        int failCount = 0;
+        SetOfDicomFiles setOfDicomFiles = new SetOfDicomFiles();
+        for (File file : fileList) {
+            try {
+                setOfDicomFiles.add(file);
+            }
+            catch (IOException e) {
+                failCount++;
+                String message = "Unable to read file " + file.getAbsolutePath() + " : " + e + "\n";
+                failText += message;
+                Log.get().warning(message);
+            }
+        }
+        if (failCount > 0) {
+            String msg = "While uploading, " + failCount + " files out of " + fileList.size() +
+                    " failed to upload.  Details below.\n\n" + failText;
+            new Alert(msg, "Upload Failure");
+        }
+
+        if (!setOfDicomFiles.isEmpty()) {
+            pushDicom(setOfDicomFiles);
             if (processOk) {
                 Log.get().info("Uploaded file to PACS " + getSelectedAeTitle());
                 setProgress(fileIndex);
-                DicomClient.getInstance().incrementUploadCount(attrListList.length);
+                DicomClient.getInstance().incrementUploadCount(setOfDicomFiles.size());
             }
         }
 
@@ -994,7 +1017,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     public static volatile boolean processOk = true;
 
-    @Override
     public void actionPerformed(ActionEvent ev) {
         processOk = true;
         if (ev.getSource() == uploadAnonymizeButton) {

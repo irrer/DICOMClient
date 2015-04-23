@@ -786,7 +786,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-    @Override
     public void actionPerformed(ActionEvent ev) {
         if (ev.getSource().equals(closeButton)) {
             close();
@@ -831,11 +830,9 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-    @Override
     public void keyTyped(KeyEvent e) {
     }
 
-    @Override
     public void keyPressed(KeyEvent e) {
         char key = e.getKeyChar();
 
@@ -854,19 +851,15 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-    @Override
     public void keyReleased(KeyEvent e) {
     }
 
-    @Override
     public void mousePressed(MouseEvent e) {
     }
 
-    @Override
     public void mouseClicked(MouseEvent e) {
     }
 
-    @Override
     public void mouseReleased(MouseEvent e) {
         if ((editGui != null) && (editGui.isVisible() && (e.getSource() == textPreview))) {
             AttributeLocation attributeLocation = new AttributeLocation(textPreview.getCaretPosition());
@@ -879,15 +872,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     }
 
-    @Override
     public void mouseEntered(MouseEvent e) {
     }
 
-    @Override
     public void mouseExited(MouseEvent e) {
     }
 
-    @Override
     public void stateChanged(ChangeEvent ev) {
         if (ev.getSource().equals(sliceSlider)) {
             if (series != null) {
@@ -910,17 +900,14 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-    @Override
     public void insertUpdate(DocumentEvent ev) {
         showText(null);
     }
 
-    @Override
     public void removeUpdate(DocumentEvent ev) {
         showText(null);
     }
 
-    @Override
     public void changedUpdate(DocumentEvent ev) {
         showText(null);
     }
@@ -1623,32 +1610,25 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         if (series != null) series.setProcessedStatus(mode);
     }
 
-    @Override
     public void windowOpened(WindowEvent e) {
     }
 
-    @Override
     public void windowClosing(WindowEvent e) {
         close();
     }
 
-    @Override
     public void windowClosed(WindowEvent e) {
     }
 
-    @Override
     public void windowIconified(WindowEvent e) {
     }
 
-    @Override
     public void windowDeiconified(WindowEvent e) {
     }
 
-    @Override
     public void windowActivated(WindowEvent e) {
     }
 
-    @Override
     public void windowDeactivated(WindowEvent e) {
     }
     

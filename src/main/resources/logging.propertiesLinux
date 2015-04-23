@@ -35,7 +35,6 @@
 
 #handlers=java.util.logging.ConsoleHandler
 #handlers=java.util.logging.ConsoleHandler edu.umro.util.LogFileHandler
-#handlers=edu.umro.util.LogFileHandler org.restlet.engine.log.AccessLogFileHandler java.util.logging.FileHandler
 handlers=edu.umro.util.LogFileHandler
 
 

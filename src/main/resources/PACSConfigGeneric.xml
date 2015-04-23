@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<PacsConfiguration>
+	<Identity>
+		<!-- This defines the way that this program will identify itself when communicating 
+			with other DICOM devices. Some DICOM PACS require all others to be on their 
+			known list of devices, but some do not. If you are unable to send files to 
+			a PACS, it is possible that it is because the one listed below is not configured 
+			on that system. -->
+		<PACS AETitle='DICOM+' Host='localhost' Port='5678' />
+	</Identity>
+
+	<!-- List of PACS that this program knows about. -->
+	<PacsList>
+		<PACS AETitle='MyPACS' Host='localhost' Port='1234' />
+		<PACS AETitle='SomePACS' Host='192.30.252.131' Port='104' />
+		<PACS AETitle='MRCT_DEV' Host='rolxdev1' Port='5680' />
+        <PACS AETitle='IRRER' Host='141.214.125.68' Port='15678' />
+	</PacsList>
+</PacsConfiguration> 

@@ -120,7 +120,8 @@ public class S08MouseCursor extends PlainDocument {
 
     private static void createAndShowGUI() {
         // the combo box (add/modify items if you like to)
-        JComboBox<String> comboBox = new JComboBox(new Object[] { "Ester", "Jordi", "Jordina", "Jorge", "Sergi" });
+        @SuppressWarnings("unchecked")
+        JComboBox<String> comboBox = (JComboBox<String>)(new JComboBox(new Object[] { "Ester", "Jordi", "Jordina", "Jorge", "Sergi" }));
         // has to be editable
         comboBox.setEditable(true);
         // get the combo boxes editor component

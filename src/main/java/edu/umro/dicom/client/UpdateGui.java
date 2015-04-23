@@ -66,7 +66,6 @@ public class UpdateGui extends JPanel implements ActionListener {
 
     MultipleValueGui multipleValueGui;
 
-    @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(cancelButton)) editGui.setToMainMode();
         if ((e.getSource().equals(updateButton) || e.getSource().equals(singleValueText)) && isModified()) {

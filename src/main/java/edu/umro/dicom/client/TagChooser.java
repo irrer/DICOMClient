@@ -132,17 +132,14 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
         comboBox.setPopupVisible(true);
     }
 
-    @Override
     public void insertUpdate(DocumentEvent e) {
         updateAndShowComboBoxPopup();
     }
 
-    @Override
     public void removeUpdate(DocumentEvent e) {
         updateAndShowComboBoxPopup();
     }
 
-    @Override
     public void changedUpdate(DocumentEvent e) {
         updateAndShowComboBoxPopup();
     }
@@ -213,7 +210,6 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
         this.setBorder(BorderFactory.createEmptyBorder(GAP, GAP, GAP, GAP));
     }
 
-    @Override
     public void keyTyped(KeyEvent e) {
     }
     
@@ -231,7 +227,6 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
         comboBox.setSelectedIndex(index);
     }
 
-    @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
         switch (key) {
@@ -250,11 +245,9 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
         }
     }
 
-    @Override
     public void keyReleased(KeyEvent e) {
     }
 
-    @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == details) {
             updateAndShowComboBoxPopup();
@@ -305,7 +298,6 @@ public class TagChooser extends JPanel implements DocumentListener, KeyListener,
 
         if (System.out == null) {
             new Thread(new Runnable() {
-                @Override
                 public void run() {
                     try {
                         while (true) {

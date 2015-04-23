@@ -1,6 +1,8 @@
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import com.pixelmed.dicom.Attribute;
@@ -25,14 +27,14 @@ public class FixCt {
             this.file = file;
             this.al = al;
         }
-        
+
         public String toString() {
             return file.getAbsolutePath(); // al.get(TagFromName.SOP)
         }
     }
 
     private static final String UM_TREATMENT_MACHINE_NAME = "UM-EX1";
-    //private static final String UM_TREATMENT_MACHINE_NAME = "Eclipse CAP";
+    // private static final String UM_TREATMENT_MACHINE_NAME = "Eclipse CAP";
 
     private ArrayList<File> rtstructFileList = new ArrayList<File>();
 
@@ -45,7 +47,7 @@ public class FixCt {
             String modality = al.get(TagFromName.SOPClassUID).getSingleStringValueOrNull();
             if (modality.equals(SOPClass.CTImageStorage)) ctList.add(new CT(file, al));
             if (modality.equals(SOPClass.RTStructureSetStorage)) rtstructFileList.add(file);
-            //System.out.println(modality + " : " + al.get(TagFromName.SOPInstanceUID).getSingleStringValueOrNull());
+            // System.out.println(modality + " : " + al.get(TagFromName.SOPInstanceUID).getSingleStringValueOrNull());
         }
     }
 
@@ -117,7 +119,8 @@ public class FixCt {
     }
 
     private void writeFile(File destFile, AttributeList source, AttributeList demographics) throws IOException, DicomException {
-        for (Entry<AttributeTag, Attribute> e : demographics.entrySet()) {
+        Set<Map.Entry<AttributeTag, Attribute>> set = (Set<Map.Entry<AttributeTag, Attribute>>) (demographics.entrySet());
+        for (Entry<AttributeTag, Attribute> e : set) {
             source.put(e.getValue());
         }
         source.write(destFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
@@ -162,8 +165,7 @@ public class FixCt {
         }
         throw new RuntimeException("Could not find file in list: " + absFilePath);
     }
-    
-    
+
     /**
      * Find all occurrences of the given tag and change the value to
      * the given value.
@@ -178,17 +180,18 @@ public class FixCt {
             attr.addValue(value);
             al.put(attr);
         }
-        for (Entry<AttributeTag,Attribute> entry : al.entrySet()) {
+        Set<Map.Entry<AttributeTag, Attribute>> set = (Set<Map.Entry<AttributeTag, Attribute>>) (al.entrySet());
+
+        for (Entry<AttributeTag, Attribute> entry : set) {
             if (entry.getValue() instanceof SequenceAttribute) {
-                SequenceAttribute seq = (SequenceAttribute)entry.getValue();
+                SequenceAttribute seq = (SequenceAttribute) entry.getValue();
                 for (int l = 0; l < seq.getNumberOfItems(); l++) {
                     fixAttribute(seq.getItem(l).getAttributeList(), tag, value);
                 }
             }
         }
     }
-    
-    
+
     /**
      * Find all occurrences of the TreatmentMachineName tag and change the name to
      * the UM machine name.
@@ -199,26 +202,12 @@ public class FixCt {
     private void fixMachineName(AttributeList al) throws DicomException {
         fixAttribute(al, TagFromName.TreatmentMachineName, UM_TREATMENT_MACHINE_NAME);
     }
-        
-    
-    private void ifZeroSetToOne(AttributeList al, AttributeTag tag) throws DicomException {
-        Attribute a = al.get(tag);
-        if (a != null) {
-            Double value = a.getSingleDoubleValueOrDefault(0);
-            if (value == 0) {
-                a = AttributeFactory.newAttribute(tag);
-                a.addValue(1);
-                al.put(a);
-            }
-        }
-    }
-    
 
     private void hackFractionGroupSequence(AttributeList al) throws DicomException {
-        SequenceAttribute FractionGroupSequence = (SequenceAttribute)(al.get(TagFromName.FractionGroupSequence));
+        SequenceAttribute FractionGroupSequence = (SequenceAttribute) (al.get(TagFromName.FractionGroupSequence));
         int numItems = FractionGroupSequence.getNumberOfItems();
-        // If only 1 fraction group, then do nothing.  Otherwise, remove all but
-        // first fraction group.  This is necessary because Aria only supports one
+        // If only 1 fraction group, then do nothing. Otherwise, remove all but
+        // first fraction group. This is necessary because Aria only supports one
         // fraction group.
         if (numItems > 1) {
             SequenceAttribute fgs = new SequenceAttribute(TagFromName.FractionGroupSequence);
@@ -226,16 +215,7 @@ public class FixCt {
             al.put(fgs);
             FractionGroupSequence = fgs;
         }
-        
-        // Make sure that all of the BeamDose and BeamMeterSet values are not zero.  Any that are, set them to 1.
-        SequenceAttribute ReferencedBeamSequence = (SequenceAttribute)(FractionGroupSequence.getItem(0).getAttributeList().get(TagFromName.ReferencedBeamSequence));
-        for (int i = 0; i < ReferencedBeamSequence.getNumberOfItems(); i++) {
-            AttributeList rbs = ReferencedBeamSequence.getItem(i).getAttributeList();
-            //ifZeroSetToOne(rbs, TagFromName.BeamDose);
-            //ifZeroSetToOne(rbs, TagFromName.BeamMeterset);
-        }
     }
-        
 
     private void writeAllFiles(File directory, ArrayList<String> ctUidList) throws IOException, DicomException {
         AttributeList basicDemographics = generateDemographics(directory);
@@ -269,11 +249,11 @@ public class FixCt {
         ArrayList<String> ctUidList = getCtUids();
 
         /*
-        while (ctList.size() > ctUidList.size()) {
-            System.out.println("Removing entry from ctList");
-            ctList.remove(ctList.size()-1);
-        }
-        */
+         * while (ctList.size() > ctUidList.size()) {
+         * System.out.println("Removing entry from ctList");
+         * ctList.remove(ctList.size()-1);
+         * }
+         */
         System.out.println("Directory: " + directory.getName());
         System.out.println("   rtstructFileList: " + rtstructFileList.size());
         System.out.println("   ctUidList:        " + ctUidList.size());

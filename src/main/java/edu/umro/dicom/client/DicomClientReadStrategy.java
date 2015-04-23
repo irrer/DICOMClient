@@ -1,7 +1,7 @@
 package edu.umro.dicom.client;
 
 /*
- * Copyright 2013 Regents of the University of Michigan
+ * Copyright 2015 Regents of the University of Michigan
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package edu.umro.dicom.client;
 
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeList;
+import com.pixelmed.dicom.AttributeList.ReadTerminationStrategy;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.SOPClass;
 import com.pixelmed.dicom.TagFromName;
@@ -46,12 +47,10 @@ import com.pixelmed.dicom.TagFromName;
  * (0x300a,0x0007)    name: RTPlanTime
  */
 
-
-public class DicomClientReadStrategy implements AttributeList.ReadTerminationStrategy {
+public class DicomClientReadStrategy implements ReadTerminationStrategy {
 
     public static final DicomClientReadStrategy dicomClientReadStrategy = new DicomClientReadStrategy();
 
-    @Override
     public boolean terminate(AttributeList attributeList, AttributeTag tag, long bytesRead) {
         Attribute sopClassUID = attributeList.get(TagFromName.SOPClassUID);
         if (sopClassUID != null) {
@@ -72,5 +71,5 @@ public class DicomClientReadStrategy implements AttributeList.ReadTerminationStr
 
         return false;
     }
-}
 
+}

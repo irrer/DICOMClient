@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<!-- Copyright 2012 Regents of the University of Michigan Licensed under 
+	<!-- Copyright 2015 Regents of the University of Michigan Licensed under 
 		the Apache License, Version 2.0 (the "License"); you may not use this file 
 		except in compliance with the License. You may obtain a copy of the License 
 		at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable 
@@ -19,7 +19,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.umro.DICOM</groupId>
 	<artifactId>dicomclient</artifactId>
-	<version>1.0.37</version>
+	<version>1.0.38</version>
 	<packaging>jar</packaging>
 	<name>${project.artifactId}</name>
 	<properties>
@@ -28,50 +28,19 @@
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>pixelmed</groupId>
-			<artifactId>pixelmed</artifactId>
-            <version>20140816</version>
-            <!-- <version>0.0.1-SNAPSHOT</version> -->
-		</dependency>
-		<dependency>
-			<groupId>org.restlet.jse</groupId>
-			<artifactId>org.restlet.ext.net</artifactId>
-			<version>2.0.10</version>
-		</dependency>
-		<dependency>
-			<groupId>org.restlet.jse</groupId>
-			<artifactId>org.restlet</artifactId>
-			<version>2.0.10</version>
-		</dependency>
-		<dependency>
-			<groupId>org.restlet.jse</groupId>
-			<artifactId>org.restlet.ext.httpclient</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.restlet.jse</groupId>
-			<artifactId>org.restlet.ext.simple</artifactId>
-			<version>2.0.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.restlet.jse</groupId>
-			<artifactId>org.restlet.ext.ssl</artifactId>
-			<version>2.0.10</version>
-		</dependency>
-		<dependency>
-			<groupId>edu.umro</groupId>
-			<artifactId>util</artifactId>
-			<version>1.3.7</version>
-		</dependency>
-		<!-- -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.8.2</version>
-			<scope>test</scope>
-		</dependency>
+        <dependency> <groupId>pixelmed</groupId>        <artifactId>pixelmed</artifactId>                   <version>20150319</version>                  </dependency>
+        <dependency> <groupId>edu.umro</groupId>        <artifactId>util</artifactId>                       <version>1.3.7</version>                     </dependency>
+        <dependency> <groupId>junit</groupId>           <artifactId>junit</artifactId>                      <version>4.8.2</version> <scope>test</scope> </dependency>
 
+        <!--
+        <dependency> <groupId>org.restlet.jse</groupId> <artifactId>org.restlet.ext.net</artifactId>        <version>2.0.10</version>                    </dependency>
+        <dependency> <groupId>org.restlet.jse</groupId> <artifactId>org.restlet</artifactId>                <version>2.0.10</version>                    </dependency>
+        <dependency> <groupId>org.restlet.jse</groupId> <artifactId>org.restlet.ext.httpclient</artifactId> <version>2.0.0</version>                     </dependency>
+        <dependency> <groupId>org.restlet.jse</groupId> <artifactId>org.restlet.ext.simple</artifactId>     <version>2.0.3</version>                     </dependency>
+        <dependency> <groupId>org.restlet.jse</groupId> <artifactId>org.restlet.ext.ssl</artifactId>        <version>2.0.10</version>                    </dependency>
+        <dependency> <groupId>pixelmed</groupId>        <artifactId>pixelmed</artifactId>                   <version>20140816</version>                  </dependency>
+        <dependency> <groupId>pixelmed</groupId>        <artifactId>pixelmed</artifactId>                   <version>0.0.1-SNAPSHOT</version>            </dependency>
+        -->
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -189,9 +158,6 @@
                                 <copy file="${resource.dir}/DICOM+.bat" toDir="${dest.dir}" />
                                 <replace file="${dest.dir}/DICOM+.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
                                 
-                                <copy file="${resource.dir}/DICOM+64.bat" toDir="${dest.dir}" />
-                                <replace file="${dest.dir}/DICOM+64.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
-								
                                 <copy file="${resource.dir}/DICOMClient.sh" toDir="${dest.dir}" />
 								<replace file="${dest.dir}/DICOMClient.sh" token="@@with-dep-jar@@"
                                 
@@ -221,11 +187,13 @@
 		</plugins>
 	</build>
 	<repositories>
+        <!--
 		<repository>
 			<id>maven-restlet</id>
 			<name>Public online Restlet repository</name>
 			<url>http://maven.restlet.org</url>
 		</repository>
+        -->
 	</repositories>
 	<distributionManagement>
 		<repository>
