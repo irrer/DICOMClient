@@ -83,6 +83,7 @@ import com.pixelmed.dicom.OtherWordAttribute;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
+import com.pixelmed.dicom.TransferSyntax;
 import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
@@ -1146,8 +1147,15 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                             if (line.length() > MAX_LINE_LENGTH) {
                                 break;
                             }
-                            if ((ValueRepresentation.isUniqueIdentifierVR(vr)) && (SOPClassDescriptions.getDescriptionFromUID(value).length() > 0)) {
-                                line.append(" (" + SOPClassDescriptions.getDescriptionFromUID(value) + ")");
+                            if (ValueRepresentation.isUniqueIdentifierVR(vr)) {
+                                String classDesc = SOPClassDescriptions.getDescriptionFromUID(value);
+                                if (classDesc.length() > 0) {
+                                    line.append(" (" + classDesc + ")");
+                                }
+                                TransferSyntax transferSyntax = new TransferSyntax(value);
+                                if (transferSyntax.isRecognized()) {
+                                    line.append(" (" + transferSyntax.getDescription() + ")");
+                                }
                             }
                         }
                     }
