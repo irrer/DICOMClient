@@ -79,9 +79,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
     /** Tool tip for Upload All button. */
     private static final String ANONYMIZE_BUTTON_TOOLTIP = "<html>AnonymizeGUI this series,<br>overwriting files.</html>";
 
-    /** Maximum number of slices to buffer when uploading. */
-    private static final int UPLOAD_BUFFER_SIZE = 25;
-
     /** DICOM value for Patient ID for the series. */
     private String patientID = null;
 
