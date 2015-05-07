@@ -1085,10 +1085,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
 
         String stats = "Loaded:";
-        stats += "    Patients: " + patientList.size();
-        stats += "        Studies: " + studyCount;
+        stats += "    Files: " + fileCount;
         stats += "        Series: " + seriesCount;
-        stats += "        Files: " + fileCount;
+        stats += "        Studies: " + studyCount;
+        stats += "        Patients: " + patientList.size();
         return stats;
     }
 
