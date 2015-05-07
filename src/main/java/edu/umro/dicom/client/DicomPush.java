@@ -1,7 +1,7 @@
 package edu.umro.dicom.client;
 
 /*
- * Copyright 2013 Regents of the University of Michigan
+ * Copyright 2015 Regents of the University of Michigan
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ package edu.umro.dicom.client;
 import com.pixelmed.network.MultipleInstanceTransferStatusHandler;
 import com.pixelmed.dicom.SetOfDicomFiles;
 import com.pixelmed.network.StorageSOPClassSCU;
-
 import edu.umro.util.Log;
+
 
 public class DicomPush extends MultipleInstanceTransferStatusHandler {
 
     private static final String ORIGINATOR_PACS_AETITLE = "DICOMClient";
     private static final int COMPRESSION_LEVEL = 0;
-    private static final int DEBUG_LEVEL = 1000;     // TODO change back to 0 
+    private static final int DEBUG_LEVEL = 0;
 
     private PACS pacs = null;
     private SetOfDicomFiles setOfDicomFiles = null;
