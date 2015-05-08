@@ -612,8 +612,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             JComponent jc = buildPacsSelector();
             gridBagLayout.setConstraints(jc, c);
             panel.add(jc);
-            c.gridheight = 1;
-            c.gridwidth = 1;
         }
 
         {
@@ -865,6 +863,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             if (!inCommandLineMode()) {
                 frame.pack();
                 frame.setVisible(true);
+                setPacsLabelSize();
             }
             setMode();
         }
@@ -930,7 +929,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         if (source.equals(pacsNorth) || source.equals(pacsSouth)) {
             ArrayList<PACS> pacsList = PACSConfig.getInstance().getPacsList();
             if (pacsList.size() > 1) {
-                setPacsLabelSize();
                 int increment = source.equals(pacsNorth) ? -1 : 1;
                 currentPacs = (currentPacs + pacsList.size() + increment) % pacsList.size();
                 String pacs = pacsList.get(currentPacs).aeTitle;
@@ -1079,7 +1077,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 ArrayList<Series> seriesList = s.seriesList();
                 seriesCount += seriesList.size();
                 for (Series series : seriesList) {
-                    fileCount += series.getFileList().size();
+                    fileCount += series.getFileCount();
                 }
             }
         }

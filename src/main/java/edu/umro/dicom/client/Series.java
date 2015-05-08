@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
@@ -171,7 +172,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
     public static int totalFilesAnonymized = 0;
 
     private class InstanceList {
-        class Instance implements Comparable<Instance> {
+        private class Instance implements Comparable<Instance> {
             public final int instanceNumber;
             public String sopInstanceUID;
             public File file;
@@ -195,6 +196,22 @@ public class Series extends JPanel implements ActionListener, Runnable {
         private HashSet<File> fileList = new HashSet<File>();
         private ArrayList<File> sortedList = null;
 
+        private Semaphore lock = new Semaphore(1);
+
+        private void acquire() {
+            try {
+                if (!lock.tryAcquire(10, TimeUnit.SECONDS)) {
+                    DicomClient.getInstance().showMessage("Failed to acquire internal data lock");
+                }
+            }
+            catch (Exception e) {
+            }
+        }
+
+        private void release() {
+            lock.release();
+        }
+
         /**
          * Get the sortedList of file names in ascending order by instance
          * number.
@@ -202,59 +219,93 @@ public class Series extends JPanel implements ActionListener, Runnable {
          * @return List of file names.
          */
         public ArrayList<File> values() {
-            if (sortedList == null) {
-                Collections.sort(instList);
-                sortedList = new ArrayList<File>();
-                for (Instance inst : instList) {
-                    sortedList.add(inst.file);
+            try {
+                acquire();
+                if (sortedList == null) {
+                    Collections.sort(instList);
+                    sortedList = new ArrayList<File>();
+                    for (Instance inst : instList) {
+                        sortedList.add(inst.file);
+                    }
                 }
+                return sortedList;
             }
-            return sortedList;
+            finally {
+                release();
+            }
         }
 
         public ArrayList<Instance> getList() {
-            Collections.sort(instList);
-            return instList;
+            try {
+                acquire();
+                Collections.sort(instList);
+                return instList;
+            }
+            finally {
+                release();
+            }
+
         }
 
         public int size() {
-            return instList.size();
+
+            try {
+                acquire();
+
+                return instList.size();
+            }
+            finally {
+                release();
+            }
         }
 
         public File getFile(int i) {
-            return instList.get(i).file;
+            try {
+                acquire();
+
+                return instList.get(i).file;
+            }
+            finally {
+                release();
+            }
         }
 
         private String put(File file, AttributeList attributeList) {
+            try {
+                acquire();
 
-            if (fileList.contains(file)) {
-                return "The file " + file + " has already been loaded.";
-            }
-
-            String sopInstanceUID = attributeList.get(TagFromName.SOPInstanceUID).getSingleStringValueOrEmptyString();
-            if (sopList.contains(sopInstanceUID)) {
-                File oldFile = null;
-                for (Instance instance : instList) {
-                    if (instance.sopInstanceUID == sopInstanceUID) {
-                        oldFile = instance.file;
-                        break;
-                    }
+                if (fileList.contains(file)) {
+                    return "The file " + file + " has already been loaded.";
                 }
-                return "The SOP Instance UID " + sopInstanceUID + " was already loaded with from file " + oldFile + ", so ignoring file " + file.getAbsolutePath();
+
+                String sopInstanceUID = attributeList.get(TagFromName.SOPInstanceUID).getSingleStringValueOrEmptyString();
+                if (sopList.contains(sopInstanceUID)) {
+                    File oldFile = null;
+                    for (Instance instance : instList) {
+                        if (instance.sopInstanceUID == sopInstanceUID) {
+                            oldFile = instance.file;
+                            break;
+                        }
+                    }
+                    return "The SOP Instance UID " + sopInstanceUID + " was already loaded with from file " + oldFile + ", so ignoring file " + file.getAbsolutePath();
+                }
+
+                Attribute instanceNumberAttr = attributeList.get(TagFromName.InstanceNumber);
+                int instanceNumber = 0;
+                if (instanceNumberAttr != null) {
+                    instanceNumber = instanceNumberAttr.getSingleIntegerValueOrDefault(0);
+                }
+
+                instList.add(new Instance(instanceNumber, sopInstanceUID, file, attributeList));
+                sopList.add(sopInstanceUID);
+                fileList.add(file);
+                sortedList = null;
+
+                return null;
             }
-
-            Attribute instanceNumberAttr = attributeList.get(TagFromName.InstanceNumber);
-            int instanceNumber = 0;
-            if (instanceNumberAttr != null) {
-                instanceNumber = instanceNumberAttr.getSingleIntegerValueOrDefault(0);
+            finally {
+                release();
             }
-
-            instList.add(new Instance(instanceNumber, sopInstanceUID, file, attributeList));
-            sopList.add(sopInstanceUID);
-            fileList.add(file);
-            sortedList = null;
-
-            return null;
         }
     }
 
@@ -1085,6 +1136,10 @@ public class Series extends JPanel implements ActionListener, Runnable {
      */
     public Collection<File> getFileList() {
         return instanceList.values();
+    }
+    
+    public int getFileCount() {
+        return instanceList.size();
     }
 
     /**
