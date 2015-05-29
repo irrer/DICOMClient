@@ -41,6 +41,9 @@ import com.pixelmed.dicom.TagFromName;
  * (0x0010,0x0010)    name: PatientName
  * (0x0010,0x0020)    name: PatientID
  * (0x0020,0x000e)    name: SeriesInstanceUID
+ * (0x0020,0x0013)    name: InstanceNumber
+ * (0x0020,0x0032)    name: ImagePositionPatient
+ * (0x0020,0x1041)    name: SliceLocation
  * (0x3006,0x0008)    name: StructureSetDate
  * (0x3006,0x0009)    name: StructureSetTime
  * (0x300a,0x0006)    name: RTPlanDate
@@ -50,6 +53,8 @@ import com.pixelmed.dicom.TagFromName;
 public class DicomClientReadStrategy implements ReadTerminationStrategy {
 
     public static final DicomClientReadStrategy dicomClientReadStrategy = new DicomClientReadStrategy();
+    
+    private static final AttributeTag lastTag = TagFromName.SliceLocation;
 
     public boolean terminate(AttributeList attributeList, AttributeTag tag, long bytesRead) {
         Attribute sopClassUID = attributeList.get(TagFromName.SOPClassUID);
@@ -62,9 +67,9 @@ public class DicomClientReadStrategy implements ReadTerminationStrategy {
                     return true;
             }
             else {
-                if (tag.getGroup() > TagFromName.SeriesInstanceUID.getGroup())
+                if (tag.getGroup() > lastTag.getGroup())
                     return true;
-                if ((tag.getGroup() == TagFromName.SeriesInstanceUID.getGroup()) && (tag.getElement() > TagFromName.SeriesInstanceUID.getElement()))
+                if ((tag.getGroup() == lastTag.getGroup()) && (tag.getElement() > lastTag.getElement()))
                     return true;
             }
         }

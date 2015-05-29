@@ -1239,6 +1239,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 TagFromName.InstanceCreationDate,
                 TagFromName.InstanceCreationTime,
                 TagFromName.InstanceNumber,
+                TagFromName.ImagePositionPatient,
+                TagFromName.SliceLocation,
                 TagFromName.ManufacturerModelName,
                 TagFromName.MediaStorageSOPClassUID,
                 TagFromName.Modality,

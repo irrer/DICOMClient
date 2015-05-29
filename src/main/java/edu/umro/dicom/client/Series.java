@@ -43,6 +43,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
+import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClassDescriptions;
@@ -138,7 +139,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
     private String rtPlanTime = null;
     /** DICOM value for structure set time for the series. */
     private String structureSetTime = null;
-
+    
     /** DICOM value for structure set time for the series. */
     private String seriesInstanceUID = null;
 
@@ -173,20 +174,109 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     private class InstanceList {
         private class Instance implements Comparable<Instance> {
-            public final int instanceNumber;
             public String sopInstanceUID;
             public File file;
             AttributeList attributeList;
 
-            public Instance(int instanceNumber, String sopInstanceUID, File file, AttributeList attributeList) {
-                this.instanceNumber = instanceNumber;
+            private int compareString(Instance other, AttributeTag tag) {
+                Attribute thisAttr = attributeList.get(tag);
+                Attribute otherAttr = other.attributeList.get(tag);
+
+                if ((thisAttr == null) && (otherAttr == null)) return 0;
+                if (thisAttr == null) return -1;
+                if (otherAttr == null) return 1;
+
+                String thisVal = thisAttr.getSingleStringValueOrNull();
+                String otherVal = otherAttr.getSingleStringValueOrNull();
+                if ((thisVal == null) && (otherVal == null)) return 0;
+                if (thisVal == null) return -1;
+                if (otherVal == null) return 1;
+
+                return thisVal.compareTo(otherVal);
+            }
+
+            private int compareDouble(Instance other, AttributeTag tag, int index) {
+                Attribute thisAttr = attributeList.get(tag);
+                Attribute otherAttr = other.attributeList.get(tag);
+
+                if ((thisAttr == null) && (otherAttr == null)) return 0;
+                if (thisAttr == null) return -1;
+                if (otherAttr == null) return 1;
+
+                try {
+                    double[] thisVal = thisAttr.getDoubleValues();
+                    double[] otherVal = thisAttr.getDoubleValues();
+                    if ((thisVal == null) && (otherVal == null)) return 0;
+                    if (thisVal == null) return -1;
+                    if (otherVal == null) return 1;
+
+                    if ((thisVal.length <= index) && (otherVal.length <= index)) return 0;
+                    if (thisVal.length <= index) return -1;
+                    if (otherVal.length <= index) return 1;
+
+                    return Double.compare(thisVal[index], otherVal[index]);
+                }
+                catch (Exception e) {
+                    return 0;
+                }
+            }
+
+            public Instance(String sopInstanceUID, File file, AttributeList attributeList) {
                 this.sopInstanceUID = sopInstanceUID;
                 this.file = file;
                 this.attributeList = attributeList;
             }
 
             public int compareTo(Instance o) {
-                return this.instanceNumber - o.instanceNumber;
+                int c = compareDouble(o, TagFromName.InstanceNumber, 0);
+                if (c != 0) return c;
+
+                c = compareDouble(o, TagFromName.SliceLocation, 0);
+                if (c != 0) return c;
+
+                c = compareDouble(o, TagFromName.ImagePositionPatient, 0);
+                if (c != 0) return c;
+
+                c = compareDouble(o, TagFromName.ImagePositionPatient, 1);
+                if (c != 0) return c;
+
+                c = compareDouble(o, TagFromName.ImagePositionPatient, 2);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.InstanceCreationDate);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.InstanceCreationTime);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.InstanceCreationTime);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.AcquisitionDate);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.AcquisitionTime);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.ContentDate);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.ContentTime);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.RTPlanDate);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.RTPlanTime);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.StructureSetDate);
+                if (c != 0) return c;
+
+                c = compareString(o, TagFromName.StructureSetTime);
+                if (c != 0) return c;
+
+                return compareString(o, TagFromName.SOPInstanceUID);
             }
         }
 
@@ -290,13 +380,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     return "The SOP Instance UID " + sopInstanceUID + " was already loaded with from file " + oldFile + ", so ignoring file " + file.getAbsolutePath();
                 }
 
-                Attribute instanceNumberAttr = attributeList.get(TagFromName.InstanceNumber);
-                int instanceNumber = 0;
-                if (instanceNumberAttr != null) {
-                    instanceNumber = instanceNumberAttr.getSingleIntegerValueOrDefault(0);
-                }
-
-                instList.add(new Instance(instanceNumber, sopInstanceUID, file, attributeList));
+                instList.add(new Instance(sopInstanceUID, file, attributeList));
                 sopList.add(sopInstanceUID);
                 fileList.add(file);
                 sortedList = null;
