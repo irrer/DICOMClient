@@ -27,8 +27,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.TreeSet;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -205,7 +205,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
                 try {
                     double[] thisVal = thisAttr.getDoubleValues();
-                    double[] otherVal = thisAttr.getDoubleValues();
+                    double[] otherVal = otherAttr.getDoubleValues();
                     if ((thisVal == null) && (otherVal == null)) return 0;
                     if (thisVal == null) return -1;
                     if (otherVal == null) return 1;
@@ -214,7 +214,12 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     if (thisVal.length <= index) return -1;
                     if (otherVal.length <= index) return 1;
 
-                    return Double.compare(thisVal[index], otherVal[index]);
+                    double tv = thisVal[index];
+                    double ov = otherVal[index];
+                    if (tv < ov) return -1;
+                    if (tv > ov) return 1;
+                    return 0;
+                    //return Double.compare(tv, ov);
                 }
                 catch (Exception e) {
                     return 0;
@@ -228,9 +233,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
             }
 
             public int compareTo(Instance o) {
-                int c = compareDouble(o, TagFromName.InstanceNumber, 0);
-                if (c != 0) return c;
-
+                int c = 0;
+                
                 c = compareDouble(o, TagFromName.SliceLocation, 0);
                 if (c != 0) return c;
 
@@ -241,6 +245,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 if (c != 0) return c;
 
                 c = compareDouble(o, TagFromName.ImagePositionPatient, 2);
+                if (c != 0) return c;
+                
+                c = compareDouble(o, TagFromName.InstanceNumber, 0);
                 if (c != 0) return c;
 
                 c = compareString(o, TagFromName.InstanceCreationDate);
@@ -280,11 +287,10 @@ public class Series extends JPanel implements ActionListener, Runnable {
             }
         }
 
-        private ArrayList<Instance> instList = new ArrayList<Instance>();
+        private TreeSet<Instance> instList = new TreeSet<Instance>();
 
         private HashSet<String> sopList = new HashSet<String>();
         private HashSet<File> fileList = new HashSet<File>();
-        private ArrayList<File> sortedList = null;
 
         private Semaphore lock = new Semaphore(1);
 
@@ -311,30 +317,17 @@ public class Series extends JPanel implements ActionListener, Runnable {
         public ArrayList<File> values() {
             try {
                 acquire();
-                if (sortedList == null) {
-                    Collections.sort(instList);
-                    sortedList = new ArrayList<File>();
-                    for (Instance inst : instList) {
-                        sortedList.add(inst.file);
-                    }
-                }
-                return sortedList;
+                ArrayList<File> list = new ArrayList<File>();
+                for (Instance inst : instList) list.add(inst.file);
+                return list;
             }
             finally {
                 release();
             }
         }
 
-        public ArrayList<Instance> getList() {
-            try {
-                acquire();
-                Collections.sort(instList);
-                return instList;
-            }
-            finally {
-                release();
-            }
-
+        public TreeSet<Instance> getList() {
+            return instList;
         }
 
         public int size() {
@@ -348,12 +341,15 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 release();
             }
         }
+        
+        public File getFirstFile() {
+            return instList.first().file;
+        }
 
         public File getFile(int i) {
             try {
                 acquire();
-
-                return instList.get(i).file;
+                return ((Instance) (instList.toArray()[i])).file;
             }
             finally {
                 release();
@@ -383,7 +379,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 instList.add(new Instance(sopInstanceUID, file, attributeList));
                 sopList.add(sopInstanceUID);
                 fileList.add(file);
-                sortedList = null;
 
                 return null;
             }
@@ -1232,7 +1227,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
      * @return Directory where series is stored.
      */
     public File getDirectory() {
-        return instanceList.getFile(0).getParentFile();
+        return instanceList.getFirstFile().getParentFile();
     }
 
     /**
