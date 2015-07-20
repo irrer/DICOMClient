@@ -34,6 +34,7 @@ import com.pixelmed.dicom.DicomDictionary;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.ValueRepresentation;
 
+import edu.umro.util.JarInfo;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
 import edu.umro.util.Utility;
@@ -96,10 +97,11 @@ public class ClientConfig {
     private Document getConfigFromJarPath() {
         File dir = null;
         try {
-            String path = ClientConfig.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            File file = new File(path);
-            dir = file.getParentFile();
+            
+            JarInfo jarInfo = new JarInfo(this.getClass());
+            dir = new File(jarInfo.getFullJarFilePath()).getParentFile();
             File configFile = new File(dir, CONFIG_FILE_NAME);
+            System.out.println("configFile: " + configFile.getAbsolutePath());
             return parseConfigFile(configFile.getAbsolutePath());
         }
         catch (Exception e) {
