@@ -81,8 +81,6 @@ public class TestCommandLine {
         String aTxt = XML.domToString(aDoc).replaceAll("[ \r\t\n][ \r\t\n]*", "");
         String bTxt = XML.domToString(bDoc).replaceAll("[ \r\t\n][ \r\t\n]*", "");
         boolean same = aTxt.equals(bTxt);
-        if (!same)
-            System.out.println("Hey!");
         return same;
     }
     
@@ -95,10 +93,21 @@ public class TestCommandLine {
     private boolean compareFiles(File destDir, String fileName) {
         File tst = new File(destDir, fileName);
         File ref = new File(refPath(fileName));
+
+        boolean same = false;
         try {
-            if (fileName.toLowerCase().endsWith(".xml")) return compareXmlFiles(tst, ref);
-            if (fileName.toLowerCase().endsWith(".txt")) return compareTxtFiles(tst, ref);
-            return Utility.compareFiles(tst, ref);
+            if (fileName.toLowerCase().endsWith(".xml")) {
+                same = compareXmlFiles(tst, ref);
+            }
+            else
+                if (fileName.toLowerCase().endsWith(".txt")) {
+                    same = compareTxtFiles(tst, ref);
+                }
+                else {
+                    same = Utility.compareFiles(tst, ref);
+                }
+            System.out.println("compared    ref (reference): " + ref.getAbsolutePath() + "    tst (generated): " + tst.getAbsolutePath() + "   same: " + same);
+            return same;
         }
         catch (Exception e) {
             System.out.println("Unexpected exception during comparison of files: " + Log.fmtEx(e));
@@ -111,8 +120,9 @@ public class TestCommandLine {
         for (String suf : new String[] { ".DCM", ".XML", ".TXT", ".PNG" }) {
             File destFile = new File(destPath(destDir, fileName + suf));
             if (destFile.exists()) 
-                if (!compareFiles(destDir, fileName + suf))
+                if (!compareFiles(destDir, fileName + suf)) {
                     return false;
+                }
         }
         return true;
     }
@@ -238,8 +248,8 @@ public class TestCommandLine {
         String outFile2 = "1234_RTIMAGE_0002.DCM";
         int code = runMain("-P", "1234", "-d", destDir.getAbsolutePath(), "-z", inFile1, inFile2);
         assertTrue("command line mode with -d and multiple files", code == 0);
-        assertTrue("Files are equal", compareAllFilesWithSuffixes(destDir, outFile1));
-        assertTrue("Files are equal", compareAllFilesWithSuffixes(destDir, outFile2));
+        assertTrue("Files are equal MinusD 1", compareAllFilesWithSuffixes(destDir, outFile1));
+        assertTrue("Files are equal MinusD 2", compareAllFilesWithSuffixes(destDir, outFile2));
     }
 
     @Test
@@ -249,7 +259,7 @@ public class TestCommandLine {
         String outFile = "1234_CT_2_0001";
         int code = runMain("-P", "1234", "-o", destPath(destDir, outFile + Util.DICOM_SUFFIX), "-z", inFile);
         assertTrue("command line mode with -o single CT", code == 0);
-        assertTrue("Files are equal", compareAllFilesWithSuffixes(destDir, outFile));
+        assertTrue("Files are equal SingleCT", compareAllFilesWithSuffixes(destDir, outFile));
         try {
             Document doc = XML.parseToDocument(Utility.readFile(new File(destPath(destDir, outFile + Util.XML_SUFFIX))));
             NodeList nodeList = XML.getMultipleNodes(doc, "DicomObject/FileMetaInformationGroupLength");
@@ -278,7 +288,13 @@ public class TestCommandLine {
      * @param args
      */
     public static void main(String[] args) {
-        {
+        try {
+            TestCommandLine tcl = new TestCommandLine();
+            tcl.commandLineSingleCT();
+        }
+        catch (Exception e) {
+            System.out.println("Badness: " + e);
+            e.printStackTrace();
         }
     }
 
