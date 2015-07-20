@@ -97,7 +97,6 @@ public class ClientConfig {
     private Document getConfigFromJarPath() {
         File dir = null;
         try {
-            
             JarInfo jarInfo = new JarInfo(this.getClass());
             dir = new File(jarInfo.getFullJarFilePath()).getParentFile();
             File configFile = new File(dir, CONFIG_FILE_NAME);

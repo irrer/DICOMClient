@@ -20,6 +20,8 @@ import java.io.File;
 import java.util.ArrayList;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+
+import edu.umro.util.JarInfo;
 import edu.umro.util.Log;
 import edu.umro.util.Utility;
 import edu.umro.util.XML;
@@ -37,19 +39,27 @@ public class PACSConfig {
 
     private volatile static boolean configHasBeenTried = false;
 
-    private static String jarConf() {
-        String path = PACSConfig.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        File dir = (new File(path)).getParentFile();
-        File configFile = new File(dir, CONFIG_FILE_NAME);
-        return configFile.getAbsolutePath();
+    private Document jarConf() {
+        try {
+            JarInfo jarInfo = new JarInfo(this.getClass());
+            File dir = new File(jarInfo.getFullJarFilePath()).getParentFile();
+            File configFile = new File(dir, CONFIG_FILE_NAME);
+            Document config = XML.parseToDocument(Utility.readFile(configFile));
+            if (config != null)
+                Log.get().info("Using configuration file " + configFile.getAbsolutePath());
+
+            return config;
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 
     /** List of all possible configuration files. */
     private static final String[] CONFIG_FILE_LIST = {
             System.getProperty("pacsconfig"),
             CONFIG_FILE_NAME,
-            "src\\main\\resources\\" + CONFIG_FILE_NAME,
-            jarConf()
+            "src\\main\\resources\\" + CONFIG_FILE_NAME
     };
 
     /** Instance of this object. */
@@ -57,7 +67,7 @@ public class PACSConfig {
 
     private PACS identity = null;
 
-    private ArrayList<PACS> pacsList = null;
+    private ArrayList<PACS> pacsList = new ArrayList<PACS>();
 
     /**
      * Read in the configuration for the client from the configuration file. Try
@@ -87,6 +97,11 @@ public class PACSConfig {
                 break;
             }
         }
+        
+        if (config == null) {
+            config = jarConf();
+        }
+        
         if (config == null) {
             String msg = "Unable to read and parse any PACS configuration file of: " + CONFIG_FILE_LIST;
             Log.get().severe(msg);
