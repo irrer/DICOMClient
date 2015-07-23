@@ -98,13 +98,14 @@ public class ClientConfig {
         File dir = null;
         try {
             JarInfo jarInfo = new JarInfo(this.getClass());
-            dir = new File(jarInfo.getFullJarFilePath()).getParentFile();
+            File jarFile = new File(jarInfo.getFullJarFilePath());
+            dir = jarFile.getParentFile();
             File configFile = new File(dir, CONFIG_FILE_NAME);
-            System.out.println("configFile: " + configFile.getAbsolutePath());
             return parseConfigFile(configFile.getAbsolutePath());
         }
         catch (Exception e) {
-            Log.get().warning("Could not get configuration file by looking in the same directory '" + dir.getAbsolutePath() + "' as the jar file: " + e);
+            String filePath = (dir == null) ? "" : ("'" + dir.getAbsolutePath() + "'");
+            Log.get().warning("Could not get configuration file by looking in the same directory " + filePath + " as the jar file: " + e);
         }
 
         return null;
