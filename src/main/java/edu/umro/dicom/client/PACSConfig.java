@@ -18,6 +18,8 @@ package edu.umro.dicom.client;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -42,11 +44,13 @@ public class PACSConfig {
     private Document jarConf() {
         try {
             JarInfo jarInfo = new JarInfo(this.getClass());
-            File dir = new File(jarInfo.getFullJarFilePath()).getParentFile();
+            File jarFile = new File(jarInfo.getFullJarFilePath());
+            File dir = jarFile.getParentFile();
             File configFile = new File(dir, CONFIG_FILE_NAME);
             Document config = XML.parseToDocument(Utility.readFile(configFile));
-            if (config != null)
+            if (config != null) {
                 Log.get().info("Using configuration file " + configFile.getAbsolutePath());
+            }
 
             return config;
         }
@@ -67,7 +71,7 @@ public class PACSConfig {
 
     private PACS identity = null;
 
-    private ArrayList<PACS> pacsList = new ArrayList<PACS>();
+    final private ArrayList<PACS> pacsList;
 
     /**
      * Read in the configuration for the client from the configuration file. Try
@@ -79,33 +83,43 @@ public class PACSConfig {
             try {
                 Log.get().info("Trying configuration file " + (new File(configFileName)).getAbsolutePath());
                 config = XML.parseToDocument(Utility.readFile(new File(configFileName)));
-
-                identity = new PACS(XML.getSingleNode(config, "/PacsConfiguration/Identity/PACS"));
-
-                pacsList = new ArrayList<PACS>();
-                NodeList nodeList = XML.getMultipleNodes(config, "/PacsConfiguration/PacsList/PACS");
-                for (int n = 0; n < nodeList.getLength(); n++) {
-                    pacsList.add(new PACS(nodeList.item(n)));
-                }
-
+                Log.get().info("was able to parse PACS config file " + configFileName);
             }
             catch (Exception e) {
                 ;
             }
+
             if (config != null) {
                 Log.get().info("Using configuration file " + (new File(configFileName)).getAbsolutePath());
                 break;
             }
         }
-        
+
         if (config == null) {
             config = jarConf();
         }
-        
+
+        if (config != null) {
+            try {
+                identity = new PACS(XML.getSingleNode(config, "/PacsConfiguration/Identity/PACS"));
+
+                NodeList nodeList = XML.getMultipleNodes(config, "/PacsConfiguration/PacsList/PACS");
+                for (int n = 0; n < nodeList.getLength(); n++) {
+                    PACS pacs = new PACS(nodeList.item(n));
+                    Log.get().info("PACS " + " : " + pacs);
+                    pacsList.add(pacs);
+                }
+            }
+            catch (Exception e) {
+                Log.get().warning("Unable to extract PACS list from file.  Will not be able to perform uploads.  Error: " + e);
+                ;
+            }
+        }
+
         if (config == null) {
             String msg = "Unable to read and parse any PACS configuration file of: " + CONFIG_FILE_LIST;
             Log.get().severe(msg);
-            //DicomClient.getInstance().showMessage(msg);
+            // DicomClient.getInstance().showMessage(msg);
         }
     }
 
@@ -113,6 +127,7 @@ public class PACSConfig {
      * Construct a configuration object.
      */
     private PACSConfig() {
+        pacsList = new ArrayList<PACS>();
         parseConfigFile();
     }
 

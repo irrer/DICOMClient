@@ -1832,7 +1832,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @param args
      */
     public static void main(String[] args) {
-        System.out.println("DICOM+ starting.  Using jar file: " + new java.io.File(DicomClient.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getName());
+        System.out.println("DICOM+ starting.  Jar file: " + new java.io.File(DicomClient.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getName());
 
         System.getProperties().list(System.out);
         try {
