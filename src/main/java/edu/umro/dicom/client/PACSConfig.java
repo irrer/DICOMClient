@@ -18,7 +18,6 @@ package edu.umro.dicom.client;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
