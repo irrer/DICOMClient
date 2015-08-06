@@ -53,8 +53,10 @@ import com.pixelmed.dicom.TagFromName;
 public class DicomClientReadStrategy implements ReadTerminationStrategy {
 
     public static final DicomClientReadStrategy dicomClientReadStrategy = new DicomClientReadStrategy();
-    
+
     private static final AttributeTag lastTag = TagFromName.SliceLocation;
+
+    private static final long ATTR_COUNT_DEADLINE = 512;
 
     public boolean terminate(AttributeList attributeList, AttributeTag tag, long bytesRead) {
         Attribute sopClassUID = attributeList.get(TagFromName.SOPClassUID);
@@ -72,6 +74,11 @@ public class DicomClientReadStrategy implements ReadTerminationStrategy {
                 if ((tag.getGroup() == lastTag.getGroup()) && (tag.getElement() > lastTag.getElement()))
                     return true;
             }
+        }
+
+        // If many bytes have been read but very few attributes recognized, then terminate.
+        if ((bytesRead > ATTR_COUNT_DEADLINE) && (attributeList.size() < DicomClient.MIN_ATTRIBUTE_COUNT)) {
+            return true;
         }
 
         return false;

@@ -93,6 +93,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         UPLOAD,
         ANONYMIZE_THEN_UPLOAD
     }
+    
+    /** A DICOM file must have at least this many attributes to be considered a DICOM file. */
+    public static final int MIN_ATTRIBUTE_COUNT = 2;
 
     /**
      * String indicating that no PACS were available for uploading to. If the DICOM service fails
@@ -1387,7 +1390,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
             AttributeList attributeList = readDicomFile(file);
 
-            if (attributeList.isEmpty()) {
+            if (attributeList.size() < MIN_ATTRIBUTE_COUNT) {
                 showMessage(file.getAbsolutePath() + " does not appear to be a DICOM file and is being ignored.");
                 return;
             }
