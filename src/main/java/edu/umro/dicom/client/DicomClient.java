@@ -1297,22 +1297,36 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      */
     private AttributeList readDicomFile(File file) {
         AttributeList attributeList = new AttributeList();
-        try {
-            if (inCommandLineMode()) {
+        if (inCommandLineMode()) {
+            try {
                 // this does not show any annoying messages in the log
                 attributeList.read(file);
             }
-            else {
-                attributeList.read(file, DicomClientReadStrategy.dicomClientReadStrategy);
-                attributeList = minimalAttributeList(attributeList);
+            catch (Exception e) {
+                // Exceptions do not matter because
+                // 1: If reading a partial file, there will always be an exception
+                // 2: The content is checked anyway
+                Log.get().severe("Error reading DICOM file " + file.getAbsolutePath() + " : " + e);
             }
         }
-        catch (Exception e) {
-            // Exceptions do not matter because
-            // 1: If reading a partial file, there will always be an exception
-            // 2: The content is checked anyway
-            Log.get().severe("Error reading DICOM file " + file.getAbsolutePath() + " : " + e);
+        else {
+            DicomClientReadStrategy dcrs = new DicomClientReadStrategy();
+            try {
+                // attributeList.read(file, DicomClientReadStrategy.dicomClientReadStrategy);
+                attributeList.read(file, dcrs);
+                attributeList = minimalAttributeList(attributeList);
+            }
+            catch (Exception e) {
+                // Exceptions do not matter because
+                // 1: If reading a partial file, there will always be an exception
+                // 2: The content is checked anyway
+                Log.get().severe("Error reading DICOM file " + file.getAbsolutePath() + " : " + e);
+                if (dcrs.latest != null) {
+                    attributeList = minimalAttributeList(dcrs.latest);
+                }
+            }
         }
+
         // needed? attributeList = ensureMinimumMetadata(file, attributeList);
         return attributeList;
     }

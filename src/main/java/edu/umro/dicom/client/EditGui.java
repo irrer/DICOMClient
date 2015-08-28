@@ -520,7 +520,7 @@ public class EditGui implements ActionListener, WindowListener {
         File destFile;
         AttributeList attributeList = new AttributeList();
         try {
-            attributeList.read(file);
+            attributeList = Util.readDicomFile(file);
         }
         catch (DicomException e) {
             return "DICOM error while reading file " + file + " : " + e.toString();

@@ -111,7 +111,6 @@ public class PACSConfig {
             }
             catch (Exception e) {
                 Log.get().warning("Unable to extract PACS list from file.  Will not be able to perform uploads.  Error: " + e);
-                ;
             }
         }
 
@@ -138,6 +137,12 @@ public class PACSConfig {
     public PACS getIdentity() {
         return identity;
     }
+
+    
+    public String getMyDicomAETitle() {
+        return identity.aeTitle;
+    }
+
 
     /**
      * Get the list of PACS we know about.

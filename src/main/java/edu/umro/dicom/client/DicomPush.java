@@ -21,10 +21,8 @@ import com.pixelmed.dicom.SetOfDicomFiles;
 import com.pixelmed.network.StorageSOPClassSCU;
 import edu.umro.util.Log;
 
-
 public class DicomPush extends MultipleInstanceTransferStatusHandler {
 
-    private static final String ORIGINATOR_PACS_AETITLE = "DICOMClient";
     private static final int COMPRESSION_LEVEL = 0;
     private static final int DEBUG_LEVEL = 0;
 
@@ -61,7 +59,7 @@ public class DicomPush extends MultipleInstanceTransferStatusHandler {
                 pacs.host,
                 pacs.port,
                 pacs.aeTitle,
-                ORIGINATOR_PACS_AETITLE,
+                PACSConfig.getInstance().getMyDicomAETitle(),
                 setOfDicomFiles,
                 COMPRESSION_LEVEL,
                 this,
@@ -77,7 +75,7 @@ public class DicomPush extends MultipleInstanceTransferStatusHandler {
 
         if (error == null) {
             Log.get().info("Succeeded in DICOM transfer of " + setOfDicomFiles.size() +
-                    " files from " + ORIGINATOR_PACS_AETITLE + " to " + pacs.toString());
+                    " files from " + PACSConfig.getInstance().getMyDicomAETitle() + " to " + pacs.toString());
         }
         else
             Log.get().warning(error);

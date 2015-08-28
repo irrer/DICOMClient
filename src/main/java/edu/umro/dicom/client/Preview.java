@@ -988,7 +988,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             imagePreview.update(imagePreview.getGraphics());
             dialog.update(dialog.getGraphics());
         }
-        catch (DicomException ex) {
+        catch (Exception ex) {
             showText(null);
             return;
         }
@@ -1538,9 +1538,8 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
                     fileNameLabel.setText(file.getAbsolutePath());
                     dialog.setTitle(TITLE_PREFIX + "  " + title);
-                    attributeList = new AttributeList();
                     try {
-                        attributeList.read(file);
+                        attributeList = Util.readDicomFile(file);
                         AnonymizeGUI.getInstance().updateTagList(attributeList);
                         sliceSlider.setValue(sliceNumber);
                         showDicom();

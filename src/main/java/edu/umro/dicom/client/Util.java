@@ -50,6 +50,7 @@ import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.TimeAttribute;
 import com.pixelmed.dicom.TransferSyntax;
 import com.pixelmed.dicom.XMLRepresentationOfDicomObjectFactory;
+import com.pixelmed.dicom.AttributeList.ReadTerminationStrategy;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
 import edu.umro.util.JarInfo;
@@ -496,6 +497,17 @@ public class Util {
      * @throws DicomException
      */
     public static AttributeList readDicomFile(File file) throws IOException, DicomException {
+
+        class ReadTermStrat implements ReadTerminationStrategy {
+            public AttributeList latest = null;
+
+            @Override
+            public boolean terminate(AttributeList attributeList, AttributeTag tag, long byteOffset) {
+                latest = attributeList;
+                return false;
+            }
+        }
+
         AttributeList attributeList = new AttributeList();
         byte filler[] = null;
         try {
@@ -509,7 +521,19 @@ public class Util {
             Runtime.getRuntime().gc();
             throw t;
         }
-        attributeList.read(file);
+
+        ReadTermStrat rts = new ReadTermStrat();
+        try {
+            attributeList.read(file, rts);
+        }
+        catch (Exception e) {
+            if (rts.latest != null) {
+                DicomClient.getInstance().showMessage("Warning!  DICOM file " + file.getAbsolutePath() + " has problems: " + e.getMessage());
+                return rts.latest;
+            }
+            else
+                throw e;
+        }
         return attributeList;
     }
 
