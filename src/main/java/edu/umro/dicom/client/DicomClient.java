@@ -35,6 +35,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
@@ -1808,7 +1809,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return fileList;
     }
 
-    private static void logPrelude() {
+    private static void logPrelude() {        
         Log.get().info("Starting DicomClient at " + new Date());
         Log.get().info("User: " + OpSys.getUser());
 
