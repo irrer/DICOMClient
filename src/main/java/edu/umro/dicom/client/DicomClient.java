@@ -26,9 +26,11 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -170,12 +172,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private JScrollPane patientScrollPane = null;
 
     /**
-     * Label that is shown by default if the application is not initially given
+     * Information that is shown by default if the application is not initially given
      * DICOM files for uploading. It is removed when the first DICOM file is loaded.
      * It is meant to be instructional, for users that start the application
      * without really knowing what they are doing.
      */
-    private JLabel dragHereLabel = null;
+    private JComponent dragHereTarget = null;
 
     /**
      * Text that shows the messages (errors) encountered by the user. Usually these
@@ -644,6 +646,46 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         return panel;
     }
+    
+    private JComponent buildDragAndDropTarget() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+
+        JLabel dragLabel = new JLabel("<html><h1> <p> <br> <p>Drag DICOM files and folders here<p/><br/><p/><br/></h1></html>");
+        dragLabel.setFont(FONT_HUGE_ITALICS);
+        dragLabel.setAlignmentX((float) 0.5);
+        dragLabel.setAlignmentY((float) 0.5);
+        dragLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        dragLabel.setVerticalAlignment(SwingConstants.CENTER);
+
+        JPanel south = new JPanel();
+        south.setLayout(new BorderLayout());
+
+        /*
+        JLabel source = new JLabel("<html> &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; Jim Irrer &nbsp; &nbsp; &nbsp; &nbsp; irrer@umich.edu <br/><p/><br/> &nbsp;  &nbsp;  &nbsp; University of Michigan Radiation Oncology</html>");
+        source.setHorizontalAlignment(SwingConstants.CENTER);
+        source.setVerticalAlignment(SwingConstants.CENTER);
+        */
+        
+        JTextArea source = new JTextArea("\n\n           Jim Irrer         irrer@umich.edu\n\n      University of Michigan Radiation Oncology");
+        source.setFont(FONT_MEDIUM);
+        source.setBackground(null);
+        source.setEditable(false);
+        //source.setHorizontalAlignment(SwingConstants.CENTER);       
+        
+        JLabel umichLogo = new JLabel(PreDefinedIcons.getUmichLogo());
+        south.add(source, BorderLayout.CENTER);
+        south.add(umichLogo, BorderLayout.WEST);
+
+        JPanel outerSouth = new JPanel();
+        outerSouth.setLayout(new FlowLayout());
+        outerSouth.add(south);
+
+        panel.add(dragLabel, BorderLayout.CENTER);
+        panel.add(outerSouth, BorderLayout.SOUTH);
+
+        return panel;
+    }
 
     /**
      * Build the central part of the dialog.
@@ -657,15 +699,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         BoxLayout patientListLayout = new BoxLayout(patientListPanel, BoxLayout.Y_AXIS);
         patientListPanel.setLayout(patientListLayout);
-
-        dragHereLabel = new JLabel("Drag DICOM files and folders here");
-        dragHereLabel = new JLabel("<html><h1> <p> <br> <p> <center>Drag DICOM files and folders here</center></h1></html>");
-        dragHereLabel.setFont(FONT_HUGE_ITALICS);
-        dragHereLabel.setAlignmentX((float) 0.5);
-        dragHereLabel.setAlignmentY((float) 0.5);
-        dragHereLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        dragHereLabel.setVerticalAlignment(SwingConstants.CENTER);
-        patientListPanel.add(dragHereLabel);
+        
+        patientListPanel.add(dragHereTarget = buildDragAndDropTarget());
 
         JPanel borderPanel = new JPanel();
         borderPanel.setLayout(new BorderLayout());
@@ -1434,10 +1469,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 patient.addStudy(file, attributeList);
             }
 
-            if (dragHereLabel != null) {
-                Container parent = dragHereLabel.getParent();
-                parent.remove(dragHereLabel);
-                dragHereLabel = null;
+            if (dragHereTarget != null) {
+                Container parent = dragHereTarget.getParent();
+                parent.remove(dragHereTarget);
+                dragHereTarget = null;
             }
 
             synchronized (this) {
