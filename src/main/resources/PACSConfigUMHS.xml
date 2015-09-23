@@ -22,7 +22,7 @@
         <PACS AETitle='IRRER' Host='141.214.125.68' Port='15678' />
         <PACS AETitle='SYNTHETIC-CT' Host='172.20.125.41' Port='5680' />
         <PACS AETitle='MRCT-DEV' Host='141.214.124.240' Port='5680' />
-        <PACS AETitle='VMSDBD_DEV' Host='141.214.124.174' Port='105' />
+        <PACS AETitle='VMSDBD_DEV' Host='141.214.124.199' Port='105' />
         <PACS AETitle='VMSDBD' Host='141.214.124.167' Port='105' />
         <PACS AETitle='UMRO_DEV' Host='141.214.124.243' Port='104' />
 	</PacsList>
