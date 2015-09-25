@@ -328,15 +328,598 @@
         <VarianCreator3291                          group='3291' element='0010' vr='LO' fullName='Varian Creator 3291'/>
         <SourceToGeneralAccessoryDist               group='3291' element='1000' vr='DS' fullName='Source To General Accessory Distance '/>
 
-        <CurveDimensions         group='5000:50fe:2' element='0005' vr='US' fullName='Curve Dimensions'         />
-        <NumberOfPoints          group='5000:50fe:2' element='0010' vr='US' fullName='Number Of Points'         />
-        <TypeOfData              group='5000:50fe:2' element='0020' vr='CS' fullName='Type Of Data'             />
-        <CurveDescription        group='5000:50fe:2' element='0022' vr='LO' fullName='Curve Description'        />
-        <AxisUnits               group='5000:50fe:2' element='0030' vr='SH' fullName='Axis Units'               />
-        <AxisLabels              group='5000:50fe:2' element='0040' vr='SH' fullName='Axis Labels'              />
-        <DataValueRepresentation group='5000:50fe:2' element='0103' vr='US' fullName='Data Value Representation'/>
-        <CurveLabel              group='5000:50fe:2' element='2500' vr='LO' fullName='Curve Label'              />
-        <CurveData               group='5000:50fe:2' element='3000' vr='OX' fullName='Curve Data'               />
+        <CurveDimensions                            group='5000:50fe:2' element='0005' vr='US' fullName='Curve Dimensions'         />
+        <NumberOfPoints                             group='5000:50fe:2' element='0010' vr='US' fullName='Number Of Points'         />
+        <TypeOfData                                 group='5000:50fe:2' element='0020' vr='CS' fullName='Type Of Data'             />
+        <CurveDescription                           group='5000:50fe:2' element='0022' vr='LO' fullName='Curve Description'        />
+        <AxisUnits                                  group='5000:50fe:2' element='0030' vr='SH' fullName='Axis Units'               />
+        <AxisLabels                                 group='5000:50fe:2' element='0040' vr='SH' fullName='Axis Labels'              />
+        <DataValueRepresentation                    group='5000:50fe:2' element='0103' vr='US' fullName='Data Value Representation'/>
+        <CurveLabel                                 group='5000:50fe:2' element='2500' vr='LO' fullName='Curve Label'              />
+        <CurveData                                  group='5000:50fe:2' element='3000' vr='OX' fullName='Curve Data'               />
+
+        <!-- SIEMENS -->
+        <Private_0019_10xxType                      group='0019' element='1008' vr='CS' fullName='Private_0019_10xxType'/>
+        <Private_0019_10xxVersion                   group='0019' element='1009' vr='LO' fullName='Private_0019_10xxVersion'/>
+        <LocationsInAcquisition                     group='0019' element='100A' vr='US' fullName='LocationsInAcquisition / NumberOfImagesInMosaic'/>
+        <SliceMeasurementDuration                   group='0019' element='100B' vr='DS' fullName='SliceMeasurementDuration'/>
+        <B_value                                    group='0019' element='100C' vr='IS' fullName='B_value'/>
+        <DiffusionDirectionality                    group='0019' element='100D' vr='CS' fullName='DiffusionDirectionality'/>
+        <DiffusionGradientDirection                 group='0019' element='100E' vr='FD' fullName='DiffusionGradientDirection'/>
+        <GradientMode                               group='0019' element='100F' vr='SH' fullName='GradientMode'/>
+        <FlowCompensation                           group='0019' element='1011' vr='SH' fullName='FlowCompensation'/>
+        <TablePositionOrigin                        group='0019' element='1012' vr='SL' fullName='TablePositionOrigin'/>
+        <ImaAbsTablePosition                        group='0019' element='1013' vr='SL' fullName='ImaAbsTablePosition'/>
+        <ImaRelTablePosition                        group='0019' element='1014' vr='IS' fullName='ImaRelTablePosition'/>
+        <SlicePosition_PCS                          group='0019' element='1015' vr='FD' fullName='SlicePosition_PCS'/>
+        <TimeAfterStart                             group='0019' element='1016' vr='DS' fullName='TimeAfterStart'/>
+        <SliceResolution                            group='0019' element='1017' vr='DS' fullName='SliceResolution'/>
+        <RealDwellTime                              group='0019' element='1018' vr='IS' fullName='RealDwellTime'/>
+        <RBMoCoTrans                                group='0019' element='1025' vr='DS' fullName='RBMoCoTrans'/>
+        <RBMoCoRot                                  group='0019' element='1026' vr='DS' fullName='RBMoCoRot'/>
+        <B_matrix                                   group='0019' element='1027' vr='FD' fullName='B_matrix'/>
+        <BandwidthPerPixelPhaseEncode               group='0019' element='1028' vr='FD' fullName='BandwidthPerPixelPhaseEncode'/>
+        <MosaicRefAcqTimes                          group='0019' element='1029' vr='FD' fullName='MosaicRefAcqTimes'/>
+        <CSAImageHeaderType                         group='0029' element='1008' vr='CS' fullName='CSAImageHeaderType'/>
+        <CSAImageHeaderVersion                      group='0029' element='1009' vr='LO' fullName='CSAImageHeaderVersion'/>
+        <CSAImageHeaderInfo                         group='0029' element='1010' vr='OB' fullName='CSAImageHeaderInfo'/>
+        <CSASeriesHeaderType                        group='0029' element='1018' vr='CS' fullName='CSASeriesHeaderType'/>
+        <CSASeriesHeaderVersion                     group='0029' element='1019' vr='LO' fullName='CSASeriesHeaderVersion'/>
+        <CSASeriesHeaderInfo                        group='0029' element='1020' vr='OB' fullName='CSASeriesHeaderInfo'/>
+        <CSAImageHeaderInfo                         group='0029' element='1110' vr='OB' fullName='CSAImageHeaderInfo'/>
+        <CSASeriesHeaderInfo                        group='0029' element='1120' vr='OB' fullName='CSASeriesHeaderInfo'/>
+        <PMTFInformation1                           group='0029' element='1131' vr='LO' fullName='PMTFInformation1'/>
+        <PMTFInformation2                           group='0029' element='1132' vr='UL' fullName='PMTFInformation2'/>
+        <PMTFInformation3                           group='0029' element='1133' vr='UL' fullName='PMTFInformation3'/>
+        <PMTFInformation4                           group='0029' element='1134' vr='CS' fullName='PMTFInformation4'/>
+        <SeriesWorkflowStatus                       group='0029' element='1160' vr='LO' fullName='SeriesWorkflowStatus'/>
+        <SeriesWorkflowStatus                       group='0029' element='1260' vr='LO' fullName='SeriesWorkflowStatus'/>
+        <Private_0051_10xx_Type                     group='0051' element='1008' vr='CS' fullName='Private_0051_10xx_Type'/>
+        <Private_0051_10xx_Version                  group='0051' element='1009' vr='LO' fullName='Private_0051_10xx_Version'/>
+        <TimeOfAcquisition                          group='0051' element='100A' vr='LO' fullName='TimeOfAcquisition'/>
+        <AcquisitionMatrixText                      group='0051' element='100B' vr='LO' fullName='AcquisitionMatrixText'/>
+        <FieldOfView                                group='0051' element='100C' vr='LO' fullName='FieldOfView'/>
+        <SlicePositionText                          group='0051' element='100D' vr='SH' fullName='SlicePositionText'/>
+        <ImageOrientation                           group='0051' element='100E' vr='LO' fullName='ImageOrientation'/>
+        <CoilString                                 group='0051' element='100F' vr='LO' fullName='CoilString'/>
+        <ImaPATModeText                             group='0051' element='1011' vr='LO' fullName='ImaPATModeText'/>
+        <TablePositionText                          group='0051' element='1012' vr='SH' fullName='TablePositionText'/>
+        <PositivePCSDirections                      group='0051' element='1013' vr='SH' fullName='PositivePCSDirections'/>
+        <DataFilterText                             group='0051' element='1015' vr='SH' fullName='DataFilterText / not sure'/>
+        <ImageTypeText                              group='0051' element='1016' vr='LO' fullName='ImageTypeText'/>
+        <SliceThicknessText                         group='0051' element='1017' vr='SH' fullName='SliceThicknessText'/>
+        <ScanOptionsText                            group='0051' element='1019' vr='LO' fullName='ScanOptionsText'/>
+
+        <!-- GE -->
+        <FullFidelity                               group='0009' element='1001' vr='LO' fullName='FullFidelity'/>
+        <SuiteId                                    group='0009' element='1002' vr='SH' fullName='SuiteId'/>
+        <ProductId                                  group='0009' element='1004' vr='SH' fullName='ProductId'/>
+        <ImageActualDate                            group='0009' element='1027' vr='SL' fullName='ImageActualDate'/>
+        <ServiceId                                  group='0009' element='1030' vr='SH' fullName='ServiceId'/>
+        <MobileLocationNumber                       group='0009' element='1031' vr='SH' fullName='MobileLocationNumber'/>
+        <EquipmentUID                               group='0009' element='10E3' vr='UI' fullName='EquipmentUID'/>
+        <ExamRecordChecksum                         group='0009' element='10E7' vr='UL' fullName='ExamRecordChecksum'/>
+        <ActualSeriesDataTimeStamp                  group='0009' element='10E9' vr='SL' fullName='ActualSeriesDataTimeStamp'/>
+        <HorizFrameOfRef                            group='0019' element='100F' vr='DS' fullName='HorizFrameOfRef'/>
+        <SeriesContrast                             group='0019' element='1011' vr='SS' fullName='SeriesContrast'/>
+        <LastPseq                                   group='0019' element='1012' vr='SS' fullName='LastPseq'/>
+        <SeriesPlane                                group='0019' element='1017' vr='SS' fullName='SeriesPlane'/>
+        <FirstScanRas                               group='0019' element='1018' vr='LO' fullName='FirstScanRas'/>
+        <FirstScanLocation                          group='0019' element='1019' vr='DS' fullName='FirstScanLocation'/>
+        <LastScanRas                                group='0019' element='101A' vr='LO' fullName='LastScanRas'/>
+        <LastScanLoc                                group='0019' element='101B' vr='DS' fullName='LastScanLoc'/>
+        <DisplayFieldOfView                         group='0019' element='101E' vr='DS' fullName='DisplayFieldOfView'/>
+        <AcquisitionDuration                        group='0019' element='105A' vr='FL' fullName='AcquisitionDuration'/>
+        <SecondEcho                                 group='0019' element='107D' vr='DS' fullName='SecondEcho'/>
+        <NumberOfEchoes                             group='0019' element='107E' vr='SS' fullName='NumberOfEchoes'/>
+        <TableDelta                                 group='0019' element='107F' vr='DS' fullName='TableDelta'/>
+        <Contiguous                                 group='0019' element='1081' vr='SS' fullName='Contiguous'/>
+        <PeakSAR                                    group='0019' element='1084' vr='DS' fullName='PeakSAR'/>
+        <MonitorSAR                                 group='0019' element='1085' vr='DS' fullName='MonitorSAR'/>
+        <CardiacRepetitionTime                      group='0019' element='1087' vr='DS' fullName='CardiacRepetitionTime'/>
+        <ImagesPerCardiacCycle                      group='0019' element='1088' vr='SS' fullName='ImagesPerCardiacCycle'/>
+        <ActualReceiveGainAnalog                    group='0019' element='108A' vr='SS' fullName='ActualReceiveGainAnalog'/>
+        <ActualReceiveGainDigital                   group='0019' element='108B' vr='SS' fullName='ActualReceiveGainDigital'/>
+        <DelayAfterTrigger                          group='0019' element='108D' vr='DS' fullName='DelayAfterTrigger'/>
+        <Swappf                                     group='0019' element='108F' vr='SS' fullName='Swappf'/>
+        <PauseInterval                              group='0019' element='1090' vr='SS' fullName='PauseInterval'/>
+        <PauseTime                                  group='0019' element='1091' vr='DS' fullName='PauseTime'/>
+        <SliceOffsetOnFreqAxis                      group='0019' element='1092' vr='SL' fullName='SliceOffsetOnFreqAxis'/>
+        <AutoPrescanCenterFrequency                 group='0019' element='1093' vr='DS' fullName='AutoPrescanCenterFrequency'/>
+        <AutoPrescanTransmitGain                    group='0019' element='1094' vr='SS' fullName='AutoPrescanTransmitGain'/>
+        <AutoPrescanAnalogReceiverGain              group='0019' element='1095' vr='SS' fullName='AutoPrescanAnalogReceiverGain'/>
+        <AutoPrescanDigitalReceiverGain             group='0019' element='1096' vr='SS' fullName='AutoPrescanDigitalReceiverGain'/>
+        <BitmapdefiningCVs                          group='0019' element='1097' vr='SL' fullName='BitmapdefiningCVs'/>
+        <CenterFreqMethod                           group='0019' element='1098' vr='SS' fullName='CenterFreqMethod'/>
+        <PulseSequenceMode                          group='0019' element='109B' vr='SS' fullName='PulseSequenceMode'/>
+        <PulseSequenceName                          group='0019' element='109C' vr='LO' fullName='PulseSequenceName'/>
+        <PulseSequenceDate                          group='0019' element='109D' vr='DT' fullName='PulseSequenceDate'/>
+        <SequenceName                               group='0019' element='109E' vr='LO' fullName='SequenceName / InternalPulseSequenceName'/>
+        <TransmittingCoilType                       group='0019' element='109F' vr='SS' fullName='TransmittingCoilType'/>
+        <SurfaceCoilType                            group='0019' element='10A0' vr='SS' fullName='SurfaceCoilType'/>
+        <ExtremityCoilflag                          group='0019' element='10A1' vr='SS' fullName='ExtremityCoilflag'/>
+        <RawDataRunNumber                           group='0019' element='10A2' vr='SL' fullName='RawDataRunNumber'/>
+        <CalibratedFieldStrength                    group='0019' element='10A3' vr='UL' fullName='CalibratedFieldStrength'/>
+        <SATFatWaterBone                            group='0019' element='10A4' vr='SS' fullName='SATFatWaterBone'/>
+        <UserData0                                  group='0019' element='10A7' vr='DS' fullName='UserData0'/>
+        <UserData1                                  group='0019' element='10A8' vr='DS' fullName='UserData1'/>
+        <UserData2                                  group='0019' element='10A9' vr='DS' fullName='UserData2'/>
+        <UserData3                                  group='0019' element='10AA' vr='DS' fullName='UserData3'/>
+        <UserData4                                  group='0019' element='10AB' vr='DS' fullName='UserData4'/>
+        <UserData5                                  group='0019' element='10AC' vr='DS' fullName='UserData5'/>
+        <UserData6                                  group='0019' element='10AD' vr='DS' fullName='UserData6'/>
+        <UserData7                                  group='0019' element='10AE' vr='DS' fullName='UserData7'/>
+        <UserData8                                  group='0019' element='10AF' vr='DS' fullName='UserData8'/>
+        <UserData9                                  group='0019' element='10B0' vr='DS' fullName='UserData9'/>
+        <UserData10                                 group='0019' element='10B1' vr='DS' fullName='UserData10'/>
+        <UserData11                                 group='0019' element='10B2' vr='DS' fullName='UserData11'/>
+        <UserData12                                 group='0019' element='10B3' vr='DS' fullName='UserData12'/>
+        <UserData13                                 group='0019' element='10B4' vr='DS' fullName='UserData13'/>
+        <UserData14                                 group='0019' element='10B5' vr='DS' fullName='UserData14'/>
+        <UserData15                                 group='0019' element='10B6' vr='DS' fullName='UserData15'/>
+        <UserData16                                 group='0019' element='10B7' vr='DS' fullName='UserData16'/>
+        <UserData17                                 group='0019' element='10B8' vr='DS' fullName='UserData17'/>
+        <UserData18                                 group='0019' element='10B9' vr='DS' fullName='UserData18'/>
+        <UserData19                                 group='0019' element='10BA' vr='DS' fullName='UserData19'/>
+        <DiffusionDirectionX                        group='0019' element='10BB' vr='DS' fullName='DiffusionDirectionX /UserData20'/>
+        <DiffusionDirectionY                        group='0019' element='10BC' vr='DS' fullName='DiffusionDirectionY /UserData21'/>
+        <DiffusionDirectionZ                        group='0019' element='10BD' vr='DS' fullName='DiffusionDirectionZ /UserData22'/>
+        <ProjectionAngle                            group='0019' element='10BE' vr='DS' fullName='ProjectionAngle'/>
+        <SaturationPlanes                           group='0019' element='10C0' vr='SS' fullName='SaturationPlanes'/>
+        <SATlocationR                               group='0019' element='10C2' vr='SS' fullName='SATlocationR'/>
+        <SATlocationL                               group='0019' element='10C3' vr='SS' fullName='SATlocationL'/>
+        <SATlocationA                               group='0019' element='10C4' vr='SS' fullName='SATlocationA'/>
+        <SATlocationP                               group='0019' element='10C5' vr='SS' fullName='SATlocationP'/>
+        <SATlocationH                               group='0019' element='10C6' vr='SS' fullName='SATlocationH'/>
+        <SATlocationF                               group='0019' element='10C7' vr='SS' fullName='SATlocationF'/>
+        <SATThicknessRL                             group='0019' element='10C8' vr='SS' fullName='SATThicknessRL'/>
+        <SATThicknessAP                             group='0019' element='10C9' vr='SS' fullName='SATThicknessAP'/>
+        <SATThicknessHF                             group='0019' element='10CA' vr='SS' fullName='SATThicknessHF'/>
+        <PhaseContrastFlowAxis                      group='0019' element='10CB' vr='SS' fullName='PhaseContrastFlowAxis'/>
+        <VelocityEncoding                           group='0019' element='10CC' vr='SS' fullName='VelocityEncoding'/>
+        <ThicknessDisclaimer                        group='0019' element='10CD' vr='SS' fullName='ThicknessDisclaimer'/>
+        <PrescanType                                group='0019' element='10CE' vr='SS' fullName='PrescanType'/>
+        <PrescanStatus                              group='0019' element='10CF' vr='SS' fullName='PrescanStatus'/>
+        <ProjectionAlgorithm                        group='0019' element='10D2' vr='SS' fullName='ProjectionAlgorithm'/>
+        <FractionalEcho                             group='0019' element='10D5' vr='SS' fullName='FractionalEcho'/>
+        <CardiacPhaseNumber                         group='0019' element='10D7' vr='SS' fullName='CardiacPhaseNumber'/>
+        <VariableEchoflag                           group='0019' element='10D8' vr='SS' fullName='VariableEchoflag'/>
+        <ConcatenatedSAT                            group='0019' element='10D9' vr='DS' fullName='ConcatenatedSAT'/>
+        <UserData23                                 group='0019' element='10DF' vr='DS' fullName='UserData23'/>
+        <NumberOfDiffusionDirection                 group='0019' element='10E0' vr='DS' fullName='NumberOfDiffusionDirection /UserData24'/>
+        <VelocityEncodeScale                        group='0019' element='10E2' vr='DS' fullName='VelocityEncodeScale'/>
+        <FastPhases                                 group='0019' element='10F2' vr='SS' fullName='FastPhases'/>
+        <TransmitGain                               group='0019' element='10F9' vr='DS' fullName='TransmitGain'/>
+        <!--
+        <ImagePositionPatient                       group='0020' element='9301' vr='DS' fullName='ImagePositionPatient / These 4 are not private'/>
+        <ImageOrientationPatient                    group='0020' element='9302' vr='DS' fullName='ImageOrientationPatient (but seems used only by GE)'/>
+        <PlanePositionSequence                      group='0020' element='930E' vr='SQ' fullName='PlanePositionSequence'/>
+        <PlaneOrientationSequence                   group='0020' element='930F' vr='SQ' fullName='PlaneOrientationSequence'/>
+        -->
+        <SeriesFromWhichPrescribed                  group='0021' element='1003' vr='SS' fullName='SeriesFromWhichPrescribed'/>
+        <SeriesFromWhichPrescribed                  group='0021' element='1035' vr='SS' fullName='SeriesFromWhichPrescribed'/>
+        <ImageFromWhichPrescribed                   group='0021' element='1036' vr='SS' fullName='ImageFromWhichPrescribed'/>
+        <ScreenFormat                               group='0021' element='1037' vr='SS' fullName='ScreenFormat'/>
+        <LocationsInAcquisition                     group='0021' element='104F' vr='SS' fullName='LocationsInAcquisition'/>
+        <GraphicallyPrescribed                      group='0021' element='1050' vr='SS' fullName='GraphicallyPrescribed'/>
+        <RotationFromSourceXRot                     group='0021' element='1051' vr='DS' fullName='RotationFromSourceXRot'/>
+        <RotationFromSourceYRot                     group='0021' element='1052' vr='DS' fullName='RotationFromSourceYRot'/>
+        <RotationFromSourceZRot                     group='0021' element='1053' vr='DS' fullName='RotationFromSourceZRot'/>
+        <Num3DSlabs                                 group='0021' element='1056' vr='SL' fullName='Num3DSlabs'/>
+        <LocsPer3DSlab                              group='0021' element='1057' vr='SL' fullName='LocsPer3DSlab'/>
+        <Overlaps                                   group='0021' element='1058' vr='SL' fullName='Overlaps'/>
+        <ImageFiltering                             group='0021' element='1059' vr='SL' fullName='ImageFiltering'/>
+        <DiffusionDirection                         group='0021' element='105A' vr='SL' fullName='DiffusionDirection'/>
+        <TaggingFlipAngle                           group='0021' element='105B' vr='DS' fullName='TaggingFlipAngle'/>
+        <TaggingOrientation                         group='0021' element='105C' vr='DS' fullName='TaggingOrientation'/>
+        <TagSpacing                                 group='0021' element='105D' vr='DS' fullName='TagSpacing'/>
+        <RTIA_timer                                 group='0021' element='105E' vr='DS' fullName='RTIA_timer'/>
+        <Fps                                        group='0021' element='105F' vr='DS' fullName='Fps'/>
+        <AutoWindowLevelAlpha                       group='0021' element='1081' vr='DS' fullName='AutoWindowLevelAlpha'/>
+        <AutoWindowLevelBeta                        group='0021' element='1082' vr='DS' fullName='AutoWindowLevelBeta'/>
+        <AutoWindowLevelWindow                      group='0021' element='1083' vr='DS' fullName='AutoWindowLevelWindow'/>
+        <AutoWindowLevelLevel                       group='0021' element='1084' vr='DS' fullName='AutoWindowLevelLevel'/>
+        <StartTimeInFirstAxial                      group='0023' element='1070' vr='FD' fullName='StartTimeInFirstAxial'/>
+        <NumberOfUpdatesToHeader                    group='0023' element='1074' vr='SL' fullName='NumberOfUpdatesToHeader'/>
+        <IndicatesStudyHasCompleteInfo              group='0023' element='107D' vr='SS' fullName='IndicatesStudyHasCompleteInfo'/>
+        <LastPulseSequenceUsed                      group='0025' element='1006' vr='SS' fullName='LastPulseSequenceUsed'/>
+        <ImagesInSeries                             group='0025' element='1007' vr='SL' fullName='ImagesInSeries'/>
+        <LandmarkCounter                            group='0025' element='1010' vr='SL' fullName='LandmarkCounter'/>
+        <NumberOfAcquisitions                       group='0025' element='1011' vr='SS' fullName='NumberOfAcquisitions'/>
+        <IndicatesNumberOfUpdatesToHeader           group='0025' element='1014' vr='SL' fullName='IndicatesNumberOfUpdatesToHeader'/>
+        <SeriesCompleteFlag                         group='0025' element='1017' vr='SL' fullName='SeriesCompleteFlag'/>
+        <NumberOfImagesArchived                     group='0025' element='1018' vr='SL' fullName='NumberOfImagesArchived'/>
+        <LastImageNumberUsed                        group='0025' element='1019' vr='SL' fullName='LastImageNumberUsed'/>
+        <PrimaryReceiverSuiteAndHost                group='0025' element='101A' vr='SH' fullName='PrimaryReceiverSuiteAndHost'/>
+        <ProtocolDataBlock                          group='0025' element='101B' vr='OB' fullName='ProtocolDataBlock'/>
+        <ImageArchiveFlag                           group='0027' element='1006' vr='SL' fullName='ImageArchiveFlag'/>
+        <ScoutType                                  group='0027' element='1010' vr='SS' fullName='ScoutType'/>
+        <ImagingMode                                group='0027' element='1031' vr='SS' fullName='ImagingMode'/>
+        <PulseSequence                              group='0027' element='1032' vr='SS' fullName='PulseSequence'/>
+        <ImagingOptions                             group='0027' element='1033' vr='UL' fullName='ImagingOptions'/>
+        <PlaneType                                  group='0027' element='1035' vr='SS' fullName='PlaneType'/>
+        <RASletterOfImageLocation                   group='0027' element='1040' vr='SH' fullName='RASletterOfImageLocation'/>
+        <ImageLocation                              group='0027' element='1041' vr='FL' fullName='ImageLocation'/>
+        <CenterRCoordOfPlaneImage                   group='0027' element='1042' vr='FL' fullName='CenterRCoordOfPlaneImage'/>
+        <CenterACoordOfPlaneImage                   group='0027' element='1043' vr='FL' fullName='CenterACoordOfPlaneImage'/>
+        <CenterSCoordOfPlaneImage                   group='0027' element='1044' vr='FL' fullName='CenterSCoordOfPlaneImage'/>
+        <NormalRCoord                               group='0027' element='1045' vr='FL' fullName='NormalRCoord'/>
+        <NormalACoord                               group='0027' element='1046' vr='FL' fullName='NormalACoord'/>
+        <NormalSCoord                               group='0027' element='1047' vr='FL' fullName='NormalSCoord'/>
+        <ImageDimensionX                            group='0027' element='1060' vr='FL' fullName='ImageDimensionX'/>
+        <ImageDimensionY                            group='0027' element='1061' vr='FL' fullName='ImageDimensionY'/>
+        <NumberOfExcitations                        group='0027' element='1062' vr='FL' fullName='NumberOfExcitations'/>
+        <LowerRangeOfPixels1                        group='0029' element='1015' vr='SL' fullName='LowerRangeOfPixels1'/>
+        <UpperRangeOfPixels1                        group='0029' element='1016' vr='SL' fullName='UpperRangeOfPixels1'/>
+        <LowerRangeOfPixels2                        group='0029' element='1017' vr='SL' fullName='LowerRangeOfPixels2'/>
+        <UpperRangeOfPixels2                        group='0029' element='1018' vr='SL' fullName='UpperRangeOfPixels2'/>
+        <VersionOfTheHdrStruct                      group='0029' element='1026' vr='SS' fullName='VersionOfTheHdrStruct'/>
+        <AdvantageCompOverflow                      group='0029' element='1034' vr='SL' fullName='AdvantageCompOverflow'/>
+        <AdvantageCompUnderflow                     group='0029' element='1035' vr='SL' fullName='AdvantageCompUnderflow'/>
+        <BitmapOfPrescanOptions                     group='0043' element='1001' vr='SS' fullName='BitmapOfPrescanOptions'/>
+        <GradientOffsetInX                          group='0043' element='1002' vr='SS' fullName='GradientOffsetInX'/>
+        <GradientOffsetInY                          group='0043' element='1003' vr='SS' fullName='GradientOffsetInY'/>
+        <GradientOffsetInZ                          group='0043' element='1004' vr='SS' fullName='GradientOffsetInZ'/>
+        <NumberOfEPIShots                           group='0043' element='1006' vr='SS' fullName='NumberOfEPIShots'/>
+        <ViewsPerSegment                            group='0043' element='1007' vr='SS' fullName='ViewsPerSegment'/>
+        <RespiratoryRate                            group='0043' element='1008' vr='SS' fullName='RespiratoryRate'/>
+        <RespiratoryTriggerPoint                    group='0043' element='1009' vr='SS' fullName='RespiratoryTriggerPoint'/>
+        <TypeOfReceiverUsed                         group='0043' element='100A' vr='SS' fullName='TypeOfReceiverUsed'/>
+        <DB_dtPeakRateOfChangeOfGradientField       group='0043' element='100B' vr='DS' fullName='DB_dtPeakRateOfChangeOfGradientField'/>
+        <dB_dtLimitsInUnitsOfPercent                group='0043' element='100C' vr='DS' fullName='dB_dtLimitsInUnitsOfPercent'/>
+        <PSDEstimatedLimit                          group='0043' element='100D' vr='DS' fullName='PSDEstimatedLimit'/>
+        <PSDEstimatedLimitInTeslaPerSecond          group='0043' element='100E' vr='DS' fullName='PSDEstimatedLimitInTeslaPerSecond'/>
+        <WindowValue                                group='0043' element='1010' vr='SS' fullName='WindowValue'/>
+        <GEImageIntegrity                           group='0043' element='101C' vr='SS' fullName='GEImageIntegrity'/>
+        <LevelValue                                 group='0043' element='101D' vr='SS' fullName='LevelValue'/>
+        <Saravghead                                 group='0043' element='100F' vr='DS' fullName='Saravghead'/>
+        <UniqueImageIden                            group='0043' element='1028' vr='OB' fullName='UniqueImageIden'/>
+        <HistogramTables                            group='0043' element='1029' vr='OB' fullName='HistogramTables'/>
+        <UserDefineData                             group='0043' element='102A' vr='OB' fullName='UserDefineData'/>
+        <PrivateScanOptions                         group='0043' element='102B' vr='SS' fullName='PrivateScanOptions'/>
+        <EffectiveEchoSpacing                       group='0043' element='102C' vr='SS' fullName='EffectiveEchoSpacing'/>
+        <FilterMode                                 group='0043' element='102D' vr='SH' fullName='FilterMode'/>
+        <PrivateImageType                           group='0043' element='102F' vr='SS' fullName='PrivateImageType'/>
+        <VasCollapseFlag                            group='0043' element='1030' vr='SS' fullName='VasCollapseFlag'/>
+        <VasFlags                                   group='0043' element='1032' vr='SS' fullName='VasFlags'/>
+        <Neg_scanspacing                            group='0043' element='1033' vr='FL' fullName='Neg_scanspacing'/>
+        <OffsetFrequency                            group='0043' element='1034' vr='IS' fullName='OffsetFrequency'/>
+        <User_usage_tag                             group='0043' element='1035' vr='UL' fullName='User_usage_tag'/>
+        <User_fill_map_MSW                          group='0043' element='1036' vr='UL' fullName='User_fill_map_MSW'/>
+        <User_fill_map_LSW                          group='0043' element='1037' vr='UL' fullName='User_fill_map_LSW'/>
+        <UserData_25_48                             group='0043' element='1038' vr='FL' fullName='UserData_25_48'/>
+        <SlopInt_6_9                                group='0043' element='1039' vr='IS' fullName='SlopInt_6_9'/>
+        <SlopInt_10_17                              group='0043' element='1060' vr='IS' fullName='SlopInt_10_17'/>
+        <ScannerStudyEntityUID                      group='0043' element='1061' vr='UI' fullName='ScannerStudyEntityUID'/>
+        <ScannerStudyID                             group='0043' element='1062' vr='SH' fullName='ScannerStudyID'/>
+        <ScannerTableEntry                          group='0043' element='106F' vr='DS' fullName='ScannerTableEntry'/>
+        <ParadigmName                               group='0043' element='1070' vr='LO' fullName='ParadigmName'/>
+        <ParadigmDescription                        group='0043' element='1071' vr='ST' fullName='ParadigmDescription'/>
+        <ParadigmUID                                group='0043' element='1072' vr='UI' fullName='ParadigmUID'/>
+        <ExperimentType                             group='0043' element='1073' vr='US' fullName='ExperimentType'/>
+        <NumberOfRestVolumes                        group='0043' element='1074' vr='US' fullName='NumberOfRestVolumes'/>
+        <NumberOfActiveVolumes                      group='0043' element='1075' vr='US' fullName='NumberOfActiveVolumes'/>
+        <NumberOfDummyScans                         group='0043' element='1076' vr='US' fullName='NumberOfDummyScans'/>
+        <LocationsInAcquisition                     group='0043' element='1079' vr='US' fullName='LocationsInAcquisition / SlicesPerVolume'/>
+        <ExpectedTimePoints                         group='0043' element='107A' vr='US' fullName='ExpectedTimePoints'/>
+        <RegressorValues                            group='0043' element='107B' vr='FL' fullName='RegressorValues'/>
+        <DelayAfterSliceGroup                       group='0043' element='107C' vr='FL' fullName='DelayAfterSliceGroup'/>
+        <ReconModeFlagWord                          group='0043' element='107D' vr='US' fullName='ReconModeFlagWord'/>
+        <CoilIDData                                 group='0043' element='1080' vr='LO' fullName='CoilIDData'/>
+        <GECoilName                                 group='0043' element='1081' vr='LO' fullName='GECoilName'/>
+        <SystemConfigurationInformation             group='0043' element='1082' vr='LO' fullName='SystemConfigurationInformation'/>
+        <AssetRFactors                              group='0043' element='1083' vr='DS' fullName='AssetRFactors'/>
+        <AdditionalAssetData                        group='0043' element='1084' vr='LO' fullName='AdditionalAssetData'/>
+        <PUREAcquisitionCalibrationSeriesUID        group='0043' element='1088' vr='UI' fullName='PUREAcquisitionCalibrationSeriesUID'/>
+        <GoverningBodydB_dtAndSARDefinition         group='0043' element='1089' vr='LO' fullName='GoverningBodydB_dtAndSARDefinition'/>
+        <InPlanePhaseEncodingDirection              group='0043' element='108A' vr='CS' fullName='InPlanePhaseEncodingDirection'/>
+        <FMRIBinaryDataBlock                        group='0043' element='108B' vr='OB' fullName='FMRIBinaryDataBlock'/>
+        <SARDefinition                              group='0043' element='1090' vr='LO' fullName='SARDefinition'/>
+        <SARValue                                   group='0043' element='1091' vr='DS' fullName='SARValue'/>
+        <PrescanReuseString                         group='0043' element='1095' vr='LO' fullName='PrescanReuseString'/>
+        <ContentQualification                       group='0043' element='1096' vr='CS' fullName='ContentQualification'/>
+        <ImageFilteringParameters                   group='0043' element='1097' vr='LO' fullName='ImageFilteringParameters'/>
+        <ASSETAcquisitionCalibrationSeriesUID       group='0043' element='1098' vr='UI' fullName='ASSETAcquisitionCalibrationSeriesUID'/>
+        <RxStackIdentification                      group='0043' element='109A' vr='IS' fullName='RxStackIdentification'/>
+        <AdditionalFilteringParameters              group='0043' element='10AA' vr='LO' fullName='AdditionalFilteringParameters'/>
+        <AdvancedEddyCorrection                     group='0043' element='10B3' vr='DS' fullName='AdvancedEddyCorrection'/>
+
+        <!-- Philips -->
+        <ChemicalShift                              group='2001' element='1001' vr='FL' fullName='ChemicalShift'/>
+        <ChemicalShiftNumberMR                      group='2001' element='1002' vr='IS' fullName='ChemicalShiftNumberMR'/>
+        <B_factor                                   group='2001' element='1003' vr='FL' fullName='B_factor'/>
+        <DiffusionDirection                         group='2001' element='1004' vr='CS' fullName='DiffusionDirection'/>
+        <ImageEnhanced                              group='2001' element='1006' vr='CS' fullName='ImageEnhanced'/>
+        <ImageTypeEDES                              group='2001' element='1007' vr='CS' fullName='ImageTypeEDES'/>
+        <PhaseNumber                                group='2001' element='1008' vr='IS' fullName='PhaseNumber'/>
+        <ImagePrepulseDelay                         group='2001' element='1009' vr='FL' fullName='ImagePrepulseDelay'/>
+        <SliceNumberMR                              group='2001' element='100A' vr='IS' fullName='SliceNumberMR'/>
+        <SliceOrientation                           group='2001' element='100B' vr='CS' fullName='SliceOrientation'/>
+        <ArrhythmiaRejection                        group='2001' element='100C' vr='CS' fullName='ArrhythmiaRejection'/>
+        <CardiacCycled                              group='2001' element='100E' vr='CS' fullName='CardiacCycled'/>
+        <CardiacGateWidth                           group='2001' element='100F' vr='SS' fullName='CardiacGateWidth'/>
+        <CardiacSync                                group='2001' element='1010' vr='CS' fullName='CardiacSync'/>
+        <DiffusionEchoTime                          group='2001' element='1011' vr='FL' fullName='DiffusionEchoTime'/>
+        <DynamicSeries                              group='2001' element='1012' vr='CS' fullName='DynamicSeries'/>
+        <EPIFactor                                  group='2001' element='1013' vr='SL' fullName='EPIFactor'/>
+        <NumberOfEchoes                             group='2001' element='1014' vr='SL' fullName='NumberOfEchoes'/>
+        <NumberOfLocations                          group='2001' element='1015' vr='SS' fullName='NumberOfLocations'/>
+        <NumberOfPCDirections                       group='2001' element='1016' vr='SS' fullName='NumberOfPCDirections'/>
+        <NumberOfPhasesMR                           group='2001' element='1017' vr='SL' fullName='NumberOfPhasesMR'/>
+        <LocationsInAcquisition                     group='2001' element='1018' vr='SL' fullName='LocationsInAcquisition / NumberOfSlicesMR'/>
+        <PartialMatrixScanned                       group='2001' element='1019' vr='CS' fullName='PartialMatrixScanned'/>
+        <PCVelocity                                 group='2001' element='101A' vr='FL' fullName='PCVelocity'/>
+        <PrepulseDelay                              group='2001' element='101B' vr='FL' fullName='PrepulseDelay'/>
+        <PrepulseType                               group='2001' element='101C' vr='CS' fullName='PrepulseType'/>
+        <ReconstructionNumberMR                     group='2001' element='101D' vr='IS' fullName='ReconstructionNumberMR'/>
+        <RespirationSync                            group='2001' element='101F' vr='CS' fullName='RespirationSync'/>
+        <ScanningSequence                           group='2001' element='1020' vr='LO' fullName='ScanningSequence / ScanningTechnique'/>
+        <SPIR                                       group='2001' element='1021' vr='CS' fullName='SPIR'/>
+        <WaterFatShift                              group='2001' element='1022' vr='FL' fullName='WaterFatShift'/>
+        <MRSeriesFlipAngle                          group='2001' element='1023' vr='DS' fullName='MRSeriesFlipAngle (duplicate)'/>
+        <SeriesIsInteractive                        group='2001' element='1024' vr='CS' fullName='SeriesIsInteractive'/>
+        <EchoTimeDisplay                            group='2001' element='1025' vr='SH' fullName='EchoTimeDisplay'/>
+        <StackNumberOfSlices                        group='2001' element='102D' vr='SS' fullName='StackNumberOfSlices'/>
+        <StackRadialAngle                           group='2001' element='1032' vr='FL' fullName='StackRadialAngle'/>
+        <StackRadialAxis                            group='2001' element='1033' vr='CS' fullName='StackRadialAxis'/>
+        <StackSliceNumber                           group='2001' element='1035' vr='SS' fullName='StackSliceNumber'/>
+        <StackType                                  group='2001' element='1036' vr='CS' fullName='StackType'/>
+        <Stack                                      group='2001' element='105F' vr='SQ' fullName='Stack'/>
+        <NumberOfStacks                             group='2001' element='1060' vr='SL' fullName='NumberOfStacks'/>
+        <SeriesTransmitted                          group='2001' element='1061' vr='CS' fullName='SeriesTransmitted'/>
+        <SeriesCommitted                            group='2001' element='1062' vr='CS' fullName='SeriesCommitted'/>
+        <ExaminationSource                          group='2001' element='1063' vr='CS' fullName='ExaminationSource'/>
+        <SeriesType                                 group='2001' element='106E' vr='SH' fullName='SeriesType'/>
+        <MRSeriesAcquisitionNumber                  group='2001' element='107B' vr='IS' fullName='MRSeriesAcquisitionNumber'/>
+        <NumberOfDynamicScans                       group='2001' element='1081' vr='IS' fullName='NumberOfDynamicScans'/>
+        <MRSeriesEchoTrainLength                    group='2001' element='1082' vr='IS' fullName='MRSeriesEchoTrainLength (duplicate)'/>
+        <MRSeriesImagingFrequency                   group='2001' element='1083' vr='DS' fullName='MRSeriesImagingFrequency (duplicate)'/>
+        <MRSeriesInversionTime                      group='2001' element='1084' vr='DS' fullName='MRSeriesInversionTime (duplicate)'/>
+        <MRSeriesMagneticFieldStrength              group='2001' element='1085' vr='DS' fullName='MRSeriesMagneticFieldStrength (duplicate, seems wrong)'/>
+        <MRSeriesNrOfPhaseEncodingSteps             group='2001' element='1086' vr='IS' fullName='MRSeriesNrOfPhaseEncodingSteps (duplicate, seems wrong)'/>
+        <MRSeriesNucleus                            group='2001' element='1087' vr='SH' fullName='MRSeriesNucleus (duplicate)'/>
+        <MRSeriesNumberOfAverages                   group='2001' element='1088' vr='DS' fullName='MRSeriesNumberOfAverages (duplicate)'/>
+        <MRSeriesPercentPhaseFieldOfView            group='2001' element='1089' vr='DS' fullName='MRSeriesPercentPhaseFieldOfView (duplicate, wrong)'/>
+        <MRSeriesPercentSampling                    group='2001' element='108A' vr='DS' fullName='MRSeriesPercentSampling (duplicate, wrong)'/>
+        <MRSeriesTransmittingCoil                   group='2001' element='108B' vr='SH' fullName='MRSeriesTransmittingCoil (duplicate)'/>
+        <ExamCardName                               group='2001' element='10C8' vr='LO' fullName='ExamCardName'/>
+        <ProspectiveMotionCorrection                group='2001' element='10F1' vr='FL' fullName='ProspectiveMotionCorrection'/>
+        <RetrospectiveMotionCorrection              group='2001' element='10F2' vr='FL' fullName='RetrospectiveMotionCorrection'/>
+        <MRImageAngulationAP                        group='2005' element='1000' vr='FL' fullName='MRImageAngulationAP'/>
+        <MRImageAngulationFH                        group='2005' element='1001' vr='FL' fullName='MRImageAngulationFH'/>
+        <MRImageAngulationRL                        group='2005' element='1002' vr='FL' fullName='MRImageAngulationRL'/>
+        <MRImageDisplayOrientation                  group='2005' element='1004' vr='CS' fullName='MRImageDisplayOrientation'/>
+        <MRImageOffCentreAP                         group='2005' element='1008' vr='FL' fullName='MRImageOffCentreAP'/>
+        <MRImageOffCentreFH                         group='2005' element='1009' vr='FL' fullName='MRImageOffCentreFH'/>
+        <MRImageOffCentreRL                         group='2005' element='100A' vr='FL' fullName='MRImageOffCentreRL'/>
+        <MRMaxFP                                    group='2005' element='100B' vr='FL' fullName='MRMaxFP'/>
+        <MRMinFP                                    group='2005' element='100C' vr='FL' fullName='MRMinFP'/>
+        <MRScaleIntercept                           group='2005' element='100D' vr='FL' fullName='MRScaleIntercept'/>
+        <MRScaleSlope                               group='2005' element='100E' vr='FL' fullName='MRScaleSlope'/>
+        <WindowCenterOriginal                       group='2005' element='100F' vr='DS' fullName='WindowCenterOriginal'/>
+        <WindowWidthOriginal                        group='2005' element='1010' vr='DS' fullName='WindowWidthOriginal'/>
+        <MRImageTypeMR                              group='2005' element='1011' vr='CS' fullName='MRImageTypeMR'/>
+        <MRCardiacGating                            group='2005' element='1012' vr='CS' fullName='MRCardiacGating'/>
+        <MRSeriesDevelopmentMode                    group='2005' element='1013' vr='CS' fullName='MRSeriesDevelopmentMode'/>
+        <MRSeriesDiffusion                          group='2005' element='1014' vr='CS' fullName='MRSeriesDiffusion'/>
+        <MRFatSaturationTechnique                   group='2005' element='1015' vr='CS' fullName='MRFatSaturationTechnique'/>
+        <MRFlowCompensation                         group='2005' element='1016' vr='CS' fullName='MRFlowCompensation'/>
+        <MRFourierInterpolation                     group='2005' element='1017' vr='CS' fullName='MRFourierInterpolation'/>
+        <MRInverseReconstructed                     group='2005' element='1019' vr='CS' fullName='MRInverseReconstructed'/>
+        <MRLabelSyntax                              group='2005' element='101A' vr='SS' fullName='MRLabelSyntax'/>
+        <MRMagnetiPrepared                          group='2005' element='101B' vr='CS' fullName='MRMagnetiPrepared'/>
+        <MRMagnetTransferConst                      group='2005' element='101C' vr='CS' fullName='MRMagnetTransferConst'/>
+        <MRMeasurementScanResolution                group='2005' element='101D' vr='SS' fullName='MRMeasurementScanResolution'/>
+        <MIPProtocol                                group='2005' element='101E' vr='SH' fullName='MIPProtocol'/>
+        <MPRProtocol                                group='2005' element='101F' vr='SH' fullName='MPRProtocol'/>
+        <NumberOfChemicalShift                      group='2005' element='1020' vr='SL' fullName='NumberOfChemicalShift'/>
+        <MRNumberOfMixes                            group='2005' element='1021' vr='SS' fullName='MRNumberOfMixes'/>
+        <MRNumberOfReferences                       group='2005' element='1022' vr='IS' fullName='MRNumberOfReferences'/>
+        <MRNumberOfSlabs                            group='2005' element='1023' vr='SS' fullName='MRNumberOfSlabs'/>
+        <MRNumberOfVolumes                          group='2005' element='1025' vr='SS' fullName='MRNumberOfVolumes'/>
+        <MROverSampleingPhase                       group='2005' element='1026' vr='CS' fullName='MROverSampleingPhase'/>
+        <MRPackageMode                              group='2005' element='1027' vr='CS' fullName='MRPackageMode'/>
+        <MRPartialFourierFrequency                  group='2005' element='1028' vr='CS' fullName='MRPartialFourierFrequency'/>
+        <MRPartialFourierPhase                      group='2005' element='1029' vr='CS' fullName='MRPartialFourierPhase'/>
+        <MRPatientReferenceID                       group='2005' element='102A' vr='IS' fullName='MRPatientReferenceID'/>
+        <MRPercentScanComplete                      group='2005' element='102B' vr='SS' fullName='MRPercentScanComplete'/>
+        <MRPhaseEncodedRecording                    group='2005' element='102C' vr='CS' fullName='MRPhaseEncodedRecording'/>
+        <MRPlanScanSurveyNumberOfImages             group='2005' element='102D' vr='IS' fullName='MRPlanScanSurveyNumberOfImages'/>
+        <MRPPGPPUGating                             group='2005' element='102E' vr='CS' fullName='MRPPGPPUGating'/>
+        <MRSpatialPresaturation                     group='2005' element='102F' vr='CS' fullName='MRSpatialPresaturation'/>
+        <MRSeriesRepetitionTime                     group='2005' element='1030' vr='FL' fullName='MRSeriesRepetitionTime (duplicate)'/>
+        <MRRespiratoryGating                        group='2005' element='1031' vr='CS' fullName='MRRespiratoryGating'/>
+        <MRSeriesScanDuration                       group='2005' element='1033' vr='FL' fullName='MRSeriesScanDuration'/>
+        <MRSegmentedKSpace                          group='2005' element='1034' vr='CS' fullName='MRSegmentedKSpace'/>
+        <MRSeriesDataType                           group='2005' element='1035' vr='CS' fullName='MRSeriesDataType'/>
+        <MRSeriesIsCardiac                          group='2005' element='1036' vr='CS' fullName='MRSeriesIsCardiac'/>
+        <MRSeriesIsSpectro                          group='2005' element='1037' vr='CS' fullName='MRSeriesIsSpectro'/>
+        <MRSpoiled                                  group='2005' element='1038' vr='CS' fullName='MRSpoiled'/>
+        <MRSteadyState                              group='2005' element='1039' vr='CS' fullName='MRSteadyState'/>
+        <MRSubAnatomy                               group='2005' element='103A' vr='SH' fullName='MRSubAnatomy'/>
+        <MRTimeReversedSteadyState                  group='2005' element='103B' vr='CS' fullName='MRTimeReversedSteadyState'/>
+        <MRSeriesTone                               group='2005' element='103C' vr='CS' fullName='MRSeriesTone'/>
+        <MRNumberOfRRIntervalRanges                 group='2005' element='103D' vr='SS' fullName='MRNumberOfRRIntervalRanges'/>
+        <MRRRIntervalsDistribution                  group='2005' element='103E' vr='SL' fullName='MRRRIntervalsDistribution'/>
+        <MRPlanScanAcquisitionNo                    group='2005' element='103F' vr='SL' fullName='MRPlanScanAcquisitionNo'/>
+        <MRChemicalShiftNo                          group='2005' element='1040' vr='SL' fullName='MRChemicalShiftNo'/>
+        <MRPlanScanDynamicScanNo                    group='2005' element='1041' vr='SL' fullName='MRPlanScanDynamicScanNo'/>
+        <MRPlanScanSurveyEchoNo                     group='2005' element='1042' vr='SL' fullName='MRPlanScanSurveyEchoNo'/>
+        <MRPlanScanImageType                        group='2005' element='1043' vr='CS' fullName='MRPlanScanImageType'/>
+        <MRPlanScanPhaseNo                          group='2005' element='1044' vr='SL' fullName='MRPlanScanPhaseNo'/>
+        <MRPlanScanReconstructionNo                 group='2005' element='1045' vr='SL' fullName='MRPlanScanReconstructionNo'/>
+        <MRPlanScanScanningSequence                 group='2005' element='1046' vr='CS' fullName='MRPlanScanScanningSequence'/>
+        <MRPlanScanSliceNo                          group='2005' element='1047' vr='SL' fullName='MRPlanScanSliceNo'/>
+        <MRVolumeAngulationAP                       group='2005' element='1054' vr='FL' fullName='MRVolumeAngulationAP'/>
+        <MRVolumeAngulationFH                       group='2005' element='1055' vr='FL' fullName='MRVolumeAngulationFH'/>
+        <MRVolumeAngulationRL                       group='2005' element='1056' vr='FL' fullName='MRVolumeAngulationRL'/>
+        <MRVolumeFovAP                              group='2005' element='1057' vr='FL' fullName='MRVolumeFovAP'/>
+        <MRVolumeFovFH                              group='2005' element='1058' vr='FL' fullName='MRVolumeFovFH'/>
+        <MRVolumeFovRL                              group='2005' element='1059' vr='FL' fullName='MRVolumeFovRL'/>
+        <MRVolumeOffcentreAP                        group='2005' element='105A' vr='FL' fullName='MRVolumeOffcentreAP'/>
+        <MRVolumeOffcentreFH                        group='2005' element='105B' vr='FL' fullName='MRVolumeOffcentreFH'/>
+        <MRVolumeOffcentreRL                        group='2005' element='105C' vr='FL' fullName='MRVolumeOffcentreRL'/>
+        <MRVolumeType                               group='2005' element='105D' vr='CS' fullName='MRVolumeType'/>
+        <MRVolumeViewAxis                           group='2005' element='105E' vr='CS' fullName='MRVolumeViewAxis'/>
+        <MRStudyOrigin                              group='2005' element='105F' vr='CS' fullName='MRStudyOrigin'/>
+        <MRStudySequenceNumber                      group='2005' element='1060' vr='IS' fullName='MRStudySequenceNumber'/>
+        <MRImagePrepulseType                        group='2005' element='1061' vr='CS' fullName='MRImagePrepulseType'/>
+        <MRfMRIStatusIndication                     group='2005' element='1063' vr='SS' fullName='MRfMRIStatusIndication'/>
+        <MRImageScanningSequencePrivate             group='2005' element='106E' vr='CS' fullName='MRImageScanningSequencePrivate'/>
+        <MRAcquisitionType                          group='2005' element='106F' vr='CS' fullName='MRAcquisitionType / MRSeriesAcquisitionTypePrivate'/>
+        <MRStackAngulationAP                        group='2005' element='1071' vr='FL' fullName='MRStackAngulationAP'/>
+        <MRStackAngulationFH                        group='2005' element='1072' vr='FL' fullName='MRStackAngulationFH'/>
+        <MRStackAngulationRL                        group='2005' element='1073' vr='FL' fullName='MRStackAngulationRL'/>
+        <MRStackFovAP                               group='2005' element='1074' vr='FL' fullName='MRStackFovAP'/>
+        <MRStackFovFH                               group='2005' element='1075' vr='FL' fullName='MRStackFovFH'/>
+        <MRStackFovRL                               group='2005' element='1076' vr='FL' fullName='MRStackFovRL'/>
+        <MRStackOffcentreAP                         group='2005' element='1078' vr='FL' fullName='MRStackOffcentreAP'/>
+        <MRStackOffcentreFH                         group='2005' element='1079' vr='FL' fullName='MRStackOffcentreFH'/>
+        <MRStackOffcentreRL                         group='2005' element='107A' vr='FL' fullName='MRStackOffcentreRL'/>
+        <MRStackPreparationDirection                group='2005' element='107B' vr='CS' fullName='MRStackPreparationDirection'/>
+        <MRStackSliceDistance                       group='2005' element='107E' vr='FL' fullName='MRStackSliceDistance'/>
+        <SeriesPlanScan                             group='2005' element='1080' vr='SQ' fullName='SeriesPlanScan'/>
+        <MRStackViewAxis                            group='2005' element='1081' vr='CS' fullName='MRStackViewAxis'/>
+        <SeriesSlab                                 group='2005' element='1083' vr='SQ' fullName='SeriesSlab'/>
+        <SeriesReference                            group='2005' element='1084' vr='SQ' fullName='SeriesReference'/>
+        <SeriesVolume                               group='2005' element='1085' vr='SQ' fullName='SeriesVolume'/>
+        <MRNumberOfGeometry                         group='2005' element='1086' vr='SS' fullName='MRNumberOfGeometry'/>
+        <SeriesGeom                                 group='2005' element='109E' vr='SQ' fullName='SeriesGeom'/>
+        <MRSeriesSpectralSelectiveExcitationPulse   group='2005' element='109F' vr='CS' fullName='MRSeriesSpectralSelectiveExcitationPulse'/>
+        <MRImageDynamicScanBeginTime                group='2005' element='10A0' vr='FL' fullName='MRImageDynamicScanBeginTime'/>
+        <SyncraScanType                             group='2005' element='10A1' vr='CS' fullName='SyncraScanType'/>
+        <MRIsCOCA                                   group='2005' element='10A2' vr='CS' fullName='MRIsCOCA'/>
+        <MRStackCoilID                              group='2005' element='10A3' vr='IS' fullName='MRStackCoilID'/>
+        <MRStackCBBCoil1                            group='2005' element='10A4' vr='IS' fullName='MRStackCBBCoil1'/>
+        <MRStackCBBCoil2                            group='2005' element='10A5' vr='IS' fullName='MRStackCBBCoil2'/>
+        <MRStackChannelCombi                        group='2005' element='10A6' vr='IS' fullName='MRStackChannelCombi'/>
+        <MRStackCoilConn                            group='2005' element='10A7' vr='CS' fullName='MRStackCoilConn'/>
+        <MRPrivateInversionTime                     group='2005' element='10A8' vr='DS' fullName='MRPrivateInversionTime'/>
+        <MRSeriesGeometryCorrection                 group='2005' element='10A9' vr='CS' fullName='MRSeriesGeometryCorrection'/>
+        <DiffusionDirectionX                        group='2005' element='10B0' vr='FL' fullName='DiffusionDirectionX / degrees'/>
+        <DiffusionDirectionY                        group='2005' element='10B1' vr='FL' fullName='DiffusionDirectionY'/>
+        <DiffusionDirectionZ                        group='2005' element='10B2' vr='FL' fullName='DiffusionDirectionZ'/>
+        <SequenceVariant                            group='2005' element='10C0' vr='CS' fullName='SequenceVariant / SeriesScanSequence (duplicate)'/>
+        <SeriesTransactionUID                       group='2005' element='1134' vr='LT' fullName='SeriesTransactionUID'/>
+        <MRNumberOfRequestExcerpts                  group='2005' element='1199' vr='UL' fullName='MRNumberOfRequestExcerpts'/>
+        <MRNumberOfSOPCommon                        group='2005' element='1200' vr='UL' fullName='MRNumberOfSOPCommon'/>
+        <MRNoOfFilmConsumption                      group='2005' element='1201' vr='UL' fullName='MRNoOfFilmConsumption'/>
+        <MRNumberOfCodes                            group='2005' element='1213' vr='UL' fullName='MRNumberOfCodes'/>
+        <MRNoDateOfLastCalibration                  group='2005' element='1243' vr='SS' fullName='MRNoDateOfLastCalibration'/>
+        <MRNoTimeOfLastCalibration                  group='2005' element='1244' vr='SS' fullName='MRNoTimeOfLastCalibration'/>
+        <MRNrOfSoftwareVersion                      group='2005' element='1245' vr='SS' fullName='MRNrOfSoftwareVersion'/>
+        <MRNrOfPatientOtherNames                    group='2005' element='1247' vr='SS' fullName='MRNrOfPatientOtherNames'/>
+        <MRNrOfReqRecipeOfResults                   group='2005' element='1248' vr='SS' fullName='MRNrOfReqRecipeOfResults'/>
+        <MRNrOfSeriesOperatorsName                  group='2005' element='1249' vr='SS' fullName='MRNrOfSeriesOperatorsName'/>
+        <MRNrOfSeriesPerfPhysiName                  group='2005' element='1250' vr='SS' fullName='MRNrOfSeriesPerfPhysiName'/>
+        <MRNrOfStudyAdmittingDiagnosticDescr        group='2005' element='1251' vr='SS' fullName='MRNrOfStudyAdmittingDiagnosticDescr'/>
+        <MRNrOfStudyPatientContrastAllergies        group='2005' element='1252' vr='SS' fullName='MRNrOfStudyPatientContrastAllergies'/>
+        <MRNrOfStudyPatientMedicalAlerts            group='2005' element='1253' vr='SS' fullName='MRNrOfStudyPatientMedicalAlerts'/>
+        <MRNrOfStudyPhysiciansOfRecord              group='2005' element='1254' vr='SS' fullName='MRNrOfStudyPhysiciansOfRecord'/>
+        <MRNrOfStudyPhysiReadingStudy               group='2005' element='1255' vr='SS' fullName='MRNrOfStudyPhysiReadingStudy'/>
+        <MRSpectroSIB0Correction                    group='2005' element='1325' vr='CS' fullName='MRSpectroSIB0Correction'/>
+        <MRSpectroB0EchoTopPosition                 group='2005' element='1326' vr='FL' fullName='MRSpectroB0EchoTopPosition'/>
+        <MRSpectroComplexComponent                  group='2005' element='1327' vr='CS' fullName='MRSpectroComplexComponent'/>
+        <MRSpectroDataOrigin                        group='2005' element='1328' vr='CS' fullName='MRSpectroDataOrigin'/>
+        <MRSpectroEchoTopPosition                   group='2005' element='1329' vr='FL' fullName='MRSpectroEchoTopPosition'/>
+        <MRInPlaneTransforms                        group='2005' element='1330' vr='CS' fullName='MRInPlaneTransforms'/>
+        <MRNumberOfSpectraAcquired                  group='2005' element='1331' vr='SS' fullName='MRNumberOfSpectraAcquired'/>
+        <MRPhaseEncodingEchoTopPositions            group='2005' element='1333' vr='FL' fullName='MRPhaseEncodingEchoTopPositions'/>
+        <MRPhysicalQuantityForChemicalShift         group='2005' element='1334' vr='CS' fullName='MRPhysicalQuantityForChemicalShift'/>
+        <MRPhysicalQuantitySpatial                  group='2005' element='1335' vr='CS' fullName='MRPhysicalQuantitySpatial'/>
+        <MRReferenceFrequency                       group='2005' element='1336' vr='FL' fullName='MRReferenceFrequency'/>
+        <MRSampleOffset                             group='2005' element='1337' vr='FL' fullName='MRSampleOffset'/>
+        <MRSamplePitch                              group='2005' element='1338' vr='FL' fullName='MRSamplePitch'/>
+        <MRSearchIntervalForPeaks                   group='2005' element='1339' vr='SS' fullName='MRSearchIntervalForPeaks'/>
+        <MRSignalDomainForChemicalShift             group='2005' element='1340' vr='CS' fullName='MRSignalDomainForChemicalShift'/>
+        <MRSignalDomainSpatial                      group='2005' element='1341' vr='CS' fullName='MRSignalDomainSpatial'/>
+        <MRSignalType                               group='2005' element='1342' vr='CS' fullName='MRSignalType'/>
+        <MRSpectroAdditionalRotations               group='2005' element='1343' vr='CS' fullName='MRSpectroAdditionalRotations'/>
+        <MRSpectroDisplayRanges                     group='2005' element='1344' vr='SS' fullName='MRSpectroDisplayRanges'/>
+        <MRSpectroEchoAcquisition                   group='2005' element='1345' vr='CS' fullName='MRSpectroEchoAcquisition'/>
+        <MRSpectroFrequencyUnit                     group='2005' element='1346' vr='CS' fullName='MRSpectroFrequencyUnit'/>
+        <MRSpectroGamma                             group='2005' element='1347' vr='FL' fullName='MRSpectroGamma'/>
+        <MRSpectroHiddenLineRemoval                 group='2005' element='1348' vr='CS' fullName='MRSpectroHiddenLineRemoval'/>
+        <MRSpectroHorizontalShift                   group='2005' element='1349' vr='FL' fullName='MRSpectroHorizontalShift'/>
+        <MRSpectroHorizontalWindow                  group='2005' element='1350' vr='FL' fullName='MRSpectroHorizontalWindow'/>
+        <MRSpectroNumberOfDisplayRanges             group='2005' element='1351' vr='SS' fullName='MRSpectroNumberOfDisplayRanges'/>
+        <MRSpectroNumberOfEchoPulses                group='2005' element='1352' vr='SS' fullName='MRSpectroNumberOfEchoPulses'/>
+        <MRSpectroProcessingHistory                 group='2005' element='1353' vr='LO' fullName='MRSpectroProcessingHistory'/>
+        <MRSpectroScanType                          group='2005' element='1354' vr='CS' fullName='MRSpectroScanType'/>
+        <MRSpectroSICSIntervals                     group='2005' element='1355' vr='FL' fullName='MRSpectroSICSIntervals'/>
+        <MRSpectroSIMode                            group='2005' element='1356' vr='CS' fullName='MRSpectroSIMode'/>
+        <MRSpectroSpectralBW                        group='2005' element='1357' vr='SS' fullName='MRSpectroSpectralBW'/>
+        <MRSpectroTitleLine                         group='2005' element='1358' vr='LO' fullName='MRSpectroTitleLine'/>
+        <MRSpectroTurboEchoSpacing                  group='2005' element='1359' vr='FL' fullName='MRSpectroTurboEchoSpacing'/>
+        <MRSpectroVerticalShift                     group='2005' element='1360' vr='FL' fullName='MRSpectroVerticalShift'/>
+        <MRSpectroVerticalWindow                    group='2005' element='1361' vr='FL' fullName='MRSpectroVerticalWindow'/>
+        <MRSpectroOffset                            group='2005' element='1362' vr='FL' fullName='MRSpectroOffset'/>
+        <MRSpectrumPitch                            group='2005' element='1363' vr='FL' fullName='MRSpectrumPitch'/>
+        <MRVolumeSelection                          group='2005' element='1364' vr='CS' fullName='MRVolumeSelection'/>
+        <MRNoMixesSpectro                           group='2005' element='1370' vr='SS' fullName='MRNoMixesSpectro'/>
+        <MRSeriesSPMix                              group='2005' element='1371' vr='SQ' fullName='MRSeriesSPMix'/>
+        <MRScanoGramSurveyNumberOfImages            group='2005' element='1381' vr='IS' fullName='MRScanoGramSurveyNumberOfImages'/>
+        <MRNumberOfProcedureCodes                   group='2005' element='1382' vr='UL' fullName='MRNumberOfProcedureCodes'/>
+        <MRStackCoilFunction                        group='2005' element='1390' vr='CS' fullName='MRStackCoilFunction'/>
+        <MRGeolinkID                                group='2005' element='1392' vr='IS' fullName='MRGeolinkID'/>
+        <MRStationNo                                group='2005' element='1393' vr='IS' fullName='MRStationNo'/>
+        <MRFlowImagesPresent                        group='2005' element='1396' vr='CS' fullName='MRFlowImagesPresent'/>
+        <AnatomicRegCodeValue                       group='2005' element='1397' vr='LO' fullName='AnatomicRegCodeValue'/>
+        <MRMobiviewEnabled                          group='2005' element='1398' vr='CS' fullName='MRMobiviewEnabled'/>
+        <MRIViewBoldEnabled                         group='2005' element='1399' vr='CS' fullName='MRIViewBoldEnabled'/>
+        <MRVolumeViewEnabled                        group='2005' element='1400' vr='CS' fullName='MRVolumeViewEnabled'/>
+        <MRNumberOfStudyReference                   group='2005' element='1401' vr='UL' fullName='MRNumberOfStudyReference'/>
+        <SPSCode                                    group='2005' element='1402' vr='SQ' fullName='SPSCode'/>
+        <MRNumberOfSPSCodes                         group='2005' element='1403' vr='UL' fullName='MRNumberOfSPSCodes'/>
+        <MRNrOfSpecificCharacterSet                 group='2005' element='1407' vr='SS' fullName='MRNrOfSpecificCharacterSet'/>
+        <RescaleInterceptOriginal                   group='2005' element='1409' vr='DS' fullName='RescaleInterceptOriginal'/>
+        <RescaleSlopeOriginal                       group='2005' element='140A' vr='DS' fullName='RescaleSlopeOriginal'/>
+        <RescaleTypeOriginal                        group='2005' element='140B' vr='LO' fullName='RescaleTypeOriginal'/>
+        <PrivateSharedSq                            group='2005' element='140E' vr='SQ' fullName='PrivateSharedSq'/>
+        <PrivatePerFrameSq                          group='2005' element='140F' vr='SQ' fullName='PrivatePerFrameSq'/>
+        <MFPrivateReferencedSOPInstanceUID          group='2005' element='1411' vr='UI' fullName='MFPrivateReferencedSOPInstanceUID'/>
+        <MRImageDiffBValueNumber                    group='2005' element='1412' vr='IS' fullName='MRImageDiffBValueNumber'/>
+        <MRImageGradientOrientationNumber           group='2005' element='1413' vr='IS' fullName='MRImageGradientOrientationNumber'/>
+        <MRSeriesNrOfDiffBValues                    group='2005' element='1414' vr='SL' fullName='MRSeriesNrOfDiffBValues'/>
+        <MRSeriesNrOfDiffGradOrients                group='2005' element='1415' vr='SL' fullName='MRSeriesNrOfDiffGradOrients'/>
+        <MRSeriesPlanMode                           group='2005' element='1416' vr='CS' fullName='MRSeriesPlanMode'/>
+        <B_matrix                                   group='2005' element='1417' vr='FD' fullName='B_matrix / DiffusionBMatrix'/>
+        <PrivOperatingModeType                      group='2005' element='1418' vr='CS' fullName='PrivOperatingModeType'/>
+        <PrivOperatingMode                          group='2005' element='1419' vr='CS' fullName='PrivOperatingMode'/>
+        <MRFatSaturationTechnique                   group='2005' element='141A' vr='CS' fullName='MRFatSaturationTechnique'/>
+        <MRVersionNumberDeletedImages               group='2005' element='141B' vr='IS' fullName='MRVersionNumberDeletedImages'/>
+        <MRVersionNumberDeletedSpectra              group='2005' element='141C' vr='IS' fullName='MRVersionNumberDeletedSpectra'/>
+        <MRVersionNumberDeletedBlobsets             group='2005' element='141D' vr='IS' fullName='MRVersionNumberDeletedBlobsets'/>
+        <ViewingHardcopyOnly                        group='2005' element='1426' vr='CS' fullName='ViewingHardcopyOnly'/>
+        <MRSeriesNrOfLabelTypes                     group='2005' element='1428' vr='SL' fullName='MRSeriesNrOfLabelTypes'/>
+        <ExamPrintStatus                            group='2005' element='142A' vr='CS' fullName='ExamPrintStatus'/>
+        <ExamExportStatus                           group='2005' element='142B' vr='CS' fullName='ExamExportStatus'/>
+        <ExamStorageCommitStatus                    group='2005' element='142C' vr='CS' fullName='ExamStorageCommitStatus'/>
+        <ExamMediaWriteStatus                       group='2005' element='142D' vr='CS' fullName='ExamMediaWriteStatus'/>
+        <MRSeriesSafetyOverrideMode                 group='2005' element='1432' vr='CS' fullName='MRSeriesSafetyOverrideMode'/>
+        <SpectroExamcard                            group='2005' element='1435' vr='CS' fullName='SpectroExamcard'/>
+        <DataDictionaryContentsVersion              group='2005' element='143A' vr='LT' fullName='DataDictionaryContentsVersion'/>
+        <MRIsCoilSurvey                             group='2005' element='143B' vr='CS' fullName='MRIsCoilSurvey'/>
+        <MRStackTablePosLong                        group='2005' element='143C' vr='FL' fullName='MRStackTablePosLong'/>
+        <MRStackTablePosLat                         group='2005' element='143D' vr='FL' fullName='MRStackTablePosLat'/>
+        <MRStackPosteriorCoilPos                    group='2005' element='143E' vr='FL' fullName='MRStackPosteriorCoilPos'/>
+        <AIMDLimitsApplied                          group='2005' element='143F' vr='CS' fullName='AIMDLimitsApplied'/>
+        <AIMDHeadSARLimit                           group='2005' element='1440' vr='FL' fullName='AIMDHeadSARLimit'/>
+        <AIMDWholeBodySARLimit                      group='2005' element='1441' vr='FL' fullName='AIMDWholeBodySARLimit'/>
+        <AIMDB1RMSLimit                             group='2005' element='1442' vr='FL' fullName='AIMDB1RMSLimit'/>
+        <AIMDdbDtLimit                              group='2005' element='1443' vr='FL' fullName='AIMDdbDtLimit'/>
+        <TFEFactor                                  group='2005' element='1444' vr='IS' fullName='TFEFactor'/>
+        <AttenuationCorrection                      group='2005' element='1445' vr='CS' fullName='AttenuationCorrection'/>
+        <PowerOptimization                          group='2005' element='1447' vr='FL' fullName='PowerOptimization'/>
+        <DataWindowDuration                         group='2005' element='144A' vr='FL' fullName='DataWindowDuration'/>
+        <MixingTime                                 group='2005' element='144B' vr='FL' fullName='MixingTime'/>
+        <FirstEchoTime                              group='2005' element='144C' vr='FL' fullName='FirstEchoTime'/>
+        <IsB0Series                                 group='2005' element='144D' vr='CS' fullName='IsB0Series'/>
+        <IsB1Series                                 group='2005' element='144E' vr='CS' fullName='IsB1Series'/>
+        <VolumeSelect                               group='2005' element='144F' vr='CS' fullName='VolumeSelect'/>
+        <MRNrOfPatientOtherIDs                      group='2005' element='1450' vr='SS' fullName='MRNrOfPatientOtherIDs'/>
+        <ImageVelocityEncodingDirection             group='2005' element='1455' vr='FD' fullName='ImageVelocityEncodingDirection'/>
+        <PresentationLUTShape                       group='2050' element='0020' vr='CS' fullName='PresentationLUTShape'/>
 
     </PrivateTagList>
 </DicomClientConfig>
