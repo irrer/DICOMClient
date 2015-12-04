@@ -488,6 +488,27 @@ public class Util {
     }
 
     /**
+     *  Try to warn the user about using up memory.
+     * @param file Incoming DICOM file.
+     */
+    private static void checkMemory(File file) {
+        try {
+            long fileLength = file.length();
+            if (fileLength > Runtime.getRuntime().freeMemory()) {
+                Runtime.getRuntime().gc(); // take a shot at freeing memory
+            }
+            if (fileLength > Runtime.getRuntime().freeMemory()) {
+                DicomClient.getInstance().showMessage("Extremely large file " + file.getAbsolutePath() + " of size " + fileLength + " might need more memory than is available.");
+            }
+        }
+        catch (Throwable t) {
+            DicomClient.getInstance().showMessage("Problem reading file (partially read) " + file.getAbsolutePath() + " : " + t);
+            Runtime.getRuntime().gc();
+        }
+
+    }
+    
+    /**
      * Read a DICOM file after checking that there is sufficient heap space to read it.
      * 
      * @param File
@@ -508,20 +529,10 @@ public class Util {
             }
         }
 
+        checkMemory(file);
+        
         AttributeList attributeList = new AttributeList();
-        byte filler[] = null;
-        try {
-            int length = (int) file.length();
-            filler = new byte[length * 10];
-            filler[length - 1] = 5;
-            if (filler[length - 1] != 5) throw new RuntimeException("readDicomFile unable to allocate space on heap to read DICOM file " + file.getAbsolutePath());
-        }
-        catch (OutOfMemoryError t) {
-            filler = null;
-            Runtime.getRuntime().gc();
-            throw t;
-        }
-
+        
         ReadTermStrat rts = new ReadTermStrat();
         try {
             attributeList.read(file, rts);
