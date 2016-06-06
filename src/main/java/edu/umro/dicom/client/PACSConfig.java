@@ -105,9 +105,14 @@ public class PACSConfig {
                 NodeList nodeList = XML.getMultipleNodes(config, "/PacsConfiguration/PacsList/PACS");
                 for (int n = 0; n < nodeList.getLength(); n++) {
                     PACS pacs = new PACS(nodeList.item(n));
-                    Log.get().info("PACS " + " : " + pacs);
                     pacsList.add(pacs);
                 }
+                StringBuffer msg = new StringBuffer("List of known PACS");
+                for (PACS pacs : pacsList) {
+                    msg.append("\n    " + pacs);
+                }
+                msg.append("\n");
+                Log.get().info(msg.toString());
             }
             catch (Exception e) {
                 Log.get().warning("Unable to extract PACS list from file.  Will not be able to perform uploads.  Error: " + e);

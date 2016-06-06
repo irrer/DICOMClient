@@ -6,26 +6,14 @@
 			known list of devices, but some do not. If you are unable to send files to 
 			a PACS, it is possible that it is because the one listed below is not configured 
 			on that system. -->
-        <PACS AETitle='DICOM+' Host='localhost' Port='50400' />
+		<PACS AETitle='DICOM+' Host='localhost' Port='5678' />
 	</Identity>
 
 	<!-- List of PACS that this program knows about. -->
 	<PacsList>
-		<PACS AETitle='CONQUESTSRVUM1' Host='172.20.125.27' Port='5678' />
-		<PACS AETitle='CONQUESTSRVUM1' Host='172.20.125.27' Port='5678' />
-		<PACS AETitle='CONQUESTSRVUM2' Host='172.20.125.37' Port='5678' />
-        <PACS AETitle='UMRADONC-STAGING' Host='141.214.124.168' Port='10104' />
-        <PACS AETitle='UMRADONC-ARCHIVE' Host='141.214.124.133' Port='10104' />
-        <PACS AETitle='UMRO_STAGING' Host='172.20.125.33' Port='104' />
-        <PACS AETitle='UMRO_ARCHIVE' Host='172.20.125.38' Port='104' />
-        <PACS AETitle='UMRO_TEST' Host='172.20.125.39' Port='104' />
+		<PACS AETitle='MyPACS' Host='localhost' Port='1234' />
+		<PACS AETitle='SomePACS' Host='192.30.252.131' Port='104' />
+		<PACS AETitle='MRCT_DEV' Host='rolxdev1' Port='5680' />
         <PACS AETitle='IRRER' Host='141.214.125.68' Port='15678' />
-        <PACS AETitle='SYNTHETIC-CT' Host='172.20.125.41' Port='5680' />
-        <PACS AETitle='MRCT-PROD' Host='rodicom11prod.ronet.med.umich.edu' Port='5680' />
-        <!-- <PACS AETitle='MRCT-CET' Host='rodicom11cet.ronet.med.umich.edu' Port='5680' /> -->
-        <PACS AETitle='MRCT-DEV' Host='rodicom11dev.ronet.med.umich.edu' Port='5680' />
-        <PACS AETitle='MRCT-IRRER' Host='141.214.125.68' Port='5680' />
-        <PACS AETitle='VMSDBD_DEV' Host='141.214.124.199' Port='105' />
-        <PACS AETitle='VMSDBD' Host='141.214.124.167' Port='105' />
 	</PacsList>
 </PacsConfiguration> 

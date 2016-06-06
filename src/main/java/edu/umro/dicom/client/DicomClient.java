@@ -267,12 +267,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      *            Message to add.
      */
     public void showMessage(String message) {
-        messageTextArea.setVisible(true);
-        if (showMessageText.length() != 0) {
-            showMessageText.append("\n");
+        if (!inCommandLineMode()) {
+            messageTextArea.setVisible(true);
+            if (showMessageText.length() != 0) {
+                showMessageText.append("\n");
+            }
+            showMessageText.append(message);
+            messageTextArea.setText(showMessageText.toString());
         }
-        showMessageText.append(message);
-        messageTextArea.setText(showMessageText.toString());
         Log.get().info("User message: " + message);
     }
 
@@ -1406,7 +1408,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
         }
     }
-
+    
     /**
      * Add the given file to the list of loaded files. If the file is not
      * a DICOM file or can not be read, then show a message and ignore it.
@@ -1439,6 +1441,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             AttributeList attributeList = readDicomFile(file);
 
             if (attributeList.size() < MIN_ATTRIBUTE_COUNT) {
+                if (Anonymize.isPreloadFile(file)) {
+                    Anonymize.preloadUids(file);
+                    return;
+                }
                 showMessage(file.getAbsolutePath() + " does not appear to be a DICOM file and is being ignored.");
                 return;
             }
@@ -1739,6 +1745,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         "        -d Specify output directory for anonymization (can not be used with -o option)\n" +
                         "        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package\n" +
                         "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
+                        "        -l preload.xml Preload UIDs for anonymization.  This allows anonymizing to take place over multiple sessions.\n" +
                         "        -z Replace each control character in generated XML files that describe DICOM attributes with a blank.  Required by SAS\n" +
                         "        -g Perform aggressive anonymization - anonymize fields that are not marked for\n" +
                         "           anonymization but contain strings found in fields that are marked for anonymization.\n";
@@ -1760,6 +1767,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     private static String[] parseArguments(String[] args) {
         String[] fileList = new String[0];
+        File preloadFile = null;
         try {
             for (int a = 0; a < args.length; a++) {
                 if (args[a].equals("-P")) {
@@ -1802,16 +1810,22 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                                                 aggressivelyAnonymize = true;
                                             }
                                             else {
-                                                if (args[a].startsWith("-")) {
-                                                    usage("Invalid argument: " + args[a]);
-                                                    System.exit(1);
+                                                if (args[a].equals("-l")) { // preload UIDs
+                                                    a++;
+                                                    preloadFile = new File(args[a]);
                                                 }
                                                 else {
-                                                    fileList = new String[args.length - a];
-                                                    int f = 0;
-                                                    for (; a < args.length; a++) {
-                                                        fileList[f] = args[a];
-                                                        f++;
+                                                    if (args[a].startsWith("-")) {
+                                                        usage("Invalid argument: " + args[a]);
+                                                        System.exit(1);
+                                                    }
+                                                    else {
+                                                        fileList = new String[args.length - a];
+                                                        int f = 0;
+                                                        for (; a < args.length; a++) {
+                                                            fileList[f] = args[a];
+                                                            f++;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1822,6 +1836,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         }
                     }
                 }
+            }
+
+            if (preloadFile != null) {  // Do this last because we need to know if we are in command line mode or not.
+                Anonymize.preloadUids(preloadFile);
             }
         }
         catch (Exception e) {
