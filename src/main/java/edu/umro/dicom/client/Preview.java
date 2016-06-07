@@ -825,6 +825,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         if (ev.getSource().equals(editButton)) {
             if (editGui == null) editGui = new EditGui(this);
+
+            // Set viewing mode to PLAIN
+            currentViewMode = ViewMode.PLAIN;
+            viewingModeLabel.setText(currentViewMode.displayName);
+            viewingModeLabel.setToolTipText(currentViewMode.toolTip);
+
             editGui.setVisible(true);
             showText(null);
             DicomClient.getInstance().setEnabled(false);
@@ -1425,13 +1431,19 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         StringBuffer anonText = new StringBuffer();
         try {
-            Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList());
-            addTextAttributes(editedAttributeList, anonText, 0, attributeLocation);
-            if (currentViewMode == ViewMode.ANONYMIZED) {
-                textPreview.setText(anonText.toString());
+            if ((editGui != null) && (editGui.isVisible())) {
+                addTextAttributes(editedAttributeList, anonText, 0, attributeLocation);
+                textPreview.setText(origText.toString());
             }
             else {
-                textPreview.setText(origText.toString());
+                Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList());
+                addTextAttributes(editedAttributeList, anonText, 0, attributeLocation);
+                if (currentViewMode == ViewMode.ANONYMIZED) {
+                    textPreview.setText(anonText.toString());
+                }
+                else {
+                    textPreview.setText(origText.toString());
+                }
             }
         }
         catch (DicomException e) {
