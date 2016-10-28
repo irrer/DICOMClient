@@ -44,6 +44,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicArrowButton;
@@ -73,6 +74,21 @@ import edu.umro.util.Log;
  */
 public class AnonymizeGUI implements ActionListener, DocumentListener {
 
+    private final static AttributeTag[] sopClassUidTagList = {
+            TagFromName.AffectedSOPClassUID,
+            TagFromName.RequestedSOPClassUID,
+            TagFromName.MediaStorageSOPClassUID,
+            TagFromName.ImplementationClassUID,
+            TagFromName.ReferencedSOPClassUIDInFile,
+            TagFromName.ReferencedRelatedGeneralSOPClassUIDInFile,
+            TagFromName.SOPClassUID,
+            TagFromName.RelatedGeneralSOPClassUID,
+            TagFromName.OriginalSpecializedSOPClassUID,
+            TagFromName.SOPClassesInStudy,
+            TagFromName.ReferencedSOPClassUID,
+            TagFromName.SOPClassesSupported
+    };
+
     /**
      * Represents one attribute to be anonymized.
      * 
@@ -95,6 +111,21 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         /** The tag associated with this attribute. */
         private AttributeTag tag = null;
 
+        private boolean isEditable(AttributeTag tag) {
+
+            byte[] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
+            if (ValueRepresentation.isUniqueIdentifierVR(vr)) {
+                for (AttributeTag c : sopClassUidTagList) {
+                    if ((tag.getGroup() == c.getGroup()) && (tag.getElement() == c.getElement())) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            return true;
+        }
+        
         /**
          * Construct the interface for one attribute.
          * 
@@ -118,10 +149,16 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             setActive(attr != null);
             checkBox.addActionListener(this);
             checkBox.addItemListener(this);
-
+            
             add(attrNameLabel);
             add(checkBox);
             add(textField);
+
+            boolean isEditable = isEditable(tag);
+            textField.setEnabled(isEditable);
+            textField.setEditable(isEditable); // extra guard against editing
+
+            if (!isEditable) textField.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
         }
 
 
@@ -151,7 +188,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
          */
         public void setActive(boolean active) {
             checkBox.setSelected(active);
-            textField.setEnabled(active);
+            if (isEditable(tag)) textField.setEnabled(active);
             attrNameLabel.setEnabled(active);
         }
 
@@ -176,7 +213,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
 
 
         public void actionPerformed(ActionEvent e) {
-            textField.setEnabled(getActive());
+            if (isEditable(tag)) textField.setEnabled(getActive());
             attrNameLabel.setEnabled(getActive());
         }
 

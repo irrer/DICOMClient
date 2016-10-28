@@ -194,6 +194,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** True if the application is in command line mode (no GUI) */
     private static boolean commandLineMode = false;
 
+    /** True if all dates should be anonymized by changing the month and day to 1.  eg: 19680422 ==> 19680101 . */
+    private static boolean yearTruncation = true;   // TODO change to false
+
     /**
      * If the application is in command line mode (no GUI) then this is the flag indicating that
      * AttributeTag details should be shown in the text dump.
@@ -1645,6 +1648,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return commandLineMode;
     }
 
+    public static boolean doYearTruncation() {
+        return yearTruncation;
+    }
+
     public static String getDefaultPatientId() {
         return defaultPatientId;
     }
@@ -1743,6 +1750,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         "        -P Specify new patient ID for anonymization\n" +
                         "        -o Specify output file for anonymization (single file only, command line only)\n" +
                         "        -d Specify output directory for anonymization (can not be used with -o option)\n" +
+                        "        -y Truncate all dates to just the year, eg: 19670225 -> 19670101\n" +
                         "        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package\n" +
                         "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
                         "        -l preload.xml Preload UIDs for anonymization.  This allows anonymizing to take place over multiple sessions.\n" +
@@ -1793,38 +1801,43 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                                 commandLineMode = true;
                             }
                             else {
-                                if (args[a].equals("-t")) {
-                                    showDetails = true;
+                                if (args[a].equals("-y")) {
+                                    yearTruncation = true;
                                 }
-
                                 else {
-                                    if (args[a].equals("-3")) {
-                                        restrictXmlTagsToLength32 = true;
+                                    if (args[a].equals("-t")) {
+                                        showDetails = true;
                                     }
+
                                     else {
-                                        if (args[a].equals("-z")) {
-                                            replaceControlCharacters = true;
+                                        if (args[a].equals("-3")) {
+                                            restrictXmlTagsToLength32 = true;
                                         }
                                         else {
-                                            if (args[a].equals("-g")) {
-                                                aggressivelyAnonymize = true;
+                                            if (args[a].equals("-z")) {
+                                                replaceControlCharacters = true;
                                             }
                                             else {
-                                                if (args[a].equals("-l")) { // preload UIDs
-                                                    a++;
-                                                    preloadFile = new File(args[a]);
+                                                if (args[a].equals("-g")) {
+                                                    aggressivelyAnonymize = true;
                                                 }
                                                 else {
-                                                    if (args[a].startsWith("-")) {
-                                                        usage("Invalid argument: " + args[a]);
-                                                        System.exit(1);
+                                                    if (args[a].equals("-l")) { // preload UIDs
+                                                        a++;
+                                                        preloadFile = new File(args[a]);
                                                     }
                                                     else {
-                                                        fileList = new String[args.length - a];
-                                                        int f = 0;
-                                                        for (; a < args.length; a++) {
-                                                            fileList[f] = args[a];
-                                                            f++;
+                                                        if (args[a].startsWith("-")) {
+                                                            usage("Invalid argument: " + args[a]);
+                                                            System.exit(1);
+                                                        }
+                                                        else {
+                                                            fileList = new String[args.length - a];
+                                                            int f = 0;
+                                                            for (; a < args.length; a++) {
+                                                                fileList[f] = args[a];
+                                                                f++;
+                                                            }
                                                         }
                                                     }
                                                 }

@@ -1436,7 +1436,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                 textPreview.setText(origText.toString());
             }
             else {
-                Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList());
+                Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList(), DicomClient.doYearTruncation());
                 addTextAttributes(editedAttributeList, anonText, 0, attributeLocation);
                 if (currentViewMode == ViewMode.ANONYMIZED) {
                     textPreview.setText(anonText.toString());

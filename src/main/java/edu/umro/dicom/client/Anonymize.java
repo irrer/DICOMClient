@@ -365,6 +365,37 @@ public class Anonymize {
         }
     }
 
+    private static boolean isDate(byte[] vr) {
+        return ValueRepresentation.isDateVR(vr) || ValueRepresentation.isDateVR(vr);
+    }
+
+    private static String truncToYear(String text) {
+        byte[] bytes = text.getBytes();
+        if (bytes.length > 4) bytes[4] = '0';
+        if (bytes.length > 5) bytes[5] = '1';
+        if (bytes.length > 6) bytes[6] = '0';
+        if (bytes.length > 7) bytes[7] = '1';
+        return new String(bytes);
+    }
+
+    /**
+     * Truncate all dates to the year, changing the month and day to 1.
+     * 
+     * @param attribute
+     */
+    private static void truncateYear(Attribute attribute) {
+        try {
+            String[] originalValueList = attribute.getStringValues();
+            attribute.removeValues();
+            for (String s : originalValueList) {
+                attribute.addValue(truncToYear(s));
+            }
+        }
+        catch (Exception e) {
+
+        }
+    }
+
     /**
      * Perform anonymization recursively to accommodate sequence attributes.
      * 
@@ -377,18 +408,23 @@ public class Anonymize {
      * @param replacementAttributeList
      *            Reference this for what is to be anonymized.
      */
-    private static void anonymize(String anonymizedPatientId, AttributeList attributeList, AttributeList replacementAttributeList, HashMap<String, String> aggressiveReplaceList,
-            String originalPatientId) {
+    private static void anonymize(String anonymizedPatientId, AttributeList attributeList, AttributeList replacementAttributeList,
+            HashMap<String, String> aggressiveReplaceList,
+            String originalPatientId,
+            boolean yearTruncation) {
         for (Attribute attribute : getAttributeListValues(attributeList).values()) {
             AttributeTag tag = attribute.getTag();
             if (attribute instanceof SequenceAttribute) {
                 Iterator<?> si = ((SequenceAttribute) attribute).iterator();
                 while (si.hasNext()) {
                     SequenceItem item = (SequenceItem) si.next();
-                    anonymize(anonymizedPatientId, item.getAttributeList(), replacementAttributeList, aggressiveReplaceList, originalPatientId);
+                    anonymize(anonymizedPatientId, item.getAttributeList(), replacementAttributeList, aggressiveReplaceList, originalPatientId, yearTruncation);
                 }
             }
             else {
+                if (yearTruncation && isDate(attribute.getVR())) {
+                    truncateYear(attribute);
+                }
                 Attribute replacement = replacementAttributeList.get(tag);
                 if (replacement != null) {
                     anonymizeNonSequenceAttribute(anonymizedPatientId, attribute, replacement, originalPatientId);
@@ -413,11 +449,11 @@ public class Anonymize {
      * @param replacementAttributeList
      *            List of values to be written into the attributeList.
      */
-    public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList) {
+    public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList, boolean yearTruncation) {
         HashMap<String, String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
         String originalPatientId = (attributeList.get(TagFromName.PatientID) == null) ? null : attributeList.get(TagFromName.PatientID).getSingleStringValueOrNull();
         String anonymizedPatientId = establishNewPatientId(replacementAttributeList);
-        anonymize(anonymizedPatientId, attributeList, replacementAttributeList, aggressiveReplaceList, originalPatientId);
+        anonymize(anonymizedPatientId, attributeList, replacementAttributeList, aggressiveReplaceList, originalPatientId, yearTruncation);
     }
 
     /**
