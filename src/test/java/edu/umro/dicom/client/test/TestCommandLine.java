@@ -172,6 +172,9 @@ public class TestCommandLine {
             allArgs[i++] = a;
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        StringBuffer fullCommand = new StringBuffer();
+        for (String s: allArgs) fullCommand.append(s + " ");
+        System.out.println("running command: " + fullCommand.toString());
 
         try {
             int exitCode = RunCommand.runArgs(allArgs, baos, baos);
