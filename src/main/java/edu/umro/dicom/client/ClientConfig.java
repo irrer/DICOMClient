@@ -367,6 +367,23 @@ public class ClientConfig {
     }
 
     /**
+     * Get the application name. Also is used for SourceApplicationEntityTitle when generating DICOM files.
+     * 
+     * @return The application Name.
+     */
+    public String getApplicationName() {
+        String value = null;
+        try {
+            value = XML.getValue(config, "/DicomClientConfig/ApplicationName/text()");
+        }
+        catch (Exception e) {
+            // Use standard name if custom name not specified.
+            value = null;
+        }
+        return (value == null) ? "DICOM+" : value;
+    }
+
+    /**
      * Only let user control certain types of attributes. It does not make
      * sense to manually control values of UIDs, and sequence attributes do
      * not have values.

@@ -84,9 +84,6 @@ import edu.umro.util.General;
  */
 public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener {
 
-    /** Name that appears in title bar of window. */
-    public static final String PROJECT_NAME = "DICOM+";
-
     /** Possible processing modes for main window. */
     public static enum ProcessingMode {
         ANONYMIZE,
@@ -195,7 +192,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private static boolean commandLineMode = false;
 
     /** True if all dates should be anonymized by changing the month and day to 1.  eg: 19680422 ==> 19680101 . */
-    private static boolean yearTruncation = true;   // TODO change to false
+    private static boolean yearTruncation = false;
 
     /**
      * If the application is in command line mode (no GUI) then this is the flag indicating that
@@ -873,7 +870,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
         else {
             frame = new JFrame();
-            frame.setTitle(PROJECT_NAME);
+            frame.setTitle(ClientConfig.getInstance().getApplicationName());
 
             if (OpSys.getOpSysId() == OpSys.OpSysId.WINDOWS) {
                 try {
@@ -1745,7 +1742,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         System.err.println(msg);
         String usage =
                 "Usage:\n\n" +
-                        "    DICOMClient [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 ...\n" +
+                        "    DICOMClient [ -h ] [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 ...\n" +
+                        "        -h Show this help and then exit (without GUI)\n" +
                         "        -c Run in command line mode (without GUI)\n" +
                         "        -P Specify new patient ID for anonymization\n" +
                         "        -o Specify output file for anonymization (single file only, command line only)\n" +
@@ -1797,46 +1795,52 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                             hasSpecifiedOutputDirectory = true;
                         }
                         else {
-                            if (args[a].equals("-c")) {
-                                commandLineMode = true;
+                            if (args[a].equals("-h")) {
+                                usage("");
+                                System.exit(0);
                             }
                             else {
-                                if (args[a].equals("-y")) {
-                                    yearTruncation = true;
+                                if (args[a].equals("-c")) {
+                                    commandLineMode = true;
                                 }
                                 else {
-                                    if (args[a].equals("-t")) {
-                                        showDetails = true;
+                                    if (args[a].equals("-y")) {
+                                        yearTruncation = true;
                                     }
-
                                     else {
-                                        if (args[a].equals("-3")) {
-                                            restrictXmlTagsToLength32 = true;
+                                        if (args[a].equals("-t")) {
+                                            showDetails = true;
                                         }
+
                                         else {
-                                            if (args[a].equals("-z")) {
-                                                replaceControlCharacters = true;
+                                            if (args[a].equals("-3")) {
+                                                restrictXmlTagsToLength32 = true;
                                             }
                                             else {
-                                                if (args[a].equals("-g")) {
-                                                    aggressivelyAnonymize = true;
+                                                if (args[a].equals("-z")) {
+                                                    replaceControlCharacters = true;
                                                 }
                                                 else {
-                                                    if (args[a].equals("-l")) { // preload UIDs
-                                                        a++;
-                                                        preloadFile = new File(args[a]);
+                                                    if (args[a].equals("-g")) {
+                                                        aggressivelyAnonymize = true;
                                                     }
                                                     else {
-                                                        if (args[a].startsWith("-")) {
-                                                            usage("Invalid argument: " + args[a]);
-                                                            System.exit(1);
+                                                        if (args[a].equals("-l")) { // preload UIDs
+                                                            a++;
+                                                            preloadFile = new File(args[a]);
                                                         }
                                                         else {
-                                                            fileList = new String[args.length - a];
-                                                            int f = 0;
-                                                            for (; a < args.length; a++) {
-                                                                fileList[f] = args[a];
-                                                                f++;
+                                                            if (args[a].startsWith("-")) {
+                                                                usage("Invalid argument: " + args[a]);
+                                                                System.exit(1);
+                                                            }
+                                                            else {
+                                                                fileList = new String[args.length - a];
+                                                                int f = 0;
+                                                                for (; a < args.length; a++) {
+                                                                    fileList[f] = args[a];
+                                                                    f++;
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -1914,7 +1918,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @param args
      */
     public static void main(String[] args) {
-        System.out.println("DICOM+ starting.  Jar file: " + new java.io.File(DicomClient.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getName());
+        System.out.println(ClientConfig.getInstance().getApplicationName() + " starting.  Jar file: " +
+                new java.io.File(DicomClient.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getName());
 
         System.getProperties().list(System.out);
         try {

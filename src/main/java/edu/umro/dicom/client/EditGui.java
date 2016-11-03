@@ -551,7 +551,7 @@ public class EditGui implements ActionListener, WindowListener {
             try {
                 destFile.delete();
                 
-                FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, DicomClient.PROJECT_NAME);
+                FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());
                 attributeList.write(destFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
             }
             catch (IOException e) {

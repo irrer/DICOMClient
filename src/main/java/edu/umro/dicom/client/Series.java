@@ -894,7 +894,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     Anonymize.anonymize(attributeList, getAnonymizingReplacementList(), DicomClient.doYearTruncation());
 
                     // Indicate that the file was touched by this application. Also a subtle way to advertise. :)
-                    FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, DicomClient.PROJECT_NAME);
+                    FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());
 
                     if (DicomClient.inCommandLineMode()) {
                         if (DicomClient.getInstance().getCommandParameterOutputFile() != null) {

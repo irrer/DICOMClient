@@ -38,7 +38,7 @@ public class Help extends Alert {
     private static final long serialVersionUID = 1L;
 
     /** Default id. */
-    private static final String WINDOW_TITLE = DicomClient.PROJECT_NAME + " Help";
+    private static final String WINDOW_TITLE = ClientConfig.getInstance().getApplicationName() + " Help";
 
     /** Preferred size of help screen. */
     private static final Dimension PREFERRED_HELP_SIZE = new Dimension(540, 750);
@@ -73,7 +73,7 @@ public class Help extends Alert {
      */
     private static String getAboutText() {
         StringBuffer text = new StringBuffer("<html>\n");
-        text.append("<center><h2>" + DicomClient.PROJECT_NAME + "<br></h2><h3>View, Anonymize, and Upload DICOM files</h3></center><br><p>\n");
+        text.append("<center><h2>" + ClientConfig.getInstance().getApplicationName() + "<br></h2><h3>View, Anonymize, and Upload DICOM files</h3></center><br><p>\n");
 
         JarInfo jarInfo = new JarInfo(Help.class);
 
@@ -100,7 +100,7 @@ public class Help extends Alert {
 
     private static final String HELP_TEXT =
             "<html><br>\n" +
-                    "<center><h2>" + DicomClient.PROJECT_NAME + "</h2></center><br>\n" +
+                    "<center><h2>" + ClientConfig.getInstance().getApplicationName() + "</h2></center><br>\n" +
                     "<center><h3>View, Anonymize, and Upload DICOM files</h3></center><br>\n" +
                     "<br>\n" +
                     "<h3>Introduction</h3><br>\n" +
@@ -407,7 +407,7 @@ public class Help extends Alert {
         super(getMessage(showUploadHelp), WINDOW_TITLE, new String[] { "About", "Close" }, PREFERRED_HELP_SIZE, true);
         switch (getSelectedButtonIndex()) {
         case 0:
-            new Alert(getAboutText(), "About " + DicomClient.PROJECT_NAME, null, PREFERRED_ABOUT_SIZE, false);
+            new Alert(getAboutText(), "About " + ClientConfig.getInstance().getApplicationName(), null, PREFERRED_ABOUT_SIZE, false);
             break;
         default:
             break;

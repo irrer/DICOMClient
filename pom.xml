@@ -19,7 +19,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.umro.DICOM</groupId>
 	<artifactId>dicomclient</artifactId>
-	<version>1.0.46</version>
+	<version>1.0.47</version>
 	<packaging>jar</packaging>
 	<name>${project.artifactId}</name>
 	<properties>
@@ -126,6 +126,7 @@
 									toDir="${dest.dir}" />
 									
                                 <copy file="${resource.dir}/DicomClientConfig.xml" toDir="${dest.dir}" />
+                                <copy file="${resource.dir}/DicomClientConfigMil.xml" toDir="${dest.dir}" />
                                 <copy file="${resource.dir}/DicomClientConfigMROQC.xml" toDir="${dest.dir}" />
                                 <copy file="${resource.dir}/PACSConfig.xml" toDir="${dest.dir}" />
 								
@@ -138,6 +139,9 @@
                                 
                                 <copy file="${resource.dir}/DICOM+.bat" toDir="${dest.dir}" />
                                 <replace file="${dest.dir}/DICOM+.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
+                                
+                                <copy file="${resource.dir}/DICOM+MIL.bat" toDir="${dest.dir}" />
+                                <replace file="${dest.dir}/DICOM+MIL.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
                                 
                                 <copy file="${resource.dir}/DICOMClient.sh" toDir="${dest.dir}" />
 								<replace file="${dest.dir}/DICOMClient.sh" token="@@with-dep-jar@@"

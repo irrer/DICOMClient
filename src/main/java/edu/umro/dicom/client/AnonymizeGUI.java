@@ -155,7 +155,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             add(textField);
 
             boolean isEditable = isEditable(tag);
-            textField.setEnabled(isEditable);
+            textField.setEnabled(isEditable && checkBox.isSelected());
             textField.setEditable(isEditable); // extra guard against editing
 
             if (!isEditable) textField.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
