@@ -1,6 +1,5 @@
 
-
-   Copyright 2012 Regents of the University of Michigan
+   Copyright 2016 Regents of the University of Michigan
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,15 +20,14 @@ Most recent documentation: http://htmlpreview.github.io/?https://github.com/irre
 The DICOM project.  This project provides support for:
     - anonymizing DICOM files
     - viewing DICOM files
-    - uploading DICOM files to a PACS (requires separate DICOM Service program)
+    - editing DICOM files
+    - uploading DICOM files to a PACS
 
 To run:
 
-     DICOM+.bat        : Windows 32 bit
+     DICOM+.bat        : Windows 32 or 64 bit
      
-     DICOM+64.bat      : Windows 64 bit (same as 32 but allows larger DICOM file sets)
-     
-     DICOMClient.bat   : Windows, within Univ Mich Rad Onc department
+     DICOM+MIL.bat     : Windows 32 or 64 bit, with with special options set for the VA (US Veterans Affairs)
      
      DICOMClient.sh    : Linux
 
@@ -60,52 +58,6 @@ The product version is driven by the <version> tag in the pom.xml file.
 The server and client share the same version.  As a developer, if you make
 changes to the code that warrant a version change, then change this
 value before building a new package.
-
-
-
-
-To build the keystore files, run the keytool command with the following options.
-    
-    keytool -genkey -v -alias dicomsvc -dname "CN=dicomsvc, OU=Radiation Oncology, O=University of Michigan, C=US" -keypass [password] -keystore dicomsvc.jks -storepass [password] -keyalg "RSA" -sigalg "SHA512withRSA" -keysize 2048 -validity 36500
-
-Note: The [password] must be the same in both instances on the above keytool invocation.
-
-The key_password is required by the server and is stored in the dicomsvcConfig.xml file.  For
-this reason it is important that the this file be readable only by the service itself.
-
-
-
-
-When accessing the service using a web browser, a warning is shown indicating that it is untrusted.
-IE will say: 'There is a problem with this website's security certificate.'  Click the 'Continue to this website (not recommended).' to continue.
-If you do not want the warning, do the following to permanently trust the web site:
- 
-Found at http://stackoverflow.com/questions/681695/what-do-i-need-to-do-to-get-internet-explorer-8-to-accept-a-self-signed-certific
-
-    How to make IE8 trust a self-signed certificate in 20 irritating steps
-
-      1 Browse to the site whose certificate you want to trust.
-      2 When told "There is a problem with this website's security certificate.", choose "Continue to this website (not recommended)."
-      3 Select Tools->Internet Options.
-      4 Select Security->Trusted sites->Sites.
-      5 Confirm the URL matches, and click "Add" then "Close".
-      6 Close the "Internet Options" dialog box with either "OK" or "Cancel".
-      7 Refresh the current page.
-      8 When told "There is a problem with this website's security certificate.", choose "Continue to this website (not recommended)."
-      9 Click on "Certificate Error" at the right of the address bar and select "View certificates".
-     10 Click on "Install Certificate...", then in the wizard, click "Next".
-     11 On the next page select "Place all certificates in the following store".
-     12 Click "Browse", select "Trusted Root Certification Authorities", and click "OK".
-     13 Back in the wizard, click "Next", then "Finish".
-     14 If you get a "Security Warning" message box, click "Yes".
-     15 Dismiss the message box with "OK".
-     16 Select Tools->Internet Options.
-     17 Select Security->Trusted sites->Sites.
-     18 Select the URL you just added, click "Remove", then "Close".
-     19 Now shut down all running instances of IE, and start up IE again.
-     20 The site's certificate should now be trusted.
-
-Chrome is no better, Firefox is really easy.
 
 
 
@@ -143,41 +95,6 @@ src/main/resources/DICOMUploadHelp.html
     and then paste into into the Help.java file.
 
 
-The Linux service supports the start, stop, restart, and status operations
-with the /etc/init.d/dicomsvc script:
-
-    dicomsvc start
-    dicomsvc stop
-    dicomsvc restart
-    dicomsvc status
-
-To install on Linux (as root):
-
-    rpm --install dicomsvc-0.0.1-1.noarch.rpm
-
-To un-install on Linux (as root) use the command below.  Note that this
-will remove configuration files.
-
-    sudo rpm -e dicomsvc
-
-To check to see if the RPM is installed on Linux:
-
-    rpmquery dicomsvc
-
-To extract all files and spec file from the RPM file on Linux:
-
-    rpm2cpio DICOMService-0.0.1-1.noarch.rpm | cpio  -idmv
-
-    rpm --scripts -qp DICOMService-0.0.1-1.noarch.rpm > spec
-
-The main files are installed in:
-
-    /usr/local/dicomsvc
-
-Log files are put in:
-
-    /var/log/dicomsvc
-    
 
 
 
@@ -231,8 +148,6 @@ but must be an XML file in the format shown in the example below:
             <UID orig='18222.13718.7029.22317.29634.26146' anon='27767.13526.26375.2090.15286.19254'/>
         </PatientID>
     </AnonymizePreload>
-
-
 
 
 The following fields should be modified to comply with 'basic anonymization' according to the 
