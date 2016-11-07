@@ -1,6 +1,6 @@
                     ![DICOM+ logo](docs/images/DICOM%2B128x128.png)
 
-### DICOM+ for:
+## DICOM+ for:
 * anonymizing DICOM files
 * viewing DICOM files as either images or the meta-data as text
 * editing DICOM files
@@ -9,9 +9,7 @@
 
 Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>         Developer: Jim Irrer  irrer@umich.edu
 
-###Latest pre-built package:
-
-    https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.47_Install.zip?raw=true
+## Latest  <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.47_Install.zip?raw=true">pre-built package</a>  
 
 
 To run, unzip the pre-built package and run:
@@ -25,4 +23,4 @@ To run, unzip the pre-built package and run:
 It is often convenient to create a shortcut on your desktop, and then drag-and-drop DICOM files and folders to start it.
 
 
-## Most recent <a href="http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.48/output/index.html">User Manual</a>  
+## Most recent <a href="http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.48/output/index.html">instructions and how to's</a>  
