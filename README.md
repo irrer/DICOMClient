@@ -9,6 +9,11 @@ DICOM+ provides support for:
     - uploading DICOM files to a PACS
 
 
+
+https://github.com/irrer/DICOMClient/blob/master/docs/images/DICOM%2B.png "full URL"
+
+[logo]: https://github.com/irrer/DICOMClient/blob/master/docs/images/DICOM%2B.png "full URL"
+
 ![alt text][logo]
 [logo]: https://github.com/irrer/DICOMClient/blob/master/docs/images/DICOM%2B.png "full URL"
 
