@@ -1,4 +1,4 @@
-->![DICOM+ logo](docs/images/DICOM%2B128x128.png)<-
+![DICOM+ logo](docs/images/DICOM%2B128x128.png)
 
 ## DICOM+ for:
 * anonymizing DICOM files
@@ -11,6 +11,8 @@ Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 
 Developer: Jim Irrer  irrer@umich.edu
 
 ## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.47_Install.zip?raw=true">package</a>  
+
+## Download custom <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.46_InstallMIL.zip?raw=true">VA package</a>  
 
 ## To Run
 Requires Java.  Unzip the pre-built package and run:
