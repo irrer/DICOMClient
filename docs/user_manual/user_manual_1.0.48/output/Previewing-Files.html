@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+  <head>
+    <title>DICOM+ Manual</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="../../../stylesheets/styles.css">
+    <link rel="stylesheet" href="../../../stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../../javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+	<header>
+		<a href="index.html" title="Generated 2016-Nov-10 06:08:43 PM">
+			<h1>DICOM+ Manual</h1>
+		</a>
+	</header>
+
+	<div id="banner">
+        <a href="index.html"                                    class="button fork"><strong>Home</strong></a>
+        <a id="logo" title="Theme by Matt Graham" href="https://twitter.com/michigangraham" target="_blank"></a>
+        <div class="downloads">
+          <ul>
+            <li><a href="https://github.com/irrer/DICOMClient" class="button"><strong>View On GitHub</strong></a></li>
+            <li><a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.48_Install.zip?raw=true" class="button" title="Download Prebuilt Package Version 1.0.48">ZIP</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+        
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+
+<h3>Previewing Files</h3>
+<p>
+To preview a DICOM series, click the <code>Preview</code> button to
+the right of the series.  Previewing a file will not change it.
+</p><p>
+All DICOM files may be viewed in text mode, and those with images
+may be viewed in image mode.  Below is an annotated screen shot of
+the image preview: <br></br>
+<img src='../previewImage.png'>
+
+<p/>
+In text mode, the meta-data of the files is shown.  Multi-valued
+attributes have their list of values display with a separating '\'
+between each value.  DICOM sequences are shown with indenting to
+reflect the hierarchy.
+</p><p>
+Optionally, the <code>Details</code> checkbox may be checked, which
+prefixes each attribute with the <br/>
+<ul>
+<li>group number</li>
+<li>element number</li>
+<li><a href='http://en.wikipedia.org/wiki/DICOM#Value_representations'>value representation</a></li>
+<li><a href='ValueMultiplicity.html'>value multiplicity</a></li>
+</ul>
+
+</p><p>
+The group and element numbers uniquely define the attribute.
+The value representation indicates the type of value (string,
+floating point, etc), and the value multiplicity indicates how
+many values may be specified.  For example, a value multiplicity of <code>1</code>
+indicates that the attribute must have exactly one value, and a value multiplicity of <code>1-N</code>
+indicates that the attribute must have one or more values.
+See <a href='http://en.wikipedia.org/wiki/DICOM#Value_representations'>Value Representations</a>
+and <a href='ValueMultiplicity.html'>Value Multiplicity</a> for details.
+<p/>
+Below is an annotated screen capture of the text previewer:
+<p/>
+<img src='../previewText.png' id='PreviewText'>
+
+      </section>
+        <p style="margin-left:50px;">Developed by <a href="https://github.com/irrer">Jim Irrer</a></p>
+      <footer style="margin-left:1px;">
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>

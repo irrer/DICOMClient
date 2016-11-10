@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="DICOM+ Documentation Build" basedir="." default="generate.docs">
+
+    <property name="dest.dir"             value="output" />
+    <property name="doc.version"          value="1.0.48" />
+    <property name="code.version"         value="1.0.48" />
+    <tstamp>
+        <format property="doc.timestamp" pattern="yyyy-MMM-dd hh:mm:ss aa" locale="en,US" />
+    </tstamp>
+
+	<target name="clean">
+		<delete dir="${dest}" />
+	</target>
+
+	<target name="prepare">
+		<mkdir dir="${dest.dir}" />
+	</target>
+
+	<target name="makehtml">
+		<concat destfile="${dest.dir}/${htmlIn}">
+		    <filelist files="html_fragment_head.html,${htmlIn},html_fragment_tail.html"/>
+		</concat>
+        <replace file="${dest.dir}/${htmlIn}">
+              <replacefilter token="@@doc.timestamp@@" value="${doc.timestamp}" />
+              <replacefilter token="@@doc.version@@" value="${doc.version}" />
+              <replacefilter token="@@code.version@@" value="${code.version}" />
+        </replace>
+	</target>
+
+	<target name="generate.docs" depends="clean,prepare">
+		<antcall target="makehtml"><param name="htmlIn" value="Anonymize-Options.html"    /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="Anonymizing-Files.html"    /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="faq.html"                  /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="index.html"                /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="Main-Window-Layout.html"   /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="Previewing-Files.html"     /></antcall>
+        <antcall target="makehtml"><param name="htmlIn" value="Edit.html"                 /></antcall>
+        <antcall target="makehtml"><param name="htmlIn" value="Quick-Start-How-To-s.html" /></antcall>
+        <antcall target="makehtml"><param name="htmlIn" value="Preload.html"              /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="Starting-the-program.html" /></antcall>
+		<antcall target="makehtml"><param name="htmlIn" value="ValueMultiplicity.html"    /></antcall>
+	</target>
+</project>

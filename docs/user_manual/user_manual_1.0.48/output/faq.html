@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+  <head>
+    <title>DICOM+ Manual</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link rel="stylesheet" href="../../../stylesheets/styles.css">
+    <link rel="stylesheet" href="../../../stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../../javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+	<header>
+		<a href="index.html" title="Generated 2016-Nov-10 06:08:43 PM">
+			<h1>DICOM+ Manual</h1>
+		</a>
+	</header>
+
+	<div id="banner">
+        <a href="index.html"                                    class="button fork"><strong>Home</strong></a>
+        <a id="logo" title="Theme by Matt Graham" href="https://twitter.com/michigangraham" target="_blank"></a>
+        <div class="downloads">
+          <ul>
+            <li><a href="https://github.com/irrer/DICOMClient" class="button"><strong>View On GitHub</strong></a></li>
+            <li><a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.48_Install.zip?raw=true" class="button" title="Download Prebuilt Package Version 1.0.48">ZIP</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+        
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+<h3>Frequently Asked Questions</h3>
+
+<p />
+<br />
+<strong>Will DICOM+ over-write my existing files?</strong>
+<br />
+By default, no - The program is designed to preserve existing files. Both
+anonymization and editing create new copies of the files. Before a new
+file is written, the program checks to make sure that the name it is
+using is unique.
+<p />
+Note that if the same series is anonymized multiple times, it will
+result in multiple sets of files. This is by design, as a common use
+case is to anonymize the same set of files multiple times with different
+user IDs to create test data.
+
+
+<p />
+<br />
+<strong>How does DICOM+ anonymize UIDs?</strong>
+<br />
+It replaces all of them with new ones, maintaining the cross-references
+between files. This is especially important in radiotherapy, where a
+patient often has a set of files including images (CT, MR, etc.),
+RTSTRUCT, RTPLAN, RTDOSE, and other files that share UIDs between
+series.
+<p />
+To maintain the cross-references, all files for a given patient must be
+anonymized in the same session.
+<p />
+This is also required by the DICOM specification. See the DICOM
+standard:
+<p />
+
+
+<ul>
+	<li><a href="http://dicom.nema.org/Dicom/supps/sup55_03.pdf">Supplement
+			55: Attribute Level Confidentiality (including De-identification)</a></li>
+	<li><a
+		href="ftp://medical.nema.org/medical/dicom/final/sup142_ft.pdf">Supplement
+			142:Clinical Trial De-identification Profiles</a></li>
+</ul>
+
+
+<p />
+
+The only exceptions are:
+
+<ul>
+
+	<li>When editing a file, the user specifically indicates that the
+		original file should be over-written.</li>
+
+	<li>When the user repeatedly saves during an edit session, the
+		same destination file is used.</li>
+
+</ul>
+
+
+
+<p />
+<br />
+<strong>How does DICOM+ construct file names?</strong>
+<br />
+File names are constructed so as to be human readable, and are formatted
+with the following fields (if they are present in the source DICOM file)
+separated by underscore:
+
+<ul>
+	<li>Patient ID</li>
+	<li>Modality</li>
+	<li>Series Number</li>
+	<li>Instance Number</li>
+</ul>
+
+If the resulting file already exists, an integer is appended to the name
+to make it unique.
+
+
+
+<p />
+<br />
+<strong>Does DICOM+ use 32 or 64 bit?</strong>
+<br />
+Either. The version of the Java runtime on your machine determines which
+will be used, but DICOM+ uses the same BAT and library files regardless.
+The advantage of 64 bit is the ability to work with larger data sets,
+but otherwised they behave identically.
+
+
+      </section>
+        <p style="margin-left:50px;">Developed by <a href="https://github.com/irrer">Jim Irrer</a></p>
+      <footer style="margin-left:1px;">
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>

@@ -12,7 +12,7 @@ Developer: Jim Irrer  irrer@umich.edu
 
 ## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.47_Install.zip?raw=true">package</a>  
 
-## Download custom <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.46_InstallMIL.zip?raw=true">VA package</a>  
+## Download custom <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.46_InstallMIL.zip?raw=true" title="Configured with options compliant with Veterans Affairs>VA package</a>  
 
 ## To Run
 Requires Java.  Unzip the pre-built package and run:
@@ -23,7 +23,8 @@ Requires Java.  Unzip the pre-built package and run:
      
 * DICOM+.sh      : Linux
 
-Pro-tip: Make a shortcut on your desktop, then drag-and-drop DICOM files and folders to it.
+Pro-tip: Make a shortcut to the bat on your desktop, then drag-and-drop DICOM files and folders to run it.
 
 
-## View <a href="http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.28/output/index.html">Instructions and how to's</a>  
+## View <a href="http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.28/output/index.html">Instructions and how to's</a>
+
