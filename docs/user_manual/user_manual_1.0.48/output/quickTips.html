@@ -17,7 +17,7 @@
   <body>
 
 	<header>
-		<a href="index.html" title="Generated 2016-Nov-10 06:08:43 PM">
+		<a href="index.html" title="Generated 2016-Nov-11 05:56:19 PM">
 			<h1>DICOM+ Manual</h1>
 		</a>
 	</header>
@@ -38,11 +38,11 @@
         <ul></ul>
       </nav>
       <section>
-<h3>Quick Start How To's</h3>
+      <h3>Quick Start How To's</h3>
 
 <p/><br/>
 
-<h3>Preview a series</h3>
+<h3 id="preview">Preview a series</h3>
 <ul>
     <li>Load DICOM files</li>
     <li>Click <code>Preview</code> button to the right of the series</li>
@@ -50,7 +50,8 @@
 <p/><br/>
 
 
-<h3>Preview the meta-data (text) of a series</h3>
+
+<h3 id="previewText">Preview the meta-data (text) of a series</h3>
 <ul>
     <li>Load DICOM files</li>
     <li>Click <code>Preview</code> button to the right of the series</li>
@@ -60,7 +61,40 @@
 <p/><br/>
 
 
-<h3>Anonymize a series:</h3>
+<h3 id="getDicomAsText">Get the text of a DICOM file</h3>
+<ul>
+    <li>Preview the file as text</li>
+    <li>Use CTRL-A and then CTRL-C to copy the text, then paste it into another application (such as Notepad).</li>
+</ul>
+<p/><br/>
+
+<h3 id="fixDicomFile">Fix a damaged DICOM file</h3>
+DICOM+ is often more tolerant of DICOM files with errors or that use older encoding methods.  If you are using
+another application that has trouble reading a DICOM file, try this:
+<p/>
+<ul>
+    <li>Load and preview the files in text mode</li>
+    <li>Click <code>Edit</code> to edit the file</li>
+    <li>Click <code>Save+Close</code></li>
+</ul>
+The files will be saved without changing the metadata, but cleanly reformatted.  Then try using the new files in
+the other application.
+<p/><br/>
+
+<h3 id="convert">Convert DICOM files to text, XML, or PNG</h3>
+<ul>
+    <li>Load and preview the files in text mode</li>
+    <li>Click <code>Edit</code> to edit the file</li>
+    <li>Click <code>Options</code></li>
+    <li>Select the format(s) you want to save in</li>
+    <li>Click <code>Back to Main</code></li>
+    <li>Click <code>Save+Close</code></li>
+</ul>
+<p/><br/>
+
+
+
+<h3 id="anonymize">Anonymize a series:</h3>
 <ul>
     <li>Load DICOM files</li>
     <li>Switch to <code>Anonymize</code> mode</li>

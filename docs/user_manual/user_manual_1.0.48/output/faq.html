@@ -17,7 +17,7 @@
   <body>
 
 	<header>
-		<a href="index.html" title="Generated 2016-Nov-10 06:08:43 PM">
+		<a href="index.html" title="Generated 2016-Nov-11 05:56:19 PM">
 			<h1>DICOM+ Manual</h1>
 		</a>
 	</header>
@@ -38,21 +38,34 @@
         <ul></ul>
       </nav>
       <section>
-<h3>Frequently Asked Questions</h3>
+      <h3>Frequently Asked Questions</h3>
 
 <p />
 <br />
 <strong>Will DICOM+ over-write my existing files?</strong>
 <br />
-By default, no - The program is designed to preserve existing files. Both
+In general, no - The program is designed to preserve existing files. Both
 anonymization and editing create new copies of the files. Before a new
 file is written, the program checks to make sure that the name it is
 using is unique.
+
+The only exceptions are:
+
+<ul>
+
+    <li>When editing a file, the user overrides the default and indicates that the
+        original file should be over-written.</li>
+
+    <li>When the user repeatedly saves during an edit session, the
+        same destination file is used.</li>
+
+</ul>
 <p />
 Note that if the same series is anonymized multiple times, it will
 result in multiple sets of files. This is by design, as a common use
 case is to anonymize the same set of files multiple times with different
 user IDs to create test data.
+
 
 
 <p />
@@ -74,7 +87,7 @@ standard:
 
 
 <ul>
-	<li><a href="http://dicom.nema.org/Dicom/supps/sup55_03.pdf">Supplement
+	<li><a href="http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1">Supplement
 			55: Attribute Level Confidentiality (including De-identification)</a></li>
 	<li><a
 		href="ftp://medical.nema.org/medical/dicom/final/sup142_ft.pdf">Supplement
@@ -83,18 +96,6 @@ standard:
 
 
 <p />
-
-The only exceptions are:
-
-<ul>
-
-	<li>When editing a file, the user specifically indicates that the
-		original file should be over-written.</li>
-
-	<li>When the user repeatedly saves during an edit session, the
-		same destination file is used.</li>
-
-</ul>
 
 
 

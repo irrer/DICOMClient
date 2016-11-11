@@ -847,7 +847,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      *            Top level container.
      * 
      * @param enable
-     *            True to enable, false to disable (diabled == greyed out).
+     *            True to enable, false to disable (disabled == greyed out).
      */
     public static void setEnabledRecursively(Container container, boolean enable) {
         if (container != null) {
@@ -1756,6 +1756,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         "        -g Perform aggressive anonymization - anonymize fields that are not marked for\n" +
                         "           anonymization but contain strings found in fields that are marked for anonymization.\n";
         System.err.println(usage);
+    }
+    
+    private static void fail(String msg) {
+        usage(msg);
         System.exit(1);
     }
 
@@ -1831,7 +1835,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                                                         }
                                                         else {
                                                             if (args[a].startsWith("-")) {
-                                                                usage("Invalid argument: " + args[a]);
+                                                                fail("Invalid argument: " + args[a]);
                                                                 System.exit(1);
                                                             }
                                                             else {
@@ -1860,19 +1864,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
         }
         catch (Exception e) {
-            usage("Unable to parse command line arguments.");
+            fail("Unable to parse command line arguments.");
         }
         if ((commandParameterOutputFile != null) && (commandParameterOutputDirectory != null)) {
-            usage("Can not specify both -o and -d options.");
-            System.exit(1);
+            fail("Can not specify both -o and -d options.");
         }
         if ((commandParameterOutputFile != null) && (fileList.length != 1)) {
-            usage("Can one specify -o option with exactly one input file.");
-            System.exit(1);
+            fail("Can one specify -o option with exactly one input file.");
         }
         if ((commandParameterOutputFile != null) && (!inCommandLineMode())) {
-            usage("Can one specify -o option in command line mode.");
-            System.exit(1);
+            fail("Can one specify -o option in command line mode.");
         }
         return fileList;
     }
@@ -1921,7 +1922,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         System.out.println(ClientConfig.getInstance().getApplicationName() + " starting.  Jar file: " +
                 new java.io.File(DicomClient.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getName());
 
-        System.getProperties().list(System.out);
+        //System.getProperties().list(System.out);
         try {
             logPrelude();
 

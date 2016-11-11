@@ -14,25 +14,25 @@ In text mode, the meta-data of the files is shown.  Multi-valued
 attributes have their list of values display with a separating '\'
 between each value.  DICOM sequences are shown with indenting to
 reflect the hierarchy.
-</p><p>
+<p/>
 Optionally, the <code>Details</code> checkbox may be checked, which
 prefixes each attribute with the <br/>
 <ul>
 <li>group number</li>
 <li>element number</li>
-<li><a href='http://en.wikipedia.org/wiki/DICOM#Value_representations'>value representation</a></li>
-<li><a href='ValueMultiplicity.html'>value multiplicity</a></li>
+<li><a href='http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1'>VR: Value Representation</a></li>
+<li><a href='valueMultiplicity.html'>VM: Value Multiplicity</a></li>
 </ul>
 
-</p><p>
+<p/>
 The group and element numbers uniquely define the attribute.
 The value representation indicates the type of value (string,
 floating point, etc), and the value multiplicity indicates how
 many values may be specified.  For example, a value multiplicity of <code>1</code>
 indicates that the attribute must have exactly one value, and a value multiplicity of <code>1-N</code>
 indicates that the attribute must have one or more values.
-See <a href='http://en.wikipedia.org/wiki/DICOM#Value_representations'>Value Representations</a>
-and <a href='ValueMultiplicity.html'>Value Multiplicity</a> for details.
+See <a href='http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1'>Value Representations</a>
+and <a href='valueMultiplicity.html'>Value Multiplicity</a> for details.
 <p/>
 Below is an annotated screen capture of the text previewer:
 <p/>
