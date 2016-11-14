@@ -241,39 +241,6 @@ public class Util {
     }
 
     /**
-     * Determine the trust store file to use and set it up.
-     * First look at the javax.net.ssl.trustStore system property,
-     * and if it is pointing to a readable file then use it.
-     * If it is not set, then look through the javax.net.ssl.trustStore
-     * list in the configuration file and use the first one that
-     * points to a readable file.
-     * 
-     * @param nodeList
-     *            List of nodes containing file names.
-     * @return File to be used for javax.net.ssl.trustStore. Null indicates failure.
-     */
-    /*
-     * public static synchronized TrustStore setupTrustStore(NodeList nodeList) {
-     * TrustStore trustStore = new TrustStore();
-     * 
-     * for (int ts = 0; ts < nodeList.getLength() && (!trustStore.viable()); ts++) {
-     * trustStore = new TrustStore(nodeList.item(ts));
-     * }
-     * 
-     * 
-     * 
-     * if (!trustStore.viable()) {
-     * Log.get().warning("Unable to find a javax.net.ssl.trustStore file");
-     * }
-     * else {
-     * Log.get().info("Using file " + trustStore.getKeystoreFile().getAbsolutePath() +
-     * " for the javax.net.ssl.trustStore file.");
-     * }
-     * return trustStore;
-     * }
-     */
-
-    /**
      * Get parameter value from jar of the given key. If there is
      * an error, return "unknown" instead.
      * 

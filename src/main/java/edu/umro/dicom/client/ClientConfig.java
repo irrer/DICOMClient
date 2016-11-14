@@ -437,27 +437,6 @@ public class ClientConfig {
         return anonymizingReplacementList;
     }
 
-    /**
-     * Determine which java key stores are available and return a
-     * list of them.
-     * 
-     * @return List of available java key store files.
-     */
-    public ArrayList<File> getJavaKeyStoreList() {
-        ArrayList<File> list = new ArrayList<File>();
-        try {
-            NodeList nodeList = XML.getMultipleNodes(config, "/DicomClientConfig/javax.net.ssl.trustStore/text()");
-            for (int tsd = 0; tsd < nodeList.getLength(); tsd++) {
-                Node node = nodeList.item(tsd);
-                list.add(new File(node.getNodeValue()));
-            }
-        }
-        catch (UMROException e) {
-            Log.get().warning("Unable to parse list of javax.net.ssl.trustStore.  You will not be able to communicate with the DICOM service.");
-        }
-        return list;
-    }
-
     public synchronized ArrayList<PrivateTag> getPrivateTagList() {
         if (privateTagList == null) {
             privateTagList = new ArrayList<PrivateTag>();

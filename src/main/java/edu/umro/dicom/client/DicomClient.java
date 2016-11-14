@@ -1888,33 +1888,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         Log.get().info("Organization: " + Util.getImplementationVendor());
     }
 
-    /*
-    private void setupTrustStore() {
-        if (ClientConfig.getInstance().getServerBaseUrl() == null) {
-            Log.get().info("No DICOM server URL specified, so Java key store not initialized");
-            return;
-        }
-        ArrayList<File> javaKeyStoreList = ClientConfig.getInstance().getJavaKeyStoreList();
-
-        for (File javaKeyStore : javaKeyStoreList) {
-            String fileName = javaKeyStore.getAbsolutePath();
-            Log.get().info("Trying java keystore file: " + fileName + " ...");
-            if (javaKeyStore.canRead()) {
-                System.setProperty("javax.net.ssl.trustStore", fileName);
-                System.setProperty("javax.net.ssl.trustStoreType", "JKS");
-                Log.get().info("Using java keystore file: " + fileName);
-                return;
-            }
-            else {
-                Log.get().info("Unable to read java key store file " + fileName);
-            }
-        }
-        showMessage("Could not find java keystore (*.jks) file to initialize secure communications with server at " +
-                ClientConfig.getInstance().getServerBaseUrl() + " so you will not be able to upload files.");
-        return;
-    }
-    */
-
     /**
      * @param args
      */
@@ -1941,7 +1914,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             Anonymize.setTemplate(ClientConfig.getInstance().getAnonPatientIdTemplate());
 
             DicomClient dicomClient = getInstance();
-            //dicomClient.setupTrustStore();
 
             // If in command line mode, then anonymize all files and exit
             // happily
