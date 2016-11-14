@@ -49,10 +49,6 @@
     <!-- If defined, display this as the application name and use as SourceApplicationEntityTitle. -->
     <ApplicationName>DICOM+MIL</ApplicationName>
 
-    <!-- The flag that indicates whether KO manifest files should be sent by default.  The user can override this via the GUI. -->
-    <!-- Deprecated in version 1.0.36. -->
-    <KOManifestDefault>false</KOManifestDefault>
-    
     <!-- When using aggressive anonymization, if DICOM field contains any one of these characters, then it is not considered PHI. 
     For example, if this field is 0123456789, and a DICOM field is TEST5, then it would not be anonymized because it contains the
     character '5'.  This is an attempt to fix operational problems with aggressive anonymization where a patient name was already

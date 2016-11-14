@@ -218,25 +218,6 @@ public class ClientConfig {
         return null;
     }
 
-    /**
-     * Get the default state for sending the KO manifest. If there is a config problem, default to TRUE.
-     * 
-     * @return Default state for sending the KO manifest.
-     */
-    public boolean getKoManifestDefault() {
-        try {
-            String text = XML.getValue(config, "/DicomClientConfig/KOManifestDefault/text()");
-            String[] falseText = { "f", "false", "no", "0" };
-            for (String f : falseText) {
-                if (f.equalsIgnoreCase(text)) return false;
-            }
-        }
-        catch (UMROException e) {
-
-        }
-        return true;
-    }
-
     private HashSet<Character> getPhiDisqualifyingCharacters() {
         if (phiDisqualifyingCharacters == null) {
             String pdcText = DEFAULT_PHI_DISQUALIFYING_CHARACTERS;
