@@ -1,0 +1,92 @@
+<h2>Command Line</h2>
+
+<p/>
+By default DICOM+ runs as a GUI, but if given the <code>-c</code> option it will run as a command line.
+Running as a command line can be useful when processing a large number of files.
+<br/>
+
+The following usage is shown when giving the command with the <code>-h</code> option:
+<p/>
+<code>DICOM+ -h</code>
+<p/>
+<blockquote >
+Usage:
+    DICOMClient [ -h ] [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 ...
+    <br/>
+    <div style="margin-left:40px;">
+        -h Show this help and then exit (without GUI)
+        <br/>
+        -c Run in command line mode (without GUI)
+        <br/>
+        -P Specify new patient ID for anonymization
+        <br/>
+        -o Specify output file for anonymization (single file only, command line only)
+        <br/>
+        -d Specify output directory for anonymization (can not be used with -o option)
+        <br/>
+        -y Truncate all dates to just the year, eg: 19670225 -> 19670101
+        <br/>
+        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package
+        <br/>
+        -t Show attribute tag details in text dump (effective in command line mode only)
+        <br/>
+        -l preload.xml Preload UIDs for anonymization.  This allows anonymizing to take place over multiple sessions.
+        <br/>
+        -z Replace each control character in generated XML files that describe DICOM attributes with a blank.  Required by SAS
+        <br/>
+        -g Perform aggressive anonymization - anonymize fields that are not marked for
+           anonymization but contain strings found in fields that are marked for anonymization.
+    </div>
+</blockquote>
+
+<h4>Command Line Options</h4>
+
+<strong>Help: -h</strong>
+Shows the above usage message and then exits regarless of any other options.
+<div style="margin-top:25px;"></div>
+<strong>Command Line Mode: -c</strong>
+Required for operating the program in command line mode.
+
+<div style="margin-top:25px;"></div>
+<strong>Output File: -o [file]</strong>
+Specify the output file for anonymization.  This option can not be used with the -d option.
+
+<div style="margin-top:25px;"></div>
+<strong>Output Directory: -d [dir]</strong>
+Specify the output directory for anonymization.  Valid in command line mode only, and also only when anonymizing a
+single file.  This option can not be used with the -o option.
+
+<div style="margin-top:25px;"></div>
+<strong>Truncate to Year: -y</strong>
+When anonymizing, change the month and day for all dates to 1.  For example, the date 19560321 would change to 19560101.
+This is applied to all attributes with the VR of DA or DT (Date or Date Time).
+
+<div style="margin-top:25px;"></div>
+<strong>Shorten XML Tags: -3</strong>
+When generating XML, restrict tag names to 32 characters. This is to support the consumption of the
+XML by the <a href='https://en.wikipedia.org/wiki/SAS_(software)'>SAS</a> packages.  Note that there is no
+official DICOM for tag names.  
+
+<div style="margin-top:25px;"></div>
+<strong>Attribute Details in Text: -t</strong>
+When generating text files, add the attribute details instead of just the attribute names.  This includes the group number,
+element number, 
+<a href="@@vr.ref@@">VR</a>
+and 
+<a href="valueMultiplicity.html">VM</a>.  This is similar to clicking the <code>Details</code> checkbox in the GUI text preview.
+
+<div style="margin-top:25px;"></div>
+<strong>Preload Anonymization UIDs: -l</strong>
+This feature is not fully implemented.  The intent of this feature is to support the saving and
+restoring of a DICOM+ session.
+
+<div style="margin-top:25px;"></div>
+<strong>Remove CTRL from XML Tags: -z</strong>
+When generating XML, replace control characters with a blank.  This is to support the XML interpreter used by
+the <a href='https://en.wikipedia.org/wiki/SAS_(software)'>SAS</a> packages.
+
+<div style="margin-top:25px;"></div>
+<strong>Aggressive Anonymization: -g</strong>
+When anonymizing, look for instances of the patient's name in text fields, such as StudyDescription and other description
+fields.  If found, replace it with <code>none</code>.
+
