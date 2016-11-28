@@ -213,13 +213,13 @@ public class TestCommandLine {
     @Test
     public void commandLineModeNoOptions() {
         int code = runMain();
-        assertTrue("command line mode with no options", code == 0);
+        assertTrue("command line mode with no options.  Code: " + code, code == 0);
     }
 
     @Test
     public void invalidOption() {
         int code = runMain("-9");
-        assertTrue("bad command line option should fail", code != 0);
+        assertTrue("bad command line option should fail.  Code: " + code, code != 0);
     }
 
     @Test
@@ -228,7 +228,7 @@ public class TestCommandLine {
         String inFile = srcPath("99999999_RTPLAN.DCM");
         String outFile = "1234_RTPLAN" + Util.DICOM_SUFFIX;
         int code = runMain("-P", "1234", "-o", destPath(destDir, outFile), "-z", inFile);
-        assertTrue("command line mode RTPLAN anonymization", code == 0);
+        assertTrue("command line mode RTPLAN anonymization.  Code: " + code, code == 0);
         assertTrue("Files are equal", compareAllFilesWithSuffixes(destDir, outFile));
     }
 
@@ -238,7 +238,7 @@ public class TestCommandLine {
         String inFile1 = srcPath("99999999_RTIMAGE_0001.DCM");
         String inFile2 = srcPath("99999999_RTIMAGE_0002.DCM");
         int code = runMain("-P", "1234", "-o", destDir.getAbsolutePath(), "-z", inFile1, inFile2);
-        assertTrue("command line mode with -o and multiple files", code != 0);
+        assertTrue("command line mode with -o and multiple files.  Code: " + code, code != 0);
         assertTrue("no files generated", !destDir.exists());
     }
 
@@ -250,7 +250,7 @@ public class TestCommandLine {
         String outFile1 = "1234_RTIMAGE_0001.DCM";
         String outFile2 = "1234_RTIMAGE_0002.DCM";
         int code = runMain("-P", "1234", "-d", destDir.getAbsolutePath(), "-z", inFile1, inFile2);
-        assertTrue("command line mode with -d and multiple files", code == 0);
+        assertTrue("command line mode with -d and multiple files.  Code: " + code, code == 0);
         assertTrue("Files are equal MinusD 1", compareAllFilesWithSuffixes(destDir, outFile1));
         assertTrue("Files are equal MinusD 2", compareAllFilesWithSuffixes(destDir, outFile2));
     }
@@ -261,7 +261,7 @@ public class TestCommandLine {
         String inFile = srcPath("99999999_CT_2_0001.DCM");
         String outFile = "1234_CT_2_0001";
         int code = runMain("-P", "1234", "-o", destPath(destDir, outFile + Util.DICOM_SUFFIX), "-z", inFile);
-        assertTrue("command line mode with -o single CT", code == 0);
+        assertTrue("command line mode with -o single CT.  Code: " + code, code == 0);
         assertTrue("Files are equal SingleCT", compareAllFilesWithSuffixes(destDir, outFile));
         try {
             Document doc = XML.parseToDocument(Utility.readFile(new File(destPath(destDir, outFile + Util.XML_SUFFIX))));
