@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.umro.DICOM</groupId>
     <artifactId>dicomclient</artifactId>
-    <version>1.0.48</version>
+    <version>1.0.49</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <properties>
@@ -95,86 +95,12 @@
                                 <property name="code.version"    value="${version}" />
                                 
                                 <ant antfile="${doc.dir}/build.xml"/>
-                      
-                                <!--
-
-                                <property name="doc.version"     value="1.0.48" />
-                                <property name="doc.dir"         value="docs/user_manual/user_manual_${doc.version}" />
-                                <property name="doc.dest.dir"        value="${doc.dir}/output" />
-                                <property name="doc.vr.ref"          value="http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1" />
-                                <echo>====== 99 </echo>
-                                <tstamp>
-                                    <format property="doc.timestamp" pattern="yyyy-MMM-dd hh:mm:ss aa" locale="en,US" />
-                                </tstamp>
-                                <echo>====== 103 doc.dest.dir : ${doc.dest.dir} </echo>
-
-                                <echo>====== 143 </echo>
-                                
-                                <antcall target="generate.docs"></antcall>
-                                <echo>====== 146 </echo>
-
-
-                                <target name="clean">
-                                    <delete dir="${doc.dest.dir}" />
-                                </target>
-                                <echo>====== 108 </echo>
-
-                                <target name="prepare">
-                                    <mkdir dir="${doc.dest.dir}" />
-                                </target>
-                                <echo>====== 113 </echo>
-
-                                <target name="makehtml">
-                                    <echo>Generating: ${htmlIn}</echo>
-
-                                    <loadfile property="content" srcFile="${doc.dir}/${htmlIn}"/>
-
-                                    <copy file="wrapper.html" toFile="${doc.dest.dir}/${htmlIn}" />
-
-                                    <replace file="${doc.dest.dir}/${htmlIn}">
-                                        <replacefilter token="@@content@@" value="${content}" />
-                                        <replacefilter token="@@doc.timestamp@@" value="${doc.timestamp}" />
-                                        <replacefilter token="@@doc.version@@" value="${doc.version}" />
-                                        <replacefilter token="@@code.version@@" value="${version}" />
-                                        <replacefilter token="@@vr.ref@@" value="${vr.ref}" />
-                                    </replace>
-                                </target>
-                                <echo>====== 127 </echo>
-
-                                <target name="generate.docs" depends="clean,prepare">
-                                    <antcall target="makehtml"><param name="htmlIn" value="anonymizeOptions.html"     /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="anonymizingFiles.html"     /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="commandLine.html"          /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="faq.html"                  /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="index.html"                /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="main.html"                 /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="preview.html"              /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="edit.html"                 /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="quickTips.html"            /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="preload.html"              /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="startingTheProgram.html"   /></antcall>
-                                    <antcall target="makehtml"><param name="htmlIn" value="valueMultiplicity.html"    /></antcall>
-                                </target>
-                                    -->
                             </tasks>
                         </configuration>
                         <goals>
                             <goal>run</goal>
                         </goals>
                     </execution>
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
                     
                     <execution>
                         <id>generate-manifest-with-timestamp</id>

@@ -471,7 +471,7 @@ public class Anonymize {
             File file = new File("D:\\tmp\\dcmexp\\dicomclient-1.0.45\\preload.xml");
             preloadUids(file);
             Thread.sleep(5000);
-            System.exit(99);
+            Util.exitSuccess();
         }
 
         String[] uidList = { "2.318828.3", " 123", "", "123", "123...a45.6", ".32362.38.6.8468.7.3.2.4252", "1.2.3." };

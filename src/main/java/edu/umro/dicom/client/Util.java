@@ -504,7 +504,15 @@ public class Util {
         try {
             attributeList.read(file, rts);
         }
-        catch (Exception e) {
+        catch (IOException e) {
+            if (rts.latest != null) {
+                DicomClient.getInstance().showMessage("Warning!  Problem reading DICOM file " + file.getAbsolutePath() + " : " + e.getMessage());
+                return rts.latest;
+            }
+            else
+                throw e;
+        }
+        catch (DicomException e) {
             if (rts.latest != null) {
                 DicomClient.getInstance().showMessage("Warning!  DICOM file " + file.getAbsolutePath() + " has problems: " + e.getMessage());
                 return rts.latest;
@@ -513,6 +521,22 @@ public class Util {
                 throw e;
         }
         return attributeList;
+    }
+
+    /**
+     * Exit with a status that indicates that everything is ok.
+     */
+    public static void exitSuccess() {
+        System.exit(0);
+    }
+
+    /**
+     * Exit with a status that indicates failure but does not indicate that
+     * too much memory was requested of the JVM with the -Xmx option.  The
+     * exit status is not supposed to reflect a standard error.
+     */
+    public static void exitFail() {
+        System.exit(7);
     }
 
 }

@@ -944,7 +944,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 processOk = false;
                 if (DicomClient.inCommandLineMode()) {
                     System.err.println(msg);
-                    System.exit(1);
+                    Util.exitFail();
                 }
             }
             catch (IOException e) {
@@ -960,7 +960,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 }
                 if (DicomClient.inCommandLineMode()) {
                     System.err.println(msg);
-                    System.exit(1);
+                    Util.exitFail();
                 }
             }
             finally {

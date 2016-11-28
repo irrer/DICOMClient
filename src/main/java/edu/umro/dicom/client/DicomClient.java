@@ -836,7 +836,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         if (headlessPanel == null) {
             System.err.println("Could not build environment without GUI");
-            System.exit(1);
+            Util.exitFail();
         }
     }
 
@@ -945,7 +945,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         Object source = ev.getSource();
 
         if (source.equals(exitButton)) {
-            System.exit(0);
+            Util.exitSuccess();
         }
 
         if (source.equals(clearButton)) {
@@ -1760,7 +1760,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     
     private static void fail(String msg) {
         usage(msg);
-        System.exit(1);
+        Util.exitFail();
     }
 
     public static boolean getRestrictXmlTagsToLength32() {
@@ -1801,7 +1801,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         else {
                             if (args[a].equals("-h")) {
                                 usage("");
-                                System.exit(0);
+                                Util.exitSuccess();
                             }
                             else {
                                 if (args[a].equals("-c")) {
@@ -1836,7 +1836,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                                                         else {
                                                             if (args[a].startsWith("-")) {
                                                                 fail("Invalid argument: " + args[a]);
-                                                                System.exit(1);
+                                                                Util.exitFail();
                                                             }
                                                             else {
                                                                 fileList = new String[args.length - a];
@@ -1923,7 +1923,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
                 Series.processOk = true;
                 processAll();
-                System.exit(0);
+                Util.exitSuccess();
             }
             else {
                 // doGc();
@@ -1940,7 +1940,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             Log.get().severe("Unexpected exception: " + Log.fmtEx(e));
             System.err.println("Unexpected failure.  Stack trace follows:");
             e.printStackTrace();
-            System.exit(1);
+            Util.exitFail();
         }
     }
 
@@ -2002,5 +2002,4 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public void setEnabled(boolean enabled) {
         setEnabledRecursively(frame.getContentPane(), enabled);
     }
-
 }
