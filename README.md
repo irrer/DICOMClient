@@ -10,9 +10,7 @@
 Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>
 Developer: Jim Irrer  irrer@umich.edu
 
-## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.48_Install.zip?raw=true">package</a>  
-
-## Download custom <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.46_InstallMIL.zip?raw=true" title="Configured with options compliant with Veterans Affairs">VA package</a>  
+## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.49_Install.zip?raw=true">package</a>  
 
 ## To Run
 Requires Java.  Unzip the pre-built package and run:
