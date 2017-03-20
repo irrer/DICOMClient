@@ -1310,10 +1310,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             try {
                 Attribute a = attributeList.get(tag);
                 if (a != null) {
-                    String value = new String(a.getSingleStringValueOrEmptyString());
-                    Attribute a2 = AttributeFactory.newAttribute(tag);
-                    a2.addValue(value);
-                    al.put(a2);
+                    String[] valueList = a.getStringValues();
+                    Attribute at2 = AttributeFactory.newAttribute(tag);
+                    for (int v = 0; v < valueList.length; v++) {
+                        at2.addValue(new String(valueList[v]));
+                    }
+                    al.put(at2);
                 }
             }
             catch (Exception e) {
