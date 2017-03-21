@@ -10,14 +10,15 @@
 Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>
 Developer: Jim Irrer  irrer@umich.edu
 
-## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.49_Install.zip?raw=true">package</a>  
+## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.49_Install.zip?raw=true">package</a>
+as of 20-March-2017
 
 ## To Run
 Requires Java.  Unzip the pre-built package and run:
 
 * DICOM+.bat     : Windows
      
-* DICOM+MIL.bat  : Windows with with special options set for the VA (US Veterans Affairs)
+* DICOM+MIL.bat  : Windows with with special options set for the US Veterans Affairs
      
 * DICOM+.sh      : Linux
 
