@@ -79,7 +79,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
     private static final String UPLOAD_BUTTON_TOOLTIP_TEXT_DISABLED = "<html>Select a PACS server<br>to enable uploading.</html>";
 
     /** Tool tip for Upload All button. */
-    private static final String ANONYMIZE_BUTTON_TOOLTIP = "<html>AnonymizeGUI this series,<br>overwriting files.</html>";
+    private static final String ANONYMIZE_BUTTON_TOOLTIP = "<html>Anonymize this series,<br>overwriting files.</html>";
 
     /** DICOM value for Patient ID for the series. */
     private String patientID = null;
@@ -862,7 +862,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             System.err.println("Unable to write anonymized " + xmlFile.getAbsolutePath() + " XML file: " + Log.fmtEx(e));
         }
     }
-
+    
     /**
      * AnonymizeGUI this series and write the results to new files.
      */
@@ -877,7 +877,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             try {
                 previewProgressLayout.show(previewProgressPanel, CARD_PROGRESS);
                 zeroProgressBar();
-                // for (String fileName : instanceList.values()) {
+                File seriesOutDir = null;
                 for (InstanceList.Instance instance : instanceList.getList()) {
                     tries++;
                     AttributeList attributeList = Util.readDicomFile(instance.file);
@@ -906,20 +906,17 @@ public class Series extends JPanel implements ActionListener, Runnable {
                             suffixList.add(Util.TEXT_SUFFIX);
                             suffixList.add(Util.PNG_SUFFIX);
                             suffixList.add(Util.XML_SUFFIX);
-                            String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, suffixList);
-                            newFile = new File(DicomClient.getInstance().getDestinationDirectory(), prefix + Util.DICOM_SUFFIX);
+                            newFile = DicomClient.getAvailableFile(attributeList, suffixList, seriesOutDir);
+                            seriesOutDir = newFile.getParentFile();
                         }
-                        if (!newFile.getParentFile().exists()) newFile.getParentFile().mkdirs();
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
                         saveTextAndXmlAndImageFiles(attributeList, newFile);
                     }
                     else {
-                        File dir = DicomClient.getInstance().getDestinationDirectory();
-                        if (!dir.exists()) dir.mkdirs();
                         ArrayList<String> suffixList = new ArrayList<String>();
                         suffixList.add(Util.DICOM_SUFFIX);
-                        String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, suffixList);
-                        newFile = new File(dir, prefix + Util.DICOM_SUFFIX);
+                        newFile = DicomClient.getAvailableFile(attributeList, suffixList, seriesOutDir);
+                        seriesOutDir = newFile.getParentFile();
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
                         // load the anonymized file automatically
                         if (DicomClient.getInstance().getProcessingMode() == ProcessingMode.ANONYMIZE_THEN_LOAD) {
@@ -927,7 +924,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                         }
                         filesCreated.add(newFile);
                     }
-                    
+
                     totalFilesAnonymized++;
                     DicomClient.getInstance().indicateThatStatisticsHaveChanged();
 

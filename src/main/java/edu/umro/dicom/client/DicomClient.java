@@ -43,6 +43,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -191,8 +192,17 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** True if the application is in command line mode (no GUI) */
     private static boolean commandLineMode = false;
 
-    /** True if all dates should be anonymized by changing the month and day to 1.  eg: 19680422 ==> 19680101 . */
+    /** True if all dates should be anonymized by changing the month and day to 1. eg: 19680422 ==> 19680101 . */
     private static boolean yearTruncation = false;
+
+    /**
+     * True if, when writing output files, they should be put in a tree with patient ID as directory containing series
+     * directories.
+     */
+    private static boolean treeOutput = false;
+
+    /** True if, when reading files, they subdirectories should be recursively searhed. */
+    private static boolean searchSubdirs = false;
 
     /**
      * If the application is in command line mode (no GUI) then this is the flag indicating that
@@ -222,7 +232,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private ButtonGroup modeButtonGroup = null;
     private JLabel anonymizeDestinationText = null;
     private JButton anonymizeDestinationBrowseButton = null;
-
+    private JCheckBox treeOutputCheckbox = null;
+    private JCheckBox searchSubdirsCheckbox = null;
+    
     /** Chooses directory for anonymized files. */
     private volatile JFileChooser directoryChooser = null;
 
@@ -389,7 +401,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         JLabel label = new JLabel("Destination: ");
         label.setToolTipText(toolTip);
-
+        
         anonymizeDestinationText = new JLabel("");
         anonymizeDestinationText.setToolTipText(toolTip);
 
@@ -400,6 +412,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         directoryChooser = new JFileChooser();
 
         directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        
+        treeOutputCheckbox = new JCheckBox("Tree");
+        treeOutputCheckbox.addActionListener(this);
+        treeOutputCheckbox.setToolTipText("<html>If checked, store created files in patient ID / series tree.</html>");
 
         if (commandParameterOutputDirectory != null) {
             directoryChooser.setSelectedFile(commandParameterOutputDirectory);
@@ -444,6 +460,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         c.weightx = 0;
         gridBagLayout.setConstraints(anonymizeDestinationBrowseButton, c);
         panel.add(anonymizeDestinationBrowseButton);
+
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 4;
+        c.gridy = 0;
+        c.weightx = 0;
+        gridBagLayout.setConstraints(treeOutputCheckbox, c);
+        panel.add(treeOutputCheckbox);
 
         // panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
         return panel;
@@ -530,6 +553,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(anonymizeOptionsButton, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel buildSearchSubdirsPanel() {
+        searchSubdirsCheckbox = new JCheckBox("Search Subdirs");
+        searchSubdirsCheckbox.addActionListener(this);
+        searchSubdirsCheckbox.setToolTipText("When reading files, recursively search sub-directories.");
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.add(searchSubdirsCheckbox, BorderLayout.CENTER);
         return panel;
     }
 
@@ -627,11 +660,15 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             c.weightx = 0;
             c.insets = new Insets(20, 20, 0, 0);
             c.anchor = GridBagConstraints.CENTER;
-            JComponent jc = buildAnonOptionsButtonPanel();
-            gridBagLayout.setConstraints(jc, c);
-            panel.add(jc);
-        }
+            JPanel anonSearchPanel = new JPanel();
+            anonSearchPanel.add(buildAnonOptionsButtonPanel());
+            anonSearchPanel.add(new JLabel("    "));
+            anonSearchPanel.add(buildSearchSubdirsPanel());
 
+            gridBagLayout.setConstraints(anonSearchPanel, c);
+            panel.add(anonSearchPanel);
+        }
+        
         {
             c.fill = GridBagConstraints.NONE;
             c.gridx = 1;
@@ -940,6 +977,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         showMessageText.delete(0, showMessageText.length());
     }
 
+    @Override
     public void actionPerformed(ActionEvent ev) {
         markScreenAsModified();
         Object source = ev.getSource();
@@ -996,6 +1034,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             case JFileChooser.CANCEL_OPTION:
                 break;
             }
+        }
+        
+        if (source.equals(searchSubdirsCheckbox)) {
+            searchSubdirs = searchSubdirsCheckbox.isSelected();
+        }
+
+        if (source.equals(treeOutputCheckbox)) {
+            treeOutput = treeOutputCheckbox.isSelected();
         }
 
         markScreenAsModified();
@@ -1311,11 +1357,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 Attribute a = attributeList.get(tag);
                 if (a != null) {
                     String[] valueList = a.getStringValues();
-                    Attribute at2 = AttributeFactory.newAttribute(tag);
-                    for (int v = 0; v < valueList.length; v++) {
-                        at2.addValue(new String(valueList[v]));
+                    if (valueList != null) {
+                        Attribute at2 = AttributeFactory.newAttribute(tag);
+                        for (int v = 0; v < valueList.length; v++) {
+                            at2.addValue(new String(valueList[v]));
+                        }
+                        al.put(at2);
                     }
-                    al.put(at2);
                 }
             }
             catch (Exception e) {
@@ -1432,7 +1480,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             if (file.isDirectory()) {
                 if (descend) {
                     for (File child : file.listFiles()) {
-                        addDicomFile(child, false);
+                        addDicomFile(child, searchSubdirs);
                     }
                 }
                 else {
@@ -1647,6 +1695,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return commandLineMode;
     }
 
+    public static boolean treeOutputFiles() {
+        return treeOutput;
+    }
+
+    public static boolean searchSubdirectories() {
+        return searchSubdirs;
+    }
+
     public static boolean doYearTruncation() {
         return yearTruncation;
     }
@@ -1682,11 +1738,21 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @return True if none of the files exist, and the prefix may be used to
      *         create new files without overwriting existing files.
      */
-    boolean testPrefix(String prefix, ArrayList<String> suffixList) {
-        File dir = getDestinationDirectory();
+    private static boolean testPrefix(String prefix, ArrayList<String> suffixList) {
+        File dir = getInstance().getDestinationDirectory();
         for (int s = 0; s < suffixList.size(); s++) {
             File file = new File(dir, prefix + suffixList.get(s));
             if (file.exists()) return false;
+        }
+        return true;
+    }
+
+    private static boolean testFileUniqueness(File file, ArrayList<String> suffixList) {
+        String fullName = file.getAbsolutePath();
+        String  prefix = fullName.substring(0, fullName.lastIndexOf('.'));
+        for (int s = 0; s < suffixList.size(); s++) {
+            File f = new File(prefix + suffixList.get(s));
+            if (f.exists()) return false;
         }
         return true;
     }
@@ -1724,7 +1790,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         name += (seriesNumberText == null) ? "" : ("_" + seriesNumberText);
         name += (instanceNumberText == null) ? "" : ("_" + instanceNumberText);
 
-        name = name.replace(' ', '_');
+        name = Util.replaceInvalidFileNameCharacters(name.replace(' ', '_'), '_');
 
         // try the prefix without an extra number to make it unique
         if (testPrefix(name, suffixList)) return name;
@@ -1740,6 +1806,124 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     }
 
+    /**
+     * Get an available file prefix to be written to. No file should exist with
+     * this prefix and any of the suffixes provided. The file prefix will also
+     * represent the content of the attribute list. The point of this is to be
+     * able to create a set of files with the given prefix and suffixes without
+     * overwriting any existing files.
+     * 
+     * @param attributeList
+     *            Content that will be written.
+     * 
+     * @param suffixList
+     *            List of suffixes needed. Suffixes are expected be provided
+     *            with a leading '.' if desired by the caller.
+     * @return A file prefix that, when appended with each of the prefixes, does
+     *         not exist in the user specified directory.
+     */
+    public static File getAvailableFile(AttributeList attributeList, ArrayList<String> suffixList, File seriesOutDir) throws SecurityException {
+
+        String patientIdText = Util.getAttributeValue(attributeList, TagFromName.PatientID);
+        String modalityText = Util.getAttributeValue(attributeList, TagFromName.Modality);
+        String seriesNumberText = Util.getAttributeValue(attributeList, TagFromName.SeriesNumber);
+        String instanceNumberText = Util.getAttributeValue(attributeList, TagFromName.InstanceNumber);
+
+        File dir = getInstance().getDestinationDirectory();
+
+        final char replc = '_';
+        final String fill = "" + replc;
+
+        if (instanceNumberText == null) {
+            instanceNumberText = "";
+        }
+
+        while (instanceNumberText.length() < 4) {
+            instanceNumberText = "0" + instanceNumberText;
+        }
+
+        String name = "";
+
+        if (treeOutput) {
+            if (patientIdText == null) {
+                patientIdText = fill;
+            }
+            File patientDir = new File(dir, Util.replaceInvalidFileNameCharacters(patientIdText, replc));
+
+            if (modalityText == null) {
+                modalityText = "";
+            }
+            else {
+                modalityText = modalityText + replc;
+            }
+
+            if (seriesNumberText == null) {
+                seriesNumberText = "";
+            }
+
+            String seriesDirName = patientIdText + replc + modalityText + seriesNumberText;
+            if (seriesDirName.length() == 0) {
+                seriesDirName = fill;
+            }
+            File seriesDir = new File(patientDir, seriesDirName);
+
+            if (seriesOutDir == null) {
+                int count = 1;
+                // if a directory of this name has files in it, then make a different name.
+                while (seriesDir.exists() && (seriesDir.list().length > 0)) {
+                    seriesDir = new File(patientDir, seriesDirName + replc + count);
+                    count++;
+                }
+            }
+            
+            String baseName = seriesDirName + replc + instanceNumberText;
+
+            File file = new File(seriesDir, baseName + Util.DICOM_SUFFIX);
+            if (testFileUniqueness(file, suffixList)) {
+                file.getParentFile().mkdirs();
+                return file;
+            }
+
+            int count = 1;
+            while (true) {
+                file = new File(seriesDir, baseName + count + Util.DICOM_SUFFIX);
+                if (testFileUniqueness(file, suffixList)) {
+                    file.getParentFile().mkdirs();
+                    return file;
+                }
+            }
+        }
+        else {
+            name += (patientIdText == null) ? "" : patientIdText;
+            name += (modalityText == null) ? "" : ("_" + modalityText);
+            name += (seriesNumberText == null) ? "" : ("_" + seriesNumberText);
+            name += (instanceNumberText == null) ? "" : ("_" + instanceNumberText);
+
+            name = Util.replaceInvalidFileNameCharacters(name.replace(' ', '_'), '_') + Util.DICOM_SUFFIX;
+
+            // try the prefix without an extra number to make it unique
+            if (testPrefix(name, suffixList)) {
+                File newFile = new File(getInstance().getDestinationDirectory(), name);
+                newFile.getParentFile().mkdirs();
+                return newFile;
+            }
+
+            // keep trying different unique numbers until one is found that is not
+            // taken
+            int count = 1;
+            while (true) {
+                String uniquifiedName = name + "_" + count;
+                if (testPrefix(uniquifiedName, suffixList)) {
+                    File newFile = new File(getInstance().getDestinationDirectory(), uniquifiedName + Util.DICOM_SUFFIX);
+                    newFile.getParentFile().mkdirs();
+                    return newFile;
+                }
+                count++;
+            }
+        }
+
+    }
+
     private static void usage(String msg) {
         System.err.println(msg);
         String usage =
@@ -1751,6 +1935,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                         "        -o Specify output file for anonymization (single file only, command line only)\n" +
                         "        -d Specify output directory for anonymization (can not be used with -o option)\n" +
                         "        -y Truncate all dates to just the year, eg: 19670225 -> 19670101\n" +
+                        "        -s When reading files, keep recursively searching through sub-directories\n" +
+                        "        -e When writing files, organize them in a tree structure by patient ID and series of patient\n" +
                         "        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package\n" +
                         "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
                         "        -l preload.xml Preload UIDs for anonymization.  This allows anonymizing to take place over multiple sessions.\n" +
@@ -1831,21 +2017,31 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                                                         aggressivelyAnonymize = true;
                                                     }
                                                     else {
-                                                        if (args[a].equals("-l")) { // preload UIDs
-                                                            a++;
-                                                            preloadFile = new File(args[a]);
+                                                        if (args[a].equals("-s")) {
+                                                            searchSubdirs = true;
                                                         }
                                                         else {
-                                                            if (args[a].startsWith("-")) {
-                                                                fail("Invalid argument: " + args[a]);
-                                                                Util.exitFail();
+                                                            if (args[a].equals("-e")) {
+                                                                treeOutput = true;
                                                             }
                                                             else {
-                                                                fileList = new String[args.length - a];
-                                                                int f = 0;
-                                                                for (; a < args.length; a++) {
-                                                                    fileList[f] = args[a];
-                                                                    f++;
+                                                                if (args[a].equals("-l")) { // preload UIDs
+                                                                    a++;
+                                                                    preloadFile = new File(args[a]);
+                                                                }
+                                                                else {
+                                                                    if (args[a].startsWith("-")) {
+                                                                        fail("Invalid argument: " + args[a]);
+                                                                        Util.exitFail();
+                                                                    }
+                                                                    else {
+                                                                        fileList = new String[args.length - a];
+                                                                        int f = 0;
+                                                                        for (; a < args.length; a++) {
+                                                                            fileList[f] = args[a];
+                                                                            f++;
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -1861,7 +2057,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
             }
 
-            if (preloadFile != null) {  // Do this last because we need to know if we are in command line mode or not.
+            if (preloadFile != null) { // Do this last because we need to know if we are in command line mode or not.
                 Anonymize.preloadUids(preloadFile);
             }
         }

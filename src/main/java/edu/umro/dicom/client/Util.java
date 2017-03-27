@@ -539,4 +539,37 @@ public class Util {
         System.exit(7);
     }
 
+    /**
+     * Replace all characters in a name that are not supported by the Windows file system.
+     * 
+     * @param name: File name
+     * 
+     * @param replacement: Character to be used instead of original.
+     *               This will work for *nix systems too. It will replace some characters that would be
+     *               allowed in *nix, but using them is generally not a good idea anyway.
+     */
+    public static String replaceInvalidFileNameCharacters(String name, char replacement) {
+        byte[] original = name.getBytes();
+        byte rep = (byte) replacement;
+
+        byte[] invalidChars = ("\\/:*\"<>").getBytes();
+
+        byte[] newName = new String(name).getBytes();
+
+        for (int c = 0; c < name.length(); c++) {
+            byte orig = original[c];
+            for (int i = 0; i < invalidChars.length; i++) {
+                if (orig == invalidChars[i]) {
+                    newName[c] = rep;
+                }
+            }
+            if ((orig < 32) || (orig > 127)) {
+                newName[c] = rep;
+            }
+
+        }
+        return new String(newName);
+
+    }
+
 }
