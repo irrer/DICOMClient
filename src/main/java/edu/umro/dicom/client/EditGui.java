@@ -47,6 +47,7 @@ import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SequenceAttribute;
+import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.ValueRepresentation;
 
 import edu.umro.dicom.client.CustomDictionary.Multiplicity;
@@ -507,7 +508,82 @@ public class EditGui implements ActionListener, WindowListener {
         if (saveAsXml.isSelected()) list.add(Util.XML_SUFFIX);
         return list;
     }
+
     
+    /**
+     * Check to see if no file exists in the user specified directory with the
+     * given prefix and each of the given suffixes.
+     * 
+     * @param dir
+     *            Directory to search.
+     * 
+     * @param prefix
+     *            Base name of file(s).
+     * 
+     * @param suffixList
+     *            Suffix for each file(s).
+     * 
+     * @return True if none of the files exist, and the prefix may be used to
+     *         create new files without overwriting existing files.
+     */
+    private static boolean testPrefix(String prefix, ArrayList<String> suffixList) {
+        File dir = DicomClient.getInstance().getDestinationDirectory();
+        for (int s = 0; s < suffixList.size(); s++) {
+            File file = new File(dir, prefix + suffixList.get(s));
+            if (file.exists()) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Get an available file prefix to be written to. No file should exist with
+     * this prefix and any of the suffixes provided. The file prefix will also
+     * represent the content of the attribute list. The point of this is to be
+     * able to create a set of files with the given prefix and suffixes without
+     * overwriting any existing files.
+     * 
+     * @param attributeList
+     *            Content that will be written.
+     * 
+     * @param suffixList
+     *            List of suffixes needed. Suffixes are expected be provided
+     *            with a leading '.' if desired by the caller.
+     * @return A file prefix that, when appended with each of the prefixes, does
+     *         not exist in the user specified directory.
+     */
+    public String getAvailableFilePrefix(AttributeList attributeList, ArrayList<String> suffixList) throws SecurityException {
+
+        String patientIdText = Util.getAttributeValue(attributeList, TagFromName.PatientID);
+        String modalityText = Util.getAttributeValue(attributeList, TagFromName.Modality);
+        String seriesNumberText = Util.getAttributeValue(attributeList, TagFromName.SeriesNumber);
+        String instanceNumberText = Util.getAttributeValue(attributeList, TagFromName.InstanceNumber);
+
+        while ((instanceNumberText != null) && (instanceNumberText.length() < 4)) {
+            instanceNumberText = "0" + instanceNumberText;
+        }
+
+        String name = "";
+        name += (patientIdText == null) ? "" : patientIdText;
+        name += (modalityText == null) ? "" : ("_" + modalityText);
+        name += (seriesNumberText == null) ? "" : ("_" + seriesNumberText);
+        name += (instanceNumberText == null) ? "" : ("_" + instanceNumberText);
+
+        name = Util.replaceInvalidFileNameCharacters(name.replace(' ', '_'), '_');
+
+        // try the prefix without an extra number to make it unique
+        if (testPrefix(name, suffixList)) return name;
+
+        // keep trying different unique numbers until one is found that is not
+        // taken
+        int count = 1;
+        while (true) {
+            String uniquifiedName = name + "_" + count;
+            if (testPrefix(uniquifiedName, suffixList)) return uniquifiedName;
+            count++;
+        }
+
+    }
+
     
     /**
      * Save a single file.
@@ -538,7 +614,7 @@ public class EditGui implements ActionListener, WindowListener {
                 destFile = savedFileList.get(file);
             }
             else {
-                String prefix = DicomClient.getInstance().getAvailableFilePrefix(attributeList, getFileSuffixList());
+                String prefix = getAvailableFilePrefix(attributeList, getFileSuffixList());
                 destFile = new File(DicomClient.getInstance().getDestinationDirectory(), prefix + Util.DICOM_SUFFIX);
                 savedFileList.put(file, destFile);
             }

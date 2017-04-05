@@ -906,7 +906,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                             suffixList.add(Util.TEXT_SUFFIX);
                             suffixList.add(Util.PNG_SUFFIX);
                             suffixList.add(Util.XML_SUFFIX);
-                            newFile = DicomClient.getAvailableFile(attributeList, suffixList, seriesOutDir);
+                            newFile = DicomClient.getAvailableFile(attributeList, suffixList, seriesOutDir, instance.file);
                             seriesOutDir = newFile.getParentFile();
                         }
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
@@ -915,7 +915,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     else {
                         ArrayList<String> suffixList = new ArrayList<String>();
                         suffixList.add(Util.DICOM_SUFFIX);
-                        newFile = DicomClient.getAvailableFile(attributeList, suffixList, seriesOutDir);
+                        newFile = DicomClient.getAvailableFile(attributeList, suffixList, seriesOutDir, instance.file);
                         seriesOutDir = newFile.getParentFile();
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
                         // load the anonymized file automatically
