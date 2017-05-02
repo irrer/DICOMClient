@@ -11,7 +11,7 @@ Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 
 Developer: Jim Irrer  irrer@umich.edu
 
 ## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.51_Install.zip?raw=true">package</a>
-Released: 23-March-2017
+Released: 2-May-2017
 
 ## To Run
 Requires Java 7 or later.  Unzip the pre-built package and run:
