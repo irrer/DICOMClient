@@ -1875,7 +1875,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private static void usage(String msg) {
         System.err.println(msg);
         String usage = "Usage:\n\n" +
-                "    DICOMClient [ -h ] [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 ...\n" +
+                "    DICOMClient [ -h ] [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 inDir1 inDir2 ...\n" +
                 "        -h Show this help and then exit (without GUI)\n" +
                 "        -c Run in command line mode (without GUI)\n" +
                 "        -P Specify new patient ID for anonymization\n" +
@@ -1883,9 +1883,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 "        -d Specify output directory for anonymization (can not be used with -o option)\n" +
                 "        -y Truncate all dates to just the year, eg: 19670225 -> 19670101\n" +
                 "        -s When reading files, keep recursively searching through sub-directories\n" +
-                "        -F Flat : Store created files into the same directory\n" +
-                "        -T Tree : Store created files in patient ID / series tree under specified directory\n" +
-                "        -L Local : Store created files in local directory as a child of their source directory.  Requires write access to source directories.\n" +
+                "        -F (Flat) The default.  Store created files into the same directory.  Use only one of -F, -T, or -L\n" +
+                "        -T (Tree) Store created files in patient ID / series tree under specified directory\n" +
+                "        -L (Local) Store created files in local directory as a child of their source directory.  Requires write access to source directories.\n" +
                 "        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package\n" +
                 "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
                 "        -l preload.xml Preload UIDs for anonymization.  This allows anonymizing to take place over multiple sessions.\n" +

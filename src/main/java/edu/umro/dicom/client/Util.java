@@ -133,7 +133,7 @@ public class Util {
             value = (new String(value)).replace('\0', ' ').trim(); // try to plug memory leak
             byte[] vr = attribute.getVR();
 
-            Class<?> vrClass = AttributeFactory.getClassOfAttributeFromValueRepresentation(tag, vr, true, TRANSFER_BUFFER_SIZE, true);
+            Class<?> vrClass = AttributeFactory.getClassOfAttributeFromValueRepresentation(tag, vr, true, TRANSFER_BUFFER_SIZE, true, false);
 
             if (vrClass.equals(TimeAttribute.class)) {
                 String text = value.replaceFirst("\\..*", "");

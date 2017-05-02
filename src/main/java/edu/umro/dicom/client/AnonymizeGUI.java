@@ -32,7 +32,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -772,8 +771,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
                     attributeList.put(attribute);
                 }
                 catch (DicomException e) {
-                    Log.get().logrb(Level.SEVERE, Anonymize.class.getCanonicalName(),
-                            "translateUid", null, "Unexpected value for attribute.  Ignored. ", e);
+                    Log.get().warning("Unexpected value for attribute.  Ignored. " + Log.fmtEx(e));
                 }
             }
         }

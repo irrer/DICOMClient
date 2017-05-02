@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>DICOM+</title>
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap.min.css" />
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap-theme.min.css" />
+<script src="../../../jquery/1.11.3/jquery.min.js"></script>
+<script src="../../../bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<style>
+body {
+	max-width: 1024px;
+}
+
+@media ( min-width : 768px) {
+	.sidebar-nav .navbar .navbar-collapse {
+		padding: 0;
+		max-height: none;
+	}
+	.sidebar-nav .navbar ul {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li a {
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+}
+</style>
+</head>
+<body>
+
+	<div style="margin-top: 20px;margin-bottom: 50px;" class="row">
+		<div class="col-md-3 col-md-offset-1">
+			<h1 class="fill">
+                <a href="index.html"> <img  
+                    src="../../../images/DICOM+.png" height="232"/>
+                </a>
+			</h1>
+			<div class="sidebar-nav">
+				<div class="navbar navbar-default" role="navigation">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse"
+							data-target=".sidebar-navbar-collapse">
+							<span class="sr-only">Toggle navigation</span> <span
+								class="icon-bar"></span> <span class="icon-bar"></span> <span
+								class="icon-bar"></span>
+						</button>
+						<span class="visible-xs navbar-brand">Sidebar menu</span>
+					</div>
+
+
+					<div class="navbar-collapse collapse sidebar-navbar-collapse">
+						<ul class="nav navbar-nav">
+							<li><a href="index.html">Starting the
+									program</a></li>
+							<li><a href="main.html">Main Window Layout</a></li>
+							<li><a href="preview.html">Previewing Files</a></li>
+							<li><a href="anonymizingFiles.html">Anonymizing Files</a></li>
+							<li><a href="anonymizeOptions.html">Anonymize Options</a></li>
+							<li><a href="edit.html">Editing</a></li>
+							<li><a href="quickTips.html">Quick Start and Tips</a></li>
+							<li><a href="faq.html">Frequently Asked Questions</a></li>
+							<li><a href="commandLine.html">Running as a command line
+									program</a></li>
+							<!-- <li><a style="margin-left:40px;" href="preload.html">Saving and loading a session</a> TODO </li> -->
+							<li><a
+								href="http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1" target="_blank">DICOM
+									Value Representations (from the DICOM standard)</a></li>
+							<li><a href="valueMultiplicity.html">DICOM Value
+									Multiplicity</a></li>
+
+						</ul>
+					</div>
+					<!--/.nav-collapse -->
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-8">
+			<h2>Anonymize Options.html</h2>
+
+The <code>Anonymize Options ...</code> button near the top of the main
+window opens the window shown below.  This window allows you to select which attributes should
+be anonymized and what value they should have.
+
+<p/>
+<br/>
+<img src='../anonymizeOptions.png' width='837'/>
+<br/>
+<p/>
+
+Attributes are only added to this list when they are encountered by
+loading a file, so if this window is viewed before loading files, it will
+show no attributes.  This is by design as there are over 4000 DICOM attributes,
+and displaying all of them would be a cumbersome user experience.
+
+<br/>
+<p/>
+
+If an attribute is encountered multiple times within the same file, it will
+be anonymized with the same value.  The exception is unique (non-class) UIDs, which
+are systematically replaced with newly generated UIDs that maintain consistency
+across series.
+
+<br/>
+<p/>
+
+The purpose of this screen is to give the user more control over what
+is anonymized and the values used.  In particular, if the user notes
+that some fields unexpectedly contain PHI (Protected Health Information)
+that should be anonymized, then that field may be marked for anonymization and
+the corresponding field set to the value of their choice.
+
+<br/>
+<p/>
+
+Changes made on this screen are only valid for the current program session.
+
+<br/>
+<p/>
+
+The default list of DICOM attributes to be anonymized was derived from
+the DICOM 2011 standard.  In general, information that identifies the
+patient, physicians, and treatment location are anonymized.  The list
+is defined in the configuration file.
+
+		</div>
+
+	</div>
+</body>
+</html>
