@@ -26,4 +26,3 @@ Pro-tip: Make a shortcut to the bat on your desktop, then drag-and-drop DICOM fi
 
 
 ## View <a href="http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.51/output/index.html">Instructions and how to's</a>
-
