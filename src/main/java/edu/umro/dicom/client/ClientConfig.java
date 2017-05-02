@@ -153,38 +153,6 @@ public class ClientConfig {
     }
 
     /**
-     * Get the base URL for the DICOM Service with any terminating /'s removed
-     * 
-     * @return Base URL for DICOM service, or null if not initialized.
-     */
-    /*
-    private String getServerBaseUrl() {
-        String dicomServiceUrl = null;
-        // This special property is mostly used in development environment for using a private server.
-        if (System.getProperty("DicomServiceUrl") != null) {
-            dicomServiceUrl = System.getProperty("DicomServiceUrl");
-        }
-        else {
-            try {
-                dicomServiceUrl = XML.getValue(config, "/DicomClientConfig/DicomServiceUrl/text()");
-            }
-            catch (UMROException e) {
-                Log.get().logrb(Level.SEVERE, this.getClass().getCanonicalName(), "AriaVerifier", null,
-                        "Failed to get DICOM service URL from configuration file " + CONFIG_FILE_NAME, e);
-            }
-        }
-
-        if (dicomServiceUrl == null) {
-            Log.get().info("DicomServiceUrl is not configured.");
-        }
-        else {
-            Log.get().info("Using DicomServiceUrl: " + dicomServiceUrl);
-        }
-        return dicomServiceUrl;
-    }
-    */
-
-    /**
      * Get the flag indicating whether or not the upload capability should be shown. If there is a problem,
      * return true.
      * 
