@@ -75,12 +75,22 @@ public class EditGui implements ActionListener, WindowListener {
     /** Ordered list of redo's available to the user. */
     private LinkedList<Edit> redoHistory = new LinkedList<Edit>();
 
+    private class SavedFile {
+        File file;
+        String series;
+
+        public SavedFile(File f, String s) {
+            file = f;
+            series = s;
+        }
+    }
+
     /**
      * List of edited DICOM files that have been saved. This list is kept so that
      * if a user saves the same file multiple times over the course of editing, a
      * new instance of the file will not be created every time.
      */
-    private HashMap<File, File> savedFileList = new HashMap<File, File>();
+    private HashMap<File, SavedFile> savedFileList = new HashMap<File, SavedFile>();
 
     /** Reflects current state of EditGui. */
     private String currentCard;
@@ -584,7 +594,16 @@ public class EditGui implements ActionListener, WindowListener {
 
     }
 
-    
+    private String getSeriesUid(File file) {
+        try {
+            String seriesUid = Util.readDicomFile(file).get(TagFromName.SeriesInstanceUID).getSingleStringValueOrNull();
+            return seriesUid;
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+
     /**
      * Save a single file.
      * 
@@ -611,12 +630,30 @@ public class EditGui implements ActionListener, WindowListener {
         }
         else {
             if (savedFileList.containsKey(file)) {
-                destFile = savedFileList.get(file);
+                destFile = savedFileList.get(file).file;
             }
             else {
-                String prefix = getAvailableFilePrefix(attributeList, getFileSuffixList());
-                destFile = new File(DicomClient.getInstance().getDestinationDirectory(), prefix + Util.DICOM_SUFFIX);
-                savedFileList.put(file, destFile);
+                if (System.out != null) {
+                    File seriesDir = null;
+                    if (!savedFileList.isEmpty()) {
+                        String seriesUid = getSeriesUid(file);
+                        if (seriesUid != null) {
+                            for (SavedFile sf : savedFileList.values()) {
+                                if ((sf.series != null) && (sf.series.equals(seriesUid))) {
+                                    seriesDir = sf.file.getParentFile();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    destFile = DicomClient.getAvailableFile(attributeList, Util.DICOM_SUFFIX, seriesDir, file);
+                    savedFileList.put(file, new SavedFile(destFile, getSeriesUid(file)));
+                }
+                else { // TODO rm
+                    String prefix = getAvailableFilePrefix(attributeList, getFileSuffixList());
+                    destFile = new File(DicomClient.getInstance().getDestinationDirectory(), prefix + Util.DICOM_SUFFIX);
+                    savedFileList.put(file, new SavedFile(destFile, getSeriesUid(file)));
+                }
             }
         }
         String prefix = destFile.getName().replaceAll("\\.[^\\.]*$", "");

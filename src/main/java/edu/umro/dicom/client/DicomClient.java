@@ -87,19 +87,18 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     /** Possible processing modes for main window. */
     public static enum ProcessingMode {
-        ANONYMIZE,
-        ANONYMIZE_THEN_LOAD,
-        UPLOAD,
-        ANONYMIZE_THEN_UPLOAD
+        ANONYMIZE, ANONYMIZE_THEN_LOAD, UPLOAD, ANONYMIZE_THEN_UPLOAD
     }
 
     /** Possible strategies for storing files. */
     public static enum OutputFileOrganization {
-        FLAT,   // Put all files in one directory as specified by the destination
-        TREE,   // Put all files in one directory as specified by the destination but organize them by Patient ID and then series
-        LOCAL   // Put all files in one directory as specified by the destination put them in an output directory under the directory of the input file
+        FLAT, // Put all files in one directory as specified by the destination
+        TREE, // Put all files in one directory as specified by the destination but organize them by Patient ID and then
+              // series
+        LOCAL // Put all files in one directory as specified by the destination put them in an output directory under
+              // the directory of the input file
     }
-    
+
     /** A DICOM file must have at least this many attributes to be considered a DICOM file. */
     public static final int MIN_ATTRIBUTE_COUNT = 2;
 
@@ -387,7 +386,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         return outerPanel;
     }
-    
+
     private JPanel buildOutputOrg() {
 
         JPanel panel = new JPanel();
@@ -410,7 +409,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         outputOrgLocal = new JRadioButton("Local");
         outputOrgLocal.setSelected(false);
         outputOrgLocal.addActionListener(this);
-        outputOrgLocal.setToolTipText("<html>Store created files in local directory as a child of their source<br/>directory.  Requires write access to source directories.</html>");
+        outputOrgLocal
+                .setToolTipText("<html>Store created files in local directory as a child of their source<br/>directory.  Requires write access to source directories.</html>");
         outputOrgGroup.add(outputOrgLocal);
         panel.add(outputOrgLocal);
 
@@ -441,7 +441,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         JLabel label = new JLabel("Destination: ");
         label.setToolTipText(toolTip);
-        
+
         anonymizeDestinationText = new JLabel("");
         anonymizeDestinationText.setToolTipText(toolTip);
 
@@ -452,7 +452,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         directoryChooser = new JFileChooser();
 
         directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        
 
         if (commandParameterOutputDirectory != null) {
             directoryChooser.setSelectedFile(commandParameterOutputDirectory);
@@ -706,7 +705,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             gridBagLayout.setConstraints(anonSearchPanel, c);
             panel.add(anonSearchPanel);
         }
-        
+
         {
             c.fill = GridBagConstraints.NONE;
             c.gridx = 1;
@@ -721,7 +720,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         return panel;
     }
-    
+
     private JComponent buildDragAndDropTarget() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -737,17 +736,19 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         south.setLayout(new BorderLayout());
 
         /*
-        JLabel source = new JLabel("<html> &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; Jim Irrer &nbsp; &nbsp; &nbsp; &nbsp; irrer@umich.edu <br/><p/><br/> &nbsp;  &nbsp;  &nbsp; University of Michigan Radiation Oncology</html>");
-        source.setHorizontalAlignment(SwingConstants.CENTER);
-        source.setVerticalAlignment(SwingConstants.CENTER);
-        */
-        
+         * JLabel source = new JLabel(
+         * "<html> &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; Jim Irrer &nbsp; &nbsp; &nbsp; &nbsp; irrer@umich.edu <br/><p/><br/> &nbsp;  &nbsp;  &nbsp; University of Michigan Radiation Oncology</html>"
+         * );
+         * source.setHorizontalAlignment(SwingConstants.CENTER);
+         * source.setVerticalAlignment(SwingConstants.CENTER);
+         */
+
         JTextArea source = new JTextArea("\n\n           Jim Irrer         irrer@umich.edu\n\n      University of Michigan Radiation Oncology");
         source.setFont(FONT_MEDIUM);
         source.setBackground(null);
         source.setEditable(false);
-        //source.setHorizontalAlignment(SwingConstants.CENTER);       
-        
+        // source.setHorizontalAlignment(SwingConstants.CENTER);
+
         JLabel umichLogo = new JLabel(PreDefinedIcons.getUmichLogo());
         south.add(source, BorderLayout.CENTER);
         south.add(umichLogo, BorderLayout.WEST);
@@ -774,7 +775,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         BoxLayout patientListLayout = new BoxLayout(patientListPanel, BoxLayout.Y_AXIS);
         patientListPanel.setLayout(patientListLayout);
-        
+
         patientListPanel.add(dragHereTarget = buildDragAndDropTarget());
 
         JPanel borderPanel = new JPanel();
@@ -1056,7 +1057,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             AnonymizeGUI.getInstance().getDialog().setVisible(!inCommandLineMode());
         }
 
-        if (source.equals(anonymizeRadioButton) || source.equals(anonymizeThenLoadRadioButton) || source.equals(uploadRadioButton) || source.equals(anonymizeThenUploadRadioButton)) {
+        if (source.equals(anonymizeRadioButton) || source.equals(anonymizeThenLoadRadioButton) || source.equals(uploadRadioButton)
+                || source.equals(anonymizeThenUploadRadioButton)) {
             setMode();
             setProcessedStatus();
         }
@@ -1108,9 +1110,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 ok = newDir.isDirectory();
             }
             if (!ok) {
-                String msg =
-                        "<html><p>Unable to create anonymization destination<p><br> &nbsp; &nbsp; &nbsp; " + newDir.getAbsolutePath() +
-                                "<p><br><p>It is most likely that you do not have<br>permission to write to this directory.</html>";
+                String msg = "<html><p>Unable to create anonymization destination<p><br> &nbsp; &nbsp; &nbsp; " + newDir.getAbsolutePath() +
+                        "<p><br><p>It is most likely that you do not have<br>permission to write to this directory.</html>";
                 new Alert(msg, "Can Not Create Directory");
             }
         }
@@ -1504,7 +1505,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             }
         }
     }
-    
+
     /**
      * Add the given file to the list of loaded files. If the file is not
      * a DICOM file or can not be read, then show a message and ignore it.
@@ -1793,7 +1794,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return true;
     }
 
-
     /**
      * Get an available file prefix to be written to. No file should exist with
      * this prefix and any of the suffixes provided. The file prefix will also
@@ -1859,9 +1859,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @return A file prefix that, when appended with each of the prefixes, does
      *         not exist in the user specified directory.
      */
-    public static File getAvailableFile(AttributeList attributeList, ArrayList<String> suffixList, File seriesOutDir, File inputFile) throws SecurityException {
+    public static File getAvailableFile(AttributeList attributeList, String suffix, File seriesOutDir, File inputFile) throws SecurityException {
 
-        OutputOrganization org = new OutputOrganization(attributeList, suffixList, seriesOutDir, inputFile);
+        OutputOrganization org = new OutputOrganization(attributeList, suffix, seriesOutDir, inputFile);
         switch (outputOrgMode) {
         case TREE:
             return org.tree();
@@ -1894,7 +1894,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 "           anonymization but contain strings found in fields that are marked for anonymization.\n";
         System.err.println(usage);
     }
-    
+
     private static void fail(String msg) {
         usage(msg);
         Util.exitFail();
@@ -2032,7 +2032,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return fileList;
     }
 
-    private static void logPrelude() {        
+    private static void logPrelude() {
         Log.get().info("Starting DicomClient at " + new Date());
         Log.get().info("User: " + OpSys.getUser());
 
@@ -2049,7 +2049,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         System.out.println(ClientConfig.getInstance().getApplicationName() + " starting.  Jar file: " +
                 new java.io.File(DicomClient.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getName());
 
-        //System.getProperties().list(System.out);
+        // System.getProperties().list(System.out);
         try {
             logPrelude();
 

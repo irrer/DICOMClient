@@ -26,6 +26,7 @@ import java.net.UnknownHostException;
 import java.rmi.server.UID;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -109,8 +110,25 @@ public class Util {
     public static final String XML_SUFFIX = ".XML";
     public static final String DICOM_SUFFIX = ".DCM";
 
+    public static final String[] allSuffixes = { TEXT_SUFFIX, PNG_SUFFIX, XML_SUFFIX, DICOM_SUFFIX };
+
     private static boolean testing() {
         return System.getProperties().contains(TESTING_PROPERTY);
+    }
+
+    public static File removeSuffix(File file) {
+        String name = file.getAbsolutePath();
+        for (String s : allSuffixes) {
+            if (name.toLowerCase().endsWith(s.toLowerCase())) {
+                name = name.substring(0, name.length() - s.length());
+                break;
+            }
+        }
+        return new File(name);
+    }
+
+    public static File addSuffix(File file, String suffix) {
+        return new File(removeSuffix(file).getAbsolutePath() + suffix);
     }
 
     /**

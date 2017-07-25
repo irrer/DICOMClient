@@ -17,7 +17,6 @@ package edu.umro.dicom.client;
  */
 
 import java.io.File;
-import java.util.ArrayList;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.TagFromName;
 
@@ -31,7 +30,7 @@ public class OutputOrganization {
     private final String seriesNumberText;
     private final String instanceNumberText;
 
-    private final ArrayList<String> suffixList;
+    private final String suffix;
     private final File seriesOutDir;
     private final File inputFile;
     private final File dir;
@@ -52,31 +51,13 @@ public class OutputOrganization {
      * @return True if none of the files exist, and the prefix may be used to
      *         create new files without overwriting existing files.
      */
-    private static boolean testPrefix(String prefix, ArrayList<String> suffixList) {
-        File dir = DicomClient.getInstance().getDestinationDirectory();
-        for (int s = 0; s < suffixList.size(); s++) {
-            File file = new File(dir, prefix + suffixList.get(s));
-            if (file.exists()) return false;
-        }
-        return true;
-    }
 
-    private static boolean testFileUniqueness(File file, ArrayList<String> suffixList) {
-        String fullName = file.getAbsolutePath();
-        String prefix = fullName.substring(0, fullName.lastIndexOf('.'));
-        for (int s = 0; s < suffixList.size(); s++) {
-            File f = new File(prefix + suffixList.get(s));
-            if (f.exists()) return false;
-        }
-        return true;
-    }
-
-    public OutputOrganization(AttributeList attributeList, ArrayList<String> suffixList_, File seriesOutDir_, File inputFile_) {
+    public OutputOrganization(AttributeList attributeList, String suffix_, File seriesOutDir_, File inputFile_) {
         patientIdText = Util.getAttributeValue(attributeList, TagFromName.PatientID);
         modalityText = Util.getAttributeValue(attributeList, TagFromName.Modality);
         seriesNumberText = Util.getAttributeValue(attributeList, TagFromName.SeriesNumber);
         String instNo = Util.getAttributeValue(attributeList, TagFromName.InstanceNumber);
-        this.suffixList = suffixList_;
+        this.suffix = suffix_;
         this.seriesOutDir = seriesOutDir_;
         this.inputFile = inputFile_;
 
@@ -93,36 +74,36 @@ public class OutputOrganization {
         instanceNumberText = replc + instNo;
     }
 
-    public File flat() {
+    private String defaultName() {
         String name = "";
         name += (patientIdText == null) ? "" : patientIdText;
         name += (modalityText == null) ? "" : ("_" + modalityText);
         name += (seriesNumberText == null) ? "" : ("_" + seriesNumberText);
         name += (instanceNumberText == null) ? "" : ("_" + instanceNumberText);
+        name = Util.replaceInvalidFileNameCharacters(name.replace(' ', '_'), '_') + suffix;
+        return name;
+    }
 
-        name = Util.replaceInvalidFileNameCharacters(name.replace(' ', '_'), '_') + Util.DICOM_SUFFIX;
-
-        File destDir = DicomClient.getInstance().getDestinationDirectory();
-        System.out.println("destDir: " + destDir);  // TODO rm
-        // try the prefix without an extra number to make it unique
-        if (testPrefix(name, suffixList)) {
-            File newFile = new File(destDir, name);
-            newFile.getParentFile().mkdirs();
-            return newFile;
+    private File uniquify(File file) {
+        if (!file.exists()) {
+            return file;
         }
 
         // keep trying different unique numbers until one is found that is not
         // taken
-        int count = 1;
-        while (true) {
-            String uniquifiedName = name + "_" + count;
-            if (testPrefix(uniquifiedName, suffixList)) {
-                File newFile = new File(destDir, uniquifiedName + Util.DICOM_SUFFIX);
-                newFile.getParentFile().mkdirs();
-                return newFile;
+        for (int count = 1; count < 100000; count++) {
+            File uniq = new File(Util.removeSuffix(file).getAbsolutePath() + "_" + count + Util.DICOM_SUFFIX);
+            if (!uniq.exists()) {
+                return uniq;
             }
-            count++;
         }
+        throw new RuntimeException("OutputOrganization.flat Could not find a unique file name for " + file.getAbsolutePath());
+    }
+
+    public File flat() {
+        String name = defaultName();
+        File destDir = DicomClient.getInstance().getDestinationDirectory();
+        return uniquify(new File(destDir, name));
     }
 
     public File tree() {
@@ -148,38 +129,20 @@ public class OutputOrganization {
                 count++;
             }
         }
-
-        String baseName = seriesDirName + instanceNumberText;
-
-        File file = new File(seriesDir, baseName + Util.DICOM_SUFFIX);
-        if (testFileUniqueness(file, suffixList)) {
-            file.getParentFile().mkdirs();
-            return file;
+        else {
+            seriesDir = seriesOutDir;
         }
 
-        int count = 1;
-        while (true) {
-            file = new File(seriesDir, baseName + count + Util.DICOM_SUFFIX);
-            if (testFileUniqueness(file, suffixList)) {
-                file.getParentFile().mkdirs();
-                return file;
-            }
-        }
+        String name = defaultName();
+
+        return uniquify(new File(seriesDir, name));
     }
 
     public File local() {
-        String name = "";
-        name += (patientIdText == null) ? "" : patientIdText;
-        name += (modalityText == null) ? "" : ("_" + modalityText);
-        name += (seriesNumberText == null) ? "" : ("_" + seriesNumberText);
-        name += (instanceNumberText == null) ? "" : ("_" + instanceNumberText);
-
-        name = Util.replaceInvalidFileNameCharacters(name.replace(' ', '_'), '_') + Util.DICOM_SUFFIX;
+        String name = defaultName();
 
         File destDir = new File(inputFile.getParent(), DicomClient.getInstance().getDestinationDirectory().getName());
 
-        File newFile = new File(destDir, name);
-        newFile.getParentFile().mkdirs();
-        return newFile;
+        return uniquify(new File(destDir, name));
     }
 }
