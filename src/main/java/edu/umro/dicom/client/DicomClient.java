@@ -335,7 +335,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         Graphics graphics = getMainContainer().getGraphics();
         FontMetrics metrics = graphics.getFontMetrics(FONT_HUGE);
         int height = metrics.getHeight();
-        int width = metrics.stringWidth(".");
+        int width = metrics.stringWidth(NO_PACS);
         for (PACS pacs : PACSConfig.getInstance().getPacsList()) {
             int w = metrics.stringWidth(pacs.aeTitle);
             width = (w > width) ? w : width;
@@ -355,7 +355,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
      * @return The GUI component for viewing and selecting the PACS.
      */
     private JComponent buildPacsSelector() {
-
         pacsNorth = new BasicArrowButton(BasicArrowButton.NORTH);
         pacsSouth = new BasicArrowButton(BasicArrowButton.SOUTH);
         JPanel buttonPanel = new JPanel();
@@ -372,19 +371,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         pacsLabel.setVerticalAlignment(JLabel.CENTER);
 
         JPanel panel = new JPanel();
-        // panel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        panel.add(pacsLabel);
-        panel.add(buttonPanel);
-
-        JPanel outerPanel = new JPanel();
-        outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
-
-        JPanel southPanel = new JPanel();
-
-        outerPanel.add(panel);
-        outerPanel.add(southPanel);
-
-        return outerPanel;
+        panel.setLayout(new BorderLayout());
+        panel.add(pacsLabel, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.EAST);
+        return panel;
     }
 
     private JPanel buildOutputOrg() {
