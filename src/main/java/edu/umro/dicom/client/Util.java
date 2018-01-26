@@ -399,11 +399,10 @@ public class Util {
      */
     public static boolean isValidUid(String uid) {
         int len = uid.length();
-        boolean ok =
-                (uid.trim().length() > 0) &&
-                        uid.matches("[0-9\\.]*") &&
-                        uid.substring(0, 1).matches("[0-9]") &&
-                        uid.substring(len - 1, len).matches("[0-9]");
+        boolean ok = (uid.trim().length() > 0) &&
+                uid.matches("[0-9\\.]*") &&
+                uid.substring(0, 1).matches("[0-9]") &&
+                uid.substring(len - 1, len).matches("[0-9]");
         return ok;
 
     }
@@ -473,8 +472,10 @@ public class Util {
     }
 
     /**
-     *  Try to warn the user about using up memory.
-     * @param file Incoming DICOM file.
+     * Try to warn the user about using up memory.
+     * 
+     * @param file
+     *            Incoming DICOM file.
      */
     private static void checkMemory(File file) {
         try {
@@ -492,7 +493,7 @@ public class Util {
         }
 
     }
-    
+
     /**
      * Read a DICOM file after checking that there is sufficient heap space to read it.
      * 
@@ -515,9 +516,9 @@ public class Util {
         }
 
         checkMemory(file);
-        
+
         AttributeList attributeList = new AttributeList();
-        
+
         ReadTermStrat rts = new ReadTermStrat();
         try {
             attributeList.read(file, rts);
@@ -550,7 +551,7 @@ public class Util {
 
     /**
      * Exit with a status that indicates failure but does not indicate that
-     * too much memory was requested of the JVM with the -Xmx option.  The
+     * too much memory was requested of the JVM with the -Xmx option. The
      * exit status is not supposed to reflect a standard error.
      */
     public static void exitFail() {
@@ -560,11 +561,13 @@ public class Util {
     /**
      * Replace all characters in a name that are not supported by the Windows file system.
      * 
-     * @param name: File name
+     * @param name:
+     *            File name
      * 
-     * @param replacement: Character to be used instead of original.
-     *               This will work for *nix systems too. It will replace some characters that would be
-     *               allowed in *nix, but using them is generally not a good idea anyway.
+     * @param replacement:
+     *            Character to be used instead of original.
+     *            This will work for *nix systems too. It will replace some characters that would be
+     *            allowed in *nix, but using them is generally not a good idea anyway.
      */
     public static String replaceInvalidFileNameCharacters(String name, char replacement) {
         byte[] original = name.getBytes();
@@ -590,4 +593,16 @@ public class Util {
 
     }
 
+    /**
+     * Determine if the attribute list is an image.
+     * 
+     * @param attributeList
+     *            Used as input.
+     * 
+     * @return True if image.
+     */
+    public static boolean isImageStorage(AttributeList attributeList) {
+        String sopClassUID = Attribute.getSingleStringValueOrEmptyString(attributeList, TagFromName.SOPClassUID);
+        return SOPClass.isImageStorage(sopClassUID);
+    }
 }

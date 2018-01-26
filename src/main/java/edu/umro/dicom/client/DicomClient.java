@@ -59,6 +59,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicArrowButton;
 
 import com.pixelmed.dicom.Attribute;
@@ -83,7 +85,7 @@ import edu.umro.util.General;
  * @author Jim Irrer irrer@umich.edu
  * 
  */
-public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener {
+public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener, DocumentListener {
 
     /** Possible processing modes for main window. */
     public static enum ProcessingMode {
@@ -239,6 +241,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private JLabel anonymizeDestinationText = null;
     private JButton anonymizeDestinationBrowseButton = null;
     private JCheckBox searchSubdirsCheckbox = null;
+    private JTextField dateShiftField = null;
 
     private JRadioButton outputOrgFlat = null;
     private JRadioButton outputOrgTree = null;
@@ -374,6 +377,33 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         panel.setLayout(new BorderLayout());
         panel.add(pacsLabel, BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.EAST);
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 50));
+        return panel;
+    }
+
+    private JPanel buildDateShiftPanel() {
+        JPanel panel = new JPanel();
+        dateShiftField = new JTextField(6);
+        dateShiftField.getDocument().addDocumentListener(this);
+        JLabel dateShiftLabel = new JLabel("Date Shift");
+        dateShiftLabel.setFont(DicomClient.FONT_MEDIUM);
+        String tip = "<html> Number of days to shift dates for <br> anonymization.  Must be an integer <br> value.  Zero means no date shift. </html>";
+        panel.setToolTipText(tip);
+        dateShiftField.setToolTipText(tip);
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        dateShiftField.setText(dateShiftValue.toString());
+        dateShiftField.setHorizontalAlignment(SwingConstants.RIGHT);
+        panel.add(dateShiftLabel);
+        panel.add(dateShiftField);
+
+        return panel;
+    }
+
+    private JComponent buildNorthEast() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.add(buildPacsSelector(), BorderLayout.CENTER);
+        panel.add(buildDateShiftPanel(), BorderLayout.WEST);
         return panel;
     }
 
@@ -429,8 +459,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private JPanel buildOutputDirectorySelector() {
         String toolTip = "<html>Where anonymized files will be<br>put. Created if necessary</html>";
 
-        JLabel label = new JLabel("Destination: ");
-        label.setToolTipText(toolTip);
+        JLabel destinationLabel = new JLabel("Destination: ");
+        destinationLabel.setToolTipText(toolTip);
 
         anonymizeDestinationText = new JLabel("");
         anonymizeDestinationText.setToolTipText(toolTip);
@@ -445,15 +475,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
         if (commandParameterOutputDirectory != null) {
             directoryChooser.setSelectedFile(commandParameterOutputDirectory);
-            anonymizeDestinationText.setText(commandParameterOutputDirectory.getAbsolutePath());
+            setAnonymizeDestinationText(commandParameterOutputDirectory.getAbsolutePath());
         }
 
         if (commandParameterOutputFile != null) {
             directoryChooser.setSelectedFile(commandParameterOutputFile.getParentFile());
-            anonymizeDestinationText.setText(commandParameterOutputFile.getAbsolutePath());
+            setAnonymizeDestinationText(commandParameterOutputFile.getAbsolutePath());
         }
 
         JPanel panel = new JPanel();
+
         GridBagLayout gridBagLayout = new GridBagLayout();
         panel.setLayout(gridBagLayout);
 
@@ -463,8 +494,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         c.gridx = 0;
         c.gridy = 0;
         c.weightx = 0;
-        gridBagLayout.setConstraints(label, c);
-        panel.add(label);
+        gridBagLayout.setConstraints(destinationLabel, c);
+        panel.add(destinationLabel);
 
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 1;
@@ -488,8 +519,8 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         panel.add(anonymizeDestinationBrowseButton);
 
         c.fill = GridBagConstraints.NONE;
-        c.gridx = 4;
-        c.gridy = 0;
+        c.gridx = 1;
+        c.gridy = 1;
         c.weightx = 0;
         JPanel outOrg = buildOutputOrg();
         gridBagLayout.setConstraints(outOrg, c);
@@ -655,7 +686,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             c.fill = GridBagConstraints.NONE;
             c.gridx = 0;
             c.gridy = 2;
-            c.weightx = 1;
+            c.weightx = 0;
             c.insets = new Insets(0, 20, 0, 0);
             c.anchor = GridBagConstraints.LINE_START;
             JComponent jc = buildOutputDirectorySelector();
@@ -670,12 +701,13 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             c.fill = GridBagConstraints.NONE;
             c.gridx = 1;
             c.gridy = 0;
-            c.weightx = 0;
+            c.weightx = 1;
             c.insets = new Insets(20, 20, 0, 0);
             c.anchor = GridBagConstraints.CENTER;
             c.gridheight = 1;
             c.gridwidth = 1;
-            JComponent jc = buildPacsSelector();
+            // JComponent jc = buildPacsSelector();
+            JComponent jc = buildNorthEast();
             gridBagLayout.setConstraints(jc, c);
             panel.add(jc);
         }
@@ -978,7 +1010,17 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
     private void resetOutputDirectory() {
         hasSpecifiedOutputDirectory = false;
-        anonymizeDestinationText.setText("");
+        setAnonymizeDestinationText("");
+    }
+
+    private void setAnonymizeDestinationText(String text) {
+        int max = 80;
+        String t = text;
+        anonymizeDestinationText.setToolTipText(text);
+        if (text.length() > max) {
+            t = text.substring(0, max) + "...";
+        }
+        anonymizeDestinationText.setText(t);
     }
 
     /**
@@ -1057,7 +1099,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             if (!hasSpecifiedOutputDirectory) directoryChooser.setSelectedFile(defaultOutputDirectory());
             switch (directoryChooser.showOpenDialog(getMainContainer())) {
             case JFileChooser.APPROVE_OPTION:
-                anonymizeDestinationText.setText(directoryChooser.getSelectedFile().getAbsolutePath());
+                setAnonymizeDestinationText(directoryChooser.getSelectedFile().getAbsolutePath());
                 Log.get().info("Destination for anonymized file: " + anonymizeDestinationText.getText());
                 hasSpecifiedOutputDirectory = true;
                 break;
@@ -1083,6 +1125,66 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         }
 
         markScreenAsModified();
+    }
+
+    /**
+     * The number of days to shift dates that are not otherwise anonymized.
+     */
+    private static Integer dateShiftValue = 0;
+
+    public static int getDateShiftValue() {
+        if (dateShiftValue == null) {
+            return 0;
+        }
+        else {
+            return dateShiftValue;
+        }
+    }
+
+    private Integer getDateShiftValueFromGUI() {
+        Integer shift = null;
+        try {
+            shift = Integer.parseInt(dateShiftField.getText().trim());
+            dateShiftField.setBackground(Color.WHITE);
+        }
+        catch (Exception e) {
+            shift = null;
+        }
+        return shift;
+    }
+
+    private void handleDateShiftChange() {
+        Color color = Color.WHITE;
+        Integer newShiftValue = getDateShiftValueFromGUI();
+        if (newShiftValue == null) {
+            color = Color.YELLOW;
+            newShiftValue = 0;
+        }
+
+        dateShiftField.setBackground(color);
+
+        if (newShiftValue != dateShiftValue) {
+            dateShiftValue = newShiftValue;
+
+            if (preview != null) {
+                preview.updateHighlightedTextIfAppropriate();
+            }
+        }
+    }
+
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        handleDateShiftChange();
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        handleDateShiftChange();
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        handleDateShiftChange();
     }
 
     public PACS getCurrentPacs() {
@@ -1574,7 +1676,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     hasSpecifiedOutputDirectory = true;
                     if (!inCommandLineMode()) {
                         directoryChooser.setSelectedFile(anonymizedDirectory);
-                        anonymizeDestinationText.setText(anonymizedDirectory.getAbsolutePath());
+                        setAnonymizeDestinationText(anonymizedDirectory.getAbsolutePath());
                     }
 
                 }
@@ -1940,6 +2042,9 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
                 if (args[a].equals("-y")) {
                     yearTruncation = true;
+                    if (dateShiftValue != 0) {
+                        fail("Can not specify both year truncation (-y) and date shift (-r)");
+                    }
                     continue;
                 }
 
@@ -1985,6 +2090,24 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
                 if (args[a].equals("-l")) { // preload UIDs
                     a++;
+                    preloadFile = new File(args[a]);
+                    continue;
+                }
+
+                if (args[a].equals("-r")) { // date shift
+                    a++;
+                    try {
+                        Integer shift = Integer.parseInt(args[a]);
+                        dateShiftValue = shift;
+                        if (yearTruncation && (dateShiftValue != 0)) {
+                            fail("Can not specify both  date shift (-r) and year truncation (-y)");
+                        }
+
+                    }
+                    catch (Exception e) {
+                        fail("Unable to parse date shift -r value " + args[a] + " as integer.");
+                    }
+
                     preloadFile = new File(args[a]);
                     continue;
                 }
@@ -2116,4 +2239,5 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     public void setEnabled(boolean enabled) {
         setEnabledRecursively(frame.getContentPane(), enabled);
     }
+
 }

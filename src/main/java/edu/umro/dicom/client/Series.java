@@ -139,7 +139,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
     private String rtPlanTime = null;
     /** DICOM value for structure set time for the series. */
     private String structureSetTime = null;
-    
+
     /** DICOM value for structure set time for the series. */
     private String seriesInstanceUID = null;
 
@@ -169,7 +169,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     /** Layout that shows the progress bar or preview slider. */
     private CardLayout previewProgressLayout = null;
-    
+
     public static int totalFilesAnonymized = 0;
 
     private class InstanceList {
@@ -219,7 +219,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     if (tv < ov) return -1;
                     if (tv > ov) return 1;
                     return 0;
-                    //return Double.compare(tv, ov);
+                    // return Double.compare(tv, ov);
                 }
                 catch (Exception e) {
                     return 0;
@@ -234,7 +234,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
             public int compareTo(Instance o) {
                 int c = 0;
-                
+
                 c = compareDouble(o, TagFromName.SliceLocation, 0);
                 if (c != 0) return c;
 
@@ -246,7 +246,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
                 c = compareDouble(o, TagFromName.ImagePositionPatient, 2);
                 if (c != 0) return c;
-                
+
                 c = compareDouble(o, TagFromName.InstanceNumber, 0);
                 if (c != 0) return c;
 
@@ -318,7 +318,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
             try {
                 acquire();
                 ArrayList<File> list = new ArrayList<File>();
-                for (Instance inst : instList) list.add(inst.file);
+                for (Instance inst : instList)
+                    list.add(inst.file);
                 return list;
             }
             finally {
@@ -341,7 +342,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 release();
             }
         }
-        
+
         public File getFirstFile() {
             return instList.first().file;
         }
@@ -862,7 +863,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
             System.err.println("Unable to write anonymized " + xmlFile.getAbsolutePath() + " XML file: " + Log.fmtEx(e));
         }
     }
-    
+
     /**
      * AnonymizeGUI this series and write the results to new files.
      */
@@ -891,7 +892,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     AnonymizeGUI.getInstance().updateTagList(attributeList);
 
                     // do the actual anonymization
-                    Anonymize.anonymize(attributeList, getAnonymizingReplacementList(), DicomClient.doYearTruncation());
+                    Anonymize.anonymize(attributeList, getAnonymizingReplacementList(), DicomClient.doYearTruncation(), DicomClient.getDateShiftValue());
 
                     // Indicate that the file was touched by this application. Also a subtle way to advertise. :)
                     FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());
@@ -1055,7 +1056,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
         previewProgressLayout.show(previewProgressPanel, CARD_SLIDER);
     }
-    
+
     /**
      * Upload the entire series to the currently selected PACS. If any of the
      * files in the series have a problem uploading, then fail with a message to
@@ -1080,7 +1081,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                 fileList.add(instanceList.getFile(f));
                 DicomClient.getInstance().markScreenAsModified();
             }
-                
+
             uploadFiles(fileList);
         }
         catch (Exception e) {
@@ -1158,7 +1159,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
         }
         DicomClient.getInstance().markScreenAsModified();
     }
-    
 
     @Override
     public String toString() {
@@ -1210,7 +1210,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
     public Collection<File> getFileList() {
         return instanceList.values();
     }
-    
+
     public int getFileCount() {
         return instanceList.size();
     }

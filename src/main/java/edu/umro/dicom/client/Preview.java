@@ -156,7 +156,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         /** Name displayed to the user. */
         String displayName;
-        
+
         /** Tool tip to give user more information. */
         String toolTip;
 
@@ -217,7 +217,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /** Panel that switches back and forth between image and text viewing modes. */
     private JPanel cardPanel = null;
 
-    /** Layout that switches back and forth between image and text viewing modes.*/
+    /** Layout that switches back and forth between image and text viewing modes. */
     private CardLayout cardLayout = null;
 
     /** Label at top of screen that shows the current file name. */
@@ -264,7 +264,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     /** Indicates the current viewing mode. */
     private JLabel viewingModeLabel = null;
-    
+
     /** Field for entering a search string when in text mode. */
     private JTextField searchField = null;
 
@@ -285,7 +285,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     /** For editing files */
     private EditGui editGui = null;
-    
+
     /** Label used to display the number of strings matching the search text. */
     private JLabel matchCountLabel = null;
 
@@ -321,13 +321,13 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     /** True if the GUI components need packing. Packing happens only once. */
     private static boolean needsPacking = true;
-    
+
     /**
      * Lock to prevent events from firing another showDicom operation while
      * already doing a showDicom.
      */
     private Semaphore showDicomInProgress = new Semaphore(1);
-    
+
     /**
      * Custom text highlighter.
      * 
@@ -394,7 +394,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         viewingPanel.add(new JLabel("  "), BorderLayout.CENTER);
         viewingPanel.add(viewingModeLabel, BorderLayout.EAST);
         viewingModeLabel.addMouseListener(this);
-        
+
         if (!DicomClient.inCommandLineMode()) {
             int maxWidth = 0;
             Graphics graphics = DicomClient.getInstance().getMainContainer().getGraphics();
@@ -408,7 +408,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         return viewingPanel;
     }
-    
+
     private JComponent buildTextScrollArea() {
         textPreview = new JTextArea();
         textPreview.setFont(DicomClient.FONT_MEDIUM);
@@ -422,7 +422,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         scrollPaneText.setBorder(BorderFactory.createEmptyBorder());
         return scrollPaneText;
     }
-    
+
     private JComponent buildShowDetails() {
         showDetails = new JCheckBox();
         showDetails.addActionListener(this);
@@ -446,7 +446,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         searchNext = new BasicArrowButton(BasicArrowButton.SOUTH);
         searchNext.addActionListener(this);
         searchNext.setToolTipText("<html>Next<br>match</html>");
-        
+
         matchCountLabel = new JLabel();
         matchCountLabel.setFont(DicomClient.FONT_MEDIUM);
 
@@ -462,40 +462,40 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         c.weightx = 0;
         gridBagLayout.setConstraints(searchLabel, c);
         panel.add(searchLabel);
-        
+
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 1;
         c.gridy = 0;
         c.weightx = 1;
         gridBagLayout.setConstraints(searchField, c);
         panel.add(searchField);
-        
+
         c.fill = GridBagConstraints.NONE;
         c.gridx = 2;
         c.gridy = 0;
         c.weightx = 0;
         gridBagLayout.setConstraints(searchPrev, c);
         panel.add(searchPrev);
-        
+
         c.fill = GridBagConstraints.NONE;
         c.gridx = 3;
         c.gridy = 0;
         c.weightx = 0;
         gridBagLayout.setConstraints(searchNext, c);
         panel.add(searchNext);
-        
+
         c.fill = GridBagConstraints.NONE;
         c.gridx = 4;
         c.gridy = 0;
         c.weightx = 0;
         gridBagLayout.setConstraints(matchCountLabel, c);
         panel.add(matchCountLabel);
-        
+
         panel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 20));
 
         return panel;
     }
-    
+
     private JComponent buildEditButton() {
         JPanel panel = new JPanel();
         editButton = new JButton("Edit...");
@@ -504,7 +504,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         panel.add(editButton);
         return panel;
     }
-    
+
     /**
      * Build the text previewer GUI and add it to the card panel.
      */
@@ -726,8 +726,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         return outerPanel;
     }
-    
-    
+
     /**
      * Change to the next viewing mode.
      */
@@ -778,7 +777,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             matchCountLabel.setText("  0 of 0");
         }
     }
-    
+
     private void changeSearchMatch(int diff) {
         if (matchList.size() >= 1) {
             matchIndex = (matchIndex + diff + matchList.size()) % matchList.size();
@@ -919,7 +918,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         showText(null);
     }
 
-
     /**
      * Set the series to be previewed.
      * 
@@ -930,7 +928,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         sliceSlider.setMaximum(series.getFileList().size());
         DicomClient.getInstance().setProcessedStatus();
     }
-    
+
     /**
      * Get the current attribute list.
      * 
@@ -939,7 +937,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     public AttributeList getAttributeList() {
         return attributeList;
     }
-    
+
     /**
      * Get the current slice number.
      * 
@@ -965,34 +963,39 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      */
     private void showImage() {
         try {
-            BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
+            if (Util.isImageStorage(attributeList)) {
+                BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList);
 
-            float contrast = (float) contrastSlider.getValue() / (float) 10.0;
-            float offset = (float) brightnessSlider.getValue();
-            RescaleOp rescale = new RescaleOp(contrast, offset, null);
-            BufferedImage transformedImage = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
-            transformedImage = rescale.filter(image, transformedImage);
+                float contrast = (float) contrastSlider.getValue() / (float) 10.0;
+                float offset = (float) brightnessSlider.getValue();
+                RescaleOp rescale = new RescaleOp(contrast, offset, null);
+                BufferedImage transformedImage = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
+                transformedImage = rescale.filter(image, transformedImage);
 
-            float zoomValue = zoomSlider.getValue();
-            float zoomFactor = 1f;
-            if (zoomValue != 0) {
-                if (zoomValue > 0) {
-                    zoomFactor = 1f + (zoomValue / 4f);
+                float zoomValue = zoomSlider.getValue();
+                float zoomFactor = 1f;
+                if (zoomValue != 0) {
+                    if (zoomValue > 0) {
+                        zoomFactor = 1f + (zoomValue / 4f);
+                    }
+                    else {
+                        zoomFactor = 4f / ((-zoomValue) + 4f);
+                    }
                 }
-                else {
-                    zoomFactor = 4f / ((-zoomValue) + 4f);
-                }
+                imagePreview.setScaleFactor(zoomFactor);
+
+                imagePreview.setImage(transformedImage);
+                ImageIcon imageIcon = new ImageIcon(transformedImage);
+                cardLayout.show(cardPanel, IMAGE_VIEW);
+                imagePreview.setIcon(imageIcon);
+                Log.get().info("Previewed in image mode: " + dialog.getTitle() + "  contrast: " + contrast + "  brightness: " + offset + "  zoom factor: " + zoomFactor);
+                // Force redrawing
+                imagePreview.update(imagePreview.getGraphics());
+                dialog.update(dialog.getGraphics());
             }
-            imagePreview.setScaleFactor(zoomFactor);
-
-            imagePreview.setImage(transformedImage);
-            ImageIcon imageIcon = new ImageIcon(transformedImage);
-            cardLayout.show(cardPanel, IMAGE_VIEW);
-            imagePreview.setIcon(imageIcon);
-            Log.get().info("Previewed in image mode: " + dialog.getTitle() + "  contrast: " + contrast + "  brightness: " + offset + "  zoom factor: " + zoomFactor);
-            // Force redrawing
-            imagePreview.update(imagePreview.getGraphics());
-            dialog.update(dialog.getGraphics());
+            else {
+                showText(null);
+            }
         }
         catch (Exception ex) {
             showText(null);
@@ -1016,7 +1019,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
         return text.toString();
     }
-    
+
     /**
      * Add a single line of text to the text view. If the text matches the
      * current search text, then add its location to the list of matches.
@@ -1075,51 +1078,52 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     }
 
     /*
-    public static AttributeList replaceNullsWithBlanks(AttributeList attributeList) throws IOException, DicomException {
-
-        attributeList = Util.cloneAttributeList(attributeList);
-
-        Iterator<?> i = attributeList.values().iterator();
-        while (i.hasNext()) {
-            Attribute attribute = (Attribute) i.next();
-            if (attribute instanceof SequenceAttribute) {
-                Iterator<?> si = ((SequenceAttribute) attribute).iterator();
-                while (si.hasNext()) {
-                    SequenceItem item = (SequenceItem) si.next();
-                    replaceNullsWithBlanks(item.getAttributeList());
-                }
-            }
-            else {
-                AttributeTag tag = attribute.getTag();
-                byte[] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
-                if ((vr != null) && stringSet.contains(new String(vr))) {
-                    try {
-                        String[] valueList = attribute.getStringValues();
-                        if ((valueList != null) && (valueList.length > 0)) {
-                            boolean same = true;
-                            for (int v = 0; v < valueList.length; v++) {
-                                if (valueList[v].indexOf('\0') != -1) {
-                                    same = false;
-                                    valueList[v] = valueList[v].replace('\0', ' ');
-                                }
-                            }
-                            if (!same) {
-                                attribute.removeValues();
-                                for (String value : valueList) {
-                                    attribute.addValue(value);
-                                }
-                            }
-                        }
-                    }
-                    catch (DicomException e) {
-                        ;
-                    }
-                }
-            }
-        }
-        return attributeList;
-    }
-    */
+     * public static AttributeList replaceNullsWithBlanks(AttributeList attributeList) throws IOException,
+     * DicomException {
+     * 
+     * attributeList = Util.cloneAttributeList(attributeList);
+     * 
+     * Iterator<?> i = attributeList.values().iterator();
+     * while (i.hasNext()) {
+     * Attribute attribute = (Attribute) i.next();
+     * if (attribute instanceof SequenceAttribute) {
+     * Iterator<?> si = ((SequenceAttribute) attribute).iterator();
+     * while (si.hasNext()) {
+     * SequenceItem item = (SequenceItem) si.next();
+     * replaceNullsWithBlanks(item.getAttributeList());
+     * }
+     * }
+     * else {
+     * AttributeTag tag = attribute.getTag();
+     * byte[] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
+     * if ((vr != null) && stringSet.contains(new String(vr))) {
+     * try {
+     * String[] valueList = attribute.getStringValues();
+     * if ((valueList != null) && (valueList.length > 0)) {
+     * boolean same = true;
+     * for (int v = 0; v < valueList.length; v++) {
+     * if (valueList[v].indexOf('\0') != -1) {
+     * same = false;
+     * valueList[v] = valueList[v].replace('\0', ' ');
+     * }
+     * }
+     * if (!same) {
+     * attribute.removeValues();
+     * for (String value : valueList) {
+     * attribute.addValue(value);
+     * }
+     * }
+     * }
+     * }
+     * catch (DicomException e) {
+     * ;
+     * }
+     * }
+     * }
+     * }
+     * return attributeList;
+     * }
+     */
 
     /**
      * Convert a single non-sequence attribute to a human readable text format.
@@ -1280,9 +1284,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                 Iterator<?> si = ((SequenceAttribute) attribute).iterator();
                 int itemNumber = 1;
                 while (si.hasNext()) {
-                    if ((attributeLocation != null) && (!attributeLocation.isLocated())) attributeLocation.addParent((SequenceAttribute)attribute, itemNumber - 1);
+                    if ((attributeLocation != null) && (!attributeLocation.isLocated())) attributeLocation.addParent((SequenceAttribute) attribute, itemNumber - 1);
                     SequenceItem item = (SequenceItem) si.next();
-                    addLine(text, "Item: " + itemNumber + " / " + ((SequenceAttribute) attribute).getNumberOfItems(), searchText, indentLevel + 1, attributeLocation, itemNumber-1, null);
+                    addLine(text, "Item: " + itemNumber + " / " + ((SequenceAttribute) attribute).getNumberOfItems(), searchText, indentLevel + 1, attributeLocation,
+                            itemNumber - 1, null);
                     addTextAttributes(item.getAttributeList(), text, indentLevel + 2, attributeLocation);
                     if ((attributeLocation != null) && (!attributeLocation.isLocated())) attributeLocation.removeParent();
                     itemNumber++;
@@ -1293,15 +1298,16 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             }
         }
     }
-    
+
     public void selectForEdit(AttributeLocation attributeLocation) {
         showText(attributeLocation);
     }
-    
+
     /**
      * Perform edits on attribute list if there are any edits.
      * 
-     * @param attributeList Source list.
+     * @param attributeList
+     *            Source list.
      * 
      * @return Modified list.
      */
@@ -1319,15 +1325,18 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
         return atList;
     }
-    
+
     /**
      * Highlight the differences between two versions of text, the original text and the anonymized text.
      * 
-     * @param displayBuffer Text to be displayed.
+     * @param displayBuffer
+     *            Text to be displayed.
      * 
-     * @param referenceBuffer Alternate text.
+     * @param referenceBuffer
+     *            Alternate text.
      * 
-     * @param highlightColor Color to use on lines that are different.
+     * @param highlightColor
+     *            Color to use on lines that are different.
      */
     private void highlightDiffs(StringBuffer displayBuffer, StringBuffer referenceBuffer, Color highlightColor) {
         String[] displayLines = displayBuffer.toString().split("\n");
@@ -1343,9 +1352,10 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             if (!disp.equals(ref)) {
                 MatchHighlightPainter painter = new MatchHighlightPainter(highlightColor);
                 int start = 0;
-                while ((disp.charAt(start) == ' ') && (start < disp.length())) start++;
+                while ((disp.charAt(start) == ' ') && (start < disp.length()))
+                    start++;
                 try {
-                    highlighter.addHighlight(index+start, index+disp.length(), painter);
+                    highlighter.addHighlight(index + start, index + disp.length(), painter);
                 }
                 catch (BadLocationException e) {
                     ;
@@ -1355,13 +1365,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-    
     private void highlightSearchText() {
 
         // Find list of matches
         String searchText = searchField.getText().toLowerCase();
         int length = searchText.length();
-        
+
         int oldMatchListSize = matchList.size();
         int oldMatchIndex = matchIndex;
         matchIndex = 0;
@@ -1370,7 +1379,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         if (length > 0) {
             String[] lineList = textPreview.getText().toLowerCase().split("\n");
             int index = 0;
-            
+
             for (String line : lineList) {
                 int position = 0;
                 while ((position = line.indexOf(searchText, position)) >= 0) {
@@ -1381,7 +1390,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             }
 
             Highlighter highlighter = textPreview.getHighlighter();
-            
+
             // highlight all instances of the search text
             if (matchList.size() > 0) {
                 MatchHighlightPainter matchHighlightPainter = new MatchHighlightPainter(TEXT_MATCH_COLOR);
@@ -1404,8 +1413,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
     }
 
-
-    
     /**
      * Display the current DICOM file as text to the user.
      */
@@ -1436,7 +1443,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                 textPreview.setText(origText.toString());
             }
             else {
-                Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList(), DicomClient.doYearTruncation());
+                Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList(), DicomClient.doYearTruncation(), DicomClient.getDateShiftValue());
                 addTextAttributes(editedAttributeList, anonText, 0, attributeLocation);
                 if (currentViewMode == ViewMode.ANONYMIZED) {
                     textPreview.setText(anonText.toString());
@@ -1466,12 +1473,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         switch (currentViewMode) {
         case PLAIN:
             break;
-            
+
         case ORIGINAL:
             highlightDiffs(origText, anonText, TEXT_NOT_ANONYMIZED_COLOR);
             break;
         case ANONYMIZED:
-            
+
             highlightDiffs(anonText, origText, TEXT_ANONYMIZED_COLOR);
             break;
         }
@@ -1505,7 +1512,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
         DicomClient.getInstance().setProcessedStatus();
     }
-    
+
     public boolean isVisible() {
         return dialog.isVisible();
     }
@@ -1528,6 +1535,24 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         }
         if (!isVisible()) {
             setVisible(true);
+        }
+    }
+
+    /**
+     * This supports the user updating the date shift from the main
+     * screen and immediately seeing the result in the preview.
+     */
+    public void updateHighlightedTextIfAppropriate() {
+        System.out.println("textPreview.isVisible: " + textPreview.isVisible()); // TODO rm
+
+        if (attributeList != null) {
+            System.out.println("Util.isImageStorage(attributeList): " + Util.isImageStorage(attributeList)); // TODO rm
+            if ((textRadioButton.isSelected()) || (!Util.isImageStorage(attributeList))) {
+                if (!viewingModeLabel.getText().equalsIgnoreCase(ViewMode.PLAIN.displayName)) {
+                    System.out.println("updateHighlightedTextIfAppropriate showing"); // TODO rm
+                    showDicom();
+                }
+            }
         }
     }
 
@@ -1601,7 +1626,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
             dialog.pack();
         }
     }
-    
+
     /**
      * Handle the user's request to close the dialog.
      */
@@ -1650,13 +1675,13 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
 
     public void windowDeactivated(WindowEvent e) {
     }
-    
+
     @AutoTest
     public void doClickTextPreview() {
         textRadioButton.doClick();
     }
-    
-    @AutoTest    
+
+    @AutoTest
     public String getTextTest() {
         return textPreview.getText();
     }
