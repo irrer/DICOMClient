@@ -62,12 +62,10 @@ import com.pixelmed.dicom.ValueRepresentation;
 
 import edu.umro.util.Log;
 
-
-
 /**
  * AnonymizeGUI PHI in a DICOM file.
  * 
- * @author Jim Irrer  irrer@umich.edu 
+ * @author Jim Irrer irrer@umich.edu
  *
  */
 public class AnonymizeGUI implements ActionListener, DocumentListener {
@@ -90,7 +88,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
     /**
      * Represents one attribute to be anonymized.
      * 
-     * @author Jim Irrer  irrer@umich.edu 
+     * @author Jim Irrer irrer@umich.edu
      *
      */
     public class AnonymizeAttribute extends JPanel implements ActionListener, ItemListener {
@@ -123,7 +121,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
 
             return true;
         }
-        
+
         /**
          * Construct the interface for one attribute.
          * 
@@ -147,7 +145,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             setActive(attr != null);
             checkBox.addActionListener(this);
             checkBox.addItemListener(this);
-            
+
             add(attrNameLabel);
             add(checkBox);
             add(textField);
@@ -159,7 +157,6 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             if (!isEditable) textField.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 0));
         }
 
-
         public void resetText(boolean showDetail) {
             String text = CustomDictionary.getInstance().getNameFromTag(tag);
             if (showDetail) text = String.format("%04x,%04x  ", tag.getGroup(), tag.getElement()) + text;
@@ -167,7 +164,6 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             attrNameLabel.setToolTipText(text);
             attrNameLabel.setCaretPosition(0);
         }
-
 
         /**
          * Get the type of attribute to be anonymized.
@@ -178,11 +174,11 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             return tag;
         }
 
-
         /**
          * Make anonymization active for this attribute.
          * 
-         * @param active True if attribute is to be anonymized.
+         * @param active
+         *            True if attribute is to be anonymized.
          */
         public void setActive(boolean active) {
             checkBox.setSelected(active);
@@ -190,25 +186,20 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             attrNameLabel.setEnabled(active);
         }
 
-
         public boolean getActive() {
             return checkBox.isSelected();
         }
-
 
         public String getValue() {
             return textField.getText();
         }
 
-        
         public void setValue(String value) {
             textField.setText(value);
         }
 
-
         public void itemStateChanged(ItemEvent e) {
         }
-
 
         public void actionPerformed(ActionEvent e) {
             if (isEditable(tag)) textField.setEnabled(getActive());
@@ -225,11 +216,10 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         }
     }
 
-
     /**
      * The position of text that matches the search text.
      * 
-     * @author Jim Irrer  irrer@umich.edu 
+     * @author Jim Irrer irrer@umich.edu
      *
      */
     class TextMatch {
@@ -249,24 +239,23 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         }
     }
 
-
     /**
      * Custom text highlighter.
      * 
-     * @author Jim Irrer  irrer@umich.edu 
+     * @author Jim Irrer irrer@umich.edu
      *
      */
     class MatchHighlightPainterAnon extends DefaultHighlighter.DefaultHighlightPainter {
         /**
          * Construct with the given color.
          * 
-         * @param color Text background color.
+         * @param color
+         *            Text background color.
          */
         public MatchHighlightPainterAnon(Color color) {
             super(color);
         }
     }
-
 
     /** Color to indicate text that matches search pattern. */
     private static final Color TEXT_MATCH_COLOR = new Color(255, 255, 150);
@@ -309,7 +298,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
     /** Scrolls list of attributes. */
     private JScrollPane scrollPane = null;
 
-    /** Default anonymization list.  Defined in configuration. */
+    /** Default anonymization list. Defined in configuration. */
     private AttributeList defaultList = ClientConfig.getInstance().getAnonymizingReplacementList();
 
     /** If checked, show detailed tag information. */
@@ -339,18 +328,17 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
 
     private void setAllCheckboxes(boolean state) {
         for (Component aa : anonPanel.getComponents()) {
-            ((AnonymizeAttribute)aa).setActive(state);
+            ((AnonymizeAttribute) aa).setActive(state);
         }
     }
 
     private void setDefaultCheckboxes() {
         for (Component aa : anonPanel.getComponents()) {
-            AnonymizeAttribute anonAttr = (AnonymizeAttribute)aa;
+            AnonymizeAttribute anonAttr = (AnonymizeAttribute) aa;
             boolean state = defaultList.get(anonAttr.getTag()) != null;
             anonAttr.setActive(state);
         }
     }
-
 
     public void actionPerformed(ActionEvent ev) {
         if (ev.getSource().equals(closeButton)) {
@@ -379,19 +367,17 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         }
     }
 
-
     private void redrawAnonList() {
         boolean sd = showDetails.isSelected();
         for (Component component : anonPanel.getComponents()) {
             if (component instanceof AnonymizeAttribute) {
-                ((AnonymizeAttribute)component).resetText(sd);
+                ((AnonymizeAttribute) component).resetText(sd);
             }
         }
     }
 
-
     private void setMatch(int matchIndex, Color color) {
-        if (matchIndex >= matchList.size()) matchIndex = matchList.size()-1;
+        if (matchIndex >= matchList.size()) matchIndex = matchList.size() - 1;
         if (matchIndex < 0) matchIndex = 0;
         TextMatch match = matchList.get(matchIndex);
         try {
@@ -399,35 +385,36 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             Highlighter highlighter = match.anonymizeAttribute.getTextField().getHighlighter();
             highlighter.removeAllHighlights();
             MatchHighlightPainterAnon matchHighlightPainter = new MatchHighlightPainterAnon(color);
-            match.highlighter = highlighter.addHighlight(match.position, match.position+length, matchHighlightPainter);
+            match.highlighter = highlighter.addHighlight(match.position, match.position + length, matchHighlightPainter);
         }
         catch (BadLocationException e) {
             ;
         }
     }
 
-
     /**
      * Set the currently selected text to the given matching entry.
      * 
-     * @param index Entry on list that should be shown as currently selected.
+     * @param index
+     *            Entry on list that should be shown as currently selected.
      */
     private void setCurrentlySelectedMatch(int incr) {
         int size = matchList.size();
         if (size > 1) {
             int oldIndex = matchIndex;
             matchIndex = (matchIndex + incr + size) % size;
-            if (oldIndex >= size) oldIndex = size-1;
+            if (oldIndex >= size) oldIndex = size - 1;
             if (oldIndex < 0) oldIndex = 0;
             setMatch(oldIndex, TEXT_MATCH_COLOR);
         }
-        else matchIndex = 0;
+        else
+            matchIndex = 0;
 
         if (size > 0) {
             setMatch(matchIndex, TEXT_CURRENT_MATCH_COLOR);
             anonPanel.scrollRectToVisible(matchList.get(matchIndex).anonymizeAttribute.getBounds());
         }
-        matchCountLabel.setText("  " + ((size > 0) ? matchIndex+1 : 0) + " of " + size);
+        matchCountLabel.setText("  " + ((size > 0) ? matchIndex + 1 : 0) + " of " + size);
     }
 
     private void search() {
@@ -439,7 +426,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
 
             for (Component component : anonPanel.getComponents()) {
                 if (component instanceof AnonymizeAttribute) {
-                    AnonymizeAttribute aa = (AnonymizeAttribute)component;
+                    AnonymizeAttribute aa = (AnonymizeAttribute) component;
                     JTextField textField = aa.getTextField();
                     String text = textField.getText().toLowerCase();
                     int posn = text.indexOf(searchText);
@@ -449,7 +436,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
                         TextMatch textMatch = new TextMatch(aa, posn);
                         matchList.add(textMatch);
                         MatchHighlightPainterAnon matchHighlightPainter = new MatchHighlightPainterAnon(TEXT_MATCH_COLOR);
-                        textMatch.highlighter = highlighter.addHighlight(posn, posn+searchTextLen, matchHighlightPainter);
+                        textMatch.highlighter = highlighter.addHighlight(posn, posn + searchTextLen, matchHighlightPainter);
                     }
                 }
             }
@@ -459,7 +446,6 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             ;
         }
     }
-
 
     public void insertUpdate(DocumentEvent e) {
         search();
@@ -473,13 +459,14 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         search();
     }
 
-
     /**
-     * Add a new attribute selector to the list.  If parameters are null, then add
+     * Add a new attribute selector to the list. If parameters are null, then add
      * 
-     * @param attributeList List of attributes.
+     * @param attributeList
+     *            List of attributes.
      * 
-     * @param tag Item to add.
+     * @param tag
+     *            Item to add.
      * 
      * @return The new anonymize attribute.
      */
@@ -498,12 +485,11 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         }
     }
 
-
     /**
      * Construct the anonymization panel.
      * 
      * @return The anonymization panel.
-     * @throws DicomException 
+     * @throws DicomException
      */
     private JComponent constructAnonPanel() throws DicomException {
         anonPanel = new JPanel();
@@ -516,10 +502,10 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         anonPanel.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));
 
         scrollPane = new JScrollPane(anonPanel);
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_INCREMENT);
         return scrollPane;
     }
-
 
     /**
      * Construct the panel that hold the directory chooser options.
@@ -536,8 +522,6 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
 
         return panel;
     }
-
-
 
     private JComponent constructSearchPanel() {
         showDetails = new JCheckBox();
@@ -575,9 +559,6 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         return panel;
     }
 
-
-
-
     /**
      * Construct the panel that hold the buttons.
      * 
@@ -589,8 +570,8 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         layout.setHgap(30);
         buttonPanel.setLayout(layout);
 
-        //buttonPanel.add(constructSearchPanel());
-        //buttonPanel.add(new JLabel("      "));
+        // buttonPanel.add(constructSearchPanel());
+        // buttonPanel.add(new JLabel(" "));
 
         selectAllButton = new JButton("All");
         selectAllButton.addActionListener(this);
@@ -616,7 +597,6 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         return buttonPanel;
     }
 
-
     private boolean isAnonymizable(AttributeTag tag) {
         if (tag.getGroup() == 2) return false;
         byte[] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
@@ -626,6 +606,12 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         return true;
     }
 
+    private JPanel constructNorthPanel() {
+        JPanel panel = new JPanel();
+        panel.add(AnonymizeDate.getInstance().getMainPanel());
+        panel.add(new JLabel("dummy filler"));
+        return panel;
+    }
 
     /**
      * Construct panel that goes on the southern part of the window.
@@ -650,38 +636,43 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         return panel;
     }
 
-
     /**
      * Make sure that all tags in the given attribute list are in the list of tags.
      * 
-     * @param attributeList List containing potentially new tags.
+     * @param attributeList
+     *            List containing potentially new tags.
      */
     @SuppressWarnings("unchecked")
     public synchronized void updateTagList(AttributeList attributeList) {
         AttributeList newAttributeList = new AttributeList();
 
         for (Object oAttr : attributeList.values()) {
-            Attribute attribute = (Attribute)oAttr;
+            Attribute attribute = (Attribute) oAttr;
             AttributeTag tag = attribute.getTag();
             if ((knownAttributes.get(tag) == null) && (!tag.equals(TagFromName.PatientID) && (!tag.equals(TagFromName.PatientName)))) {
                 try {
                     String value = "";
                     Attribute newAttr = AttributeFactory.newAttribute(new AttributeTag(tag.getGroup(), tag.getElement()));
-                    try { newAttr.addValue(value); } catch (Exception e) {}
+                    try {
+                        newAttr.addValue(value);
+                    }
+                    catch (Exception e) {
+                    }
                     newAttributeList.put(newAttr);
                     knownAttributes.put(newAttr);
-                    tag = new AttributeTag(tag.getGroup(), tag.getElement());  // avoid memory leaks
+                    tag = new AttributeTag(tag.getGroup(), tag.getElement()); // avoid memory leaks
                     if (defaultList.get(tag) != null) {
                         value = defaultList.get(tag).getSingleStringValueOrEmptyString();
                     }
-                } catch (DicomException e) {
+                }
+                catch (DicomException e) {
                     Log.get().warning("Unexpected exception while adding new tag to anonymize list: " + e);
                 }
             }
             if (attribute instanceof SequenceAttribute) {
-                Iterator<?> si = ((SequenceAttribute)attribute).iterator();
+                Iterator<?> si = ((SequenceAttribute) attribute).iterator();
                 while (si.hasNext()) {
-                    SequenceItem item = (SequenceItem)si.next();
+                    SequenceItem item = (SequenceItem) si.next();
                     updateTagList(item.getAttributeList());
                 }
             }
@@ -693,7 +684,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             TreeSet<String> tagListSorted = new TreeSet<String>();
 
             for (Object attrO : newAttributeList.entrySet()) {
-                Map.Entry<AttributeTag, Attribute> mapEntry = (Map.Entry<AttributeTag, Attribute>)attrO;
+                Map.Entry<AttributeTag, Attribute> mapEntry = (Map.Entry<AttributeTag, Attribute>) attrO;
                 Attribute attr = mapEntry.getValue();
                 String name = CustomDictionary.getName(attr);
                 if ((name != null) && (name.length() > 0) && (!tagListSorted.contains(name))) {
@@ -701,18 +692,19 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
                 }
             }
 
-            for (AttributeTag tag : (Set<AttributeTag>)newAttributeList.keySet()) {
+            for (AttributeTag tag : (Set<AttributeTag>) newAttributeList.keySet()) {
                 addAttribute(tag);
             }
             search();
         }
     }
 
-
     private Container mainContainer = null;
+
     /**
      * Build the GUI for anonymization options.
-     * @throws DicomException 
+     * 
+     * @throws DicomException
      * 
      */
     private AnonymizeGUI() throws DicomException {
@@ -731,6 +723,8 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             dialog.getContentPane().add(panel);
             panel.setLayout(new BorderLayout());
 
+            panel.add(constructNorthPanel(), BorderLayout.NORTH);
+
             panel.add(constructAnonPanel(), BorderLayout.CENTER);
 
             panel.add(constructSouthPanel(), BorderLayout.SOUTH);
@@ -741,19 +735,18 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             dialog.pack();
         }
     }
-    
 
     public static AnonymizeGUI getInstance() {
         if (anonymizeGUI == null)
             try {
-                anonymizeGUI = new AnonymizeGUI();
-            } catch (DicomException e) {
-                Log.get().severe("Unable to construct anonymize GUI: " + Log.fmtEx(e));
+            anonymizeGUI = new AnonymizeGUI();
+            }
+            catch (DicomException e) {
+            Log.get().severe("Unable to construct anonymize GUI: " + Log.fmtEx(e));
             }
         return anonymizeGUI;
     }
 
-    
     /**
      * Get the attribute list containing tags and values to be used
      * for anonymization.
@@ -763,7 +756,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
     public AttributeList getAttributeList() {
         AttributeList attributeList = new AttributeList();
         for (Component c : anonPanel.getComponents()) {
-            AnonymizeAttribute aa = (AnonymizeAttribute)c;
+            AnonymizeAttribute aa = (AnonymizeAttribute) c;
             if (aa.getActive()) {
                 try {
                     Attribute attribute = AttributeFactory.newAttribute(aa.getTag());

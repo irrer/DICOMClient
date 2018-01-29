@@ -26,7 +26,6 @@ import java.net.UnknownHostException;
 import java.rmi.server.UID;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -112,6 +111,8 @@ public class Util {
 
     public static final String[] allSuffixes = { TEXT_SUFFIX, PNG_SUFFIX, XML_SUFFIX, DICOM_SUFFIX };
 
+    public static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+
     private static boolean testing() {
         return System.getProperties().contains(TESTING_PROPERTY);
     }
@@ -170,8 +171,7 @@ public class Util {
             if (vrClass.equals(DateAttribute.class)) {
                 String text = value.replaceFirst("\\..*", "");
                 ParsePosition parsePosition = new ParsePosition(0);
-                SimpleDateFormat dateParse = new SimpleDateFormat("yyyyMMdd");
-                Date date = dateParse.parse(text, parsePosition);
+                Date date = dateFormat.parse(text, parsePosition);
                 if (date == null) {
                     // if there is a badly formatted date, then just return the value.
                     return value;
@@ -419,7 +419,7 @@ public class Util {
     public static void writePngFile(AttributeList attributeList, File pngFile) throws DicomException, IOException {
         if (SOPClass.isImageStorage(Attribute.getSingleStringValueOrEmptyString(attributeList, TagFromName.SOPClassUID))) {
             pngFile.delete();
-            BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList, 0);
+            BufferedImage image = ConsumerFormatImageMaker.makeEightBitImage(attributeList);
             ImageIO.write(image, "png", pngFile);
             Log.get().info("Wrote image file " + pngFile.getAbsolutePath());
         }

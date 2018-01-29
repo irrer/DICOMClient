@@ -892,7 +892,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                     AnonymizeGUI.getInstance().updateTagList(attributeList);
 
                     // do the actual anonymization
-                    Anonymize.anonymize(attributeList, getAnonymizingReplacementList(), DicomClient.doYearTruncation(), DicomClient.getDateShiftValue());
+                    Anonymize.anonymize(attributeList, getAnonymizingReplacementList());
 
                     // Indicate that the file was touched by this application. Also a subtle way to advertise. :)
                     FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());

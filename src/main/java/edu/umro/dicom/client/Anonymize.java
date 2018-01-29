@@ -20,7 +20,6 @@ import java.io.FileInputStream;
  */
 
 import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -411,10 +410,9 @@ public class Anonymize {
         String minDate = "00010101";
         long msInDay = 24 * 60 * 60 * 1000;
         try {
-            SimpleDateFormat dateParse = new SimpleDateFormat("yyyyMMdd");
-            Date date = dateParse.parse(text);
+            Date date = Util.dateFormat.parse(text);
             Date shiftedDate = new Date(date.getTime() + (dateShiftValue * msInDay));
-            String shiftedDateText = dateParse.format(shiftedDate);
+            String shiftedDateText = Util.dateFormat.format(shiftedDate);
             if (shiftedDateText.length() > 8) {
                 if (dateShiftValue > 0) {
                     return maxDate;
@@ -445,6 +443,21 @@ public class Anonymize {
         }
     }
 
+    private static void anonDateAttr(Attribute attribute, Date dateAnonValue) {
+        try {
+            String dateText = Util.dateFormat.format(dateAnonValue);
+            String[] originalValueList = attribute.getStringValues();
+            attribute.removeValues();
+            for (@SuppressWarnings("unused")
+            String s : originalValueList) {
+                attribute.addValue(dateText);
+            }
+        }
+        catch (Exception e) {
+
+        }
+    }
+
     /**
      * Perform anonymization recursively to accommodate sequence attributes.
      * 
@@ -459,25 +472,39 @@ public class Anonymize {
      */
     private static void anonymize(String anonymizedPatientId, AttributeList attributeList, AttributeList replacementAttributeList,
             HashMap<String, String> aggressiveReplaceList,
-            String originalPatientId,
-            boolean yearTruncation,
-            int dateShiftValue) {
+            String originalPatientId) {
         for (Attribute attribute : getAttributeListValues(attributeList).values()) {
             AttributeTag tag = attribute.getTag();
             if (attribute instanceof SequenceAttribute) {
                 Iterator<?> si = ((SequenceAttribute) attribute).iterator();
                 while (si.hasNext()) {
                     SequenceItem item = (SequenceItem) si.next();
-                    anonymize(anonymizedPatientId, item.getAttributeList(), replacementAttributeList, aggressiveReplaceList, originalPatientId, yearTruncation, dateShiftValue);
+                    anonymize(anonymizedPatientId, item.getAttributeList(), replacementAttributeList, aggressiveReplaceList, originalPatientId);
                 }
             }
             else {
                 if (isDate(attribute.getVR())) {
-                    if (yearTruncation) {
-                        truncateYear(attribute);
+                    switch (AnonymizeDate.getInstance().getMode()) {
+                    case Anon: {
+                        if (AnonymizeDate.getInstance().getAnonValue() != null) {
+                            anonDateAttr(attribute, AnonymizeDate.getInstance().getAnonValue());
+                        }
+                        break;
                     }
-                    if (dateShiftValue != 0) {
-                        shiftDateAttr(attribute, dateShiftValue);
+
+                    case Year: {
+                        truncateYear(attribute);
+                        break;
+                    }
+
+                    case Shift: {
+                        if (AnonymizeDate.getInstance().getShiftValue() != 0) {
+                            shiftDateAttr(attribute, AnonymizeDate.getInstance().getShiftValue());
+                        }
+                        break;
+                    }
+
+                    default:
                     }
                 }
                 Attribute replacement = replacementAttributeList.get(tag);
@@ -504,11 +531,11 @@ public class Anonymize {
      * @param replacementAttributeList
      *            List of values to be written into the attributeList.
      */
-    public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList, boolean yearTruncation, int dateShiftValue) {
+    public static synchronized void anonymize(AttributeList attributeList, AttributeList replacementAttributeList) {
         HashMap<String, String> aggressiveReplaceList = ClientConfig.getInstance().getAggressiveAnonymization(attributeList, CustomDictionary.getInstance());
         String originalPatientId = (attributeList.get(TagFromName.PatientID) == null) ? null : attributeList.get(TagFromName.PatientID).getSingleStringValueOrNull();
         String anonymizedPatientId = establishNewPatientId(replacementAttributeList);
-        anonymize(anonymizedPatientId, attributeList, replacementAttributeList, aggressiveReplaceList, originalPatientId, yearTruncation, dateShiftValue);
+        anonymize(anonymizedPatientId, attributeList, replacementAttributeList, aggressiveReplaceList, originalPatientId);
     }
 
     /**

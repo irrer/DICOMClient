@@ -70,6 +70,7 @@ import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.TagFromName;
 
+import edu.umro.dicom.client.AnonymizeDate.DateMode;
 import edu.umro.util.Exec;
 import edu.umro.util.Log;
 import edu.umro.util.OpSys;
@@ -85,7 +86,7 @@ import edu.umro.util.General;
  * @author Jim Irrer irrer@umich.edu
  * 
  */
-public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener, DocumentListener {
+public class DicomClient implements ActionListener, FileDrop.Listener, ChangeListener {
 
     /** Possible processing modes for main window. */
     public static enum ProcessingMode {
@@ -200,9 +201,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** True if the application is in command line mode (no GUI) */
     private static boolean commandLineMode = false;
 
-    /** True if all dates should be anonymized by changing the month and day to 1. eg: 19680422 ==> 19680101 . */
-    private static boolean yearTruncation = false;
-
     /**
      * True if, when writing output files, they should be put in a tree with patient ID as directory containing series
      * directories.
@@ -241,7 +239,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private JLabel anonymizeDestinationText = null;
     private JButton anonymizeDestinationBrowseButton = null;
     private JCheckBox searchSubdirsCheckbox = null;
-    private JTextField dateShiftField = null;
 
     private JRadioButton outputOrgFlat = null;
     private JRadioButton outputOrgTree = null;
@@ -381,29 +378,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return panel;
     }
 
-    private JPanel buildDateShiftPanel() {
-        JPanel panel = new JPanel();
-        dateShiftField = new JTextField(6);
-        dateShiftField.getDocument().addDocumentListener(this);
-        JLabel dateShiftLabel = new JLabel("Date Shift");
-        dateShiftLabel.setFont(DicomClient.FONT_MEDIUM);
-        String tip = "<html> Number of days to shift dates for <br> anonymization.  Must be an integer <br> value.  Zero means no date shift. </html>";
-        panel.setToolTipText(tip);
-        dateShiftField.setToolTipText(tip);
-        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        dateShiftField.setText(dateShiftValue.toString());
-        dateShiftField.setHorizontalAlignment(SwingConstants.RIGHT);
-        panel.add(dateShiftLabel);
-        panel.add(dateShiftField);
-
-        return panel;
-    }
-
     private JComponent buildNorthEast() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(buildPacsSelector(), BorderLayout.CENTER);
-        panel.add(buildDateShiftPanel(), BorderLayout.WEST);
         return panel;
     }
 
@@ -1127,64 +1105,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         markScreenAsModified();
     }
 
-    /**
-     * The number of days to shift dates that are not otherwise anonymized.
-     */
-    private static Integer dateShiftValue = 0;
-
-    public static int getDateShiftValue() {
-        if (dateShiftValue == null) {
-            return 0;
+    public void updatePreviewIfAppropriate() {
+        if (preview != null) {
+            preview.updateHighlightedTextIfAppropriate();
         }
-        else {
-            return dateShiftValue;
-        }
-    }
-
-    private Integer getDateShiftValueFromGUI() {
-        Integer shift = null;
-        try {
-            shift = Integer.parseInt(dateShiftField.getText().trim());
-            dateShiftField.setBackground(Color.WHITE);
-        }
-        catch (Exception e) {
-            shift = null;
-        }
-        return shift;
-    }
-
-    private void handleDateShiftChange() {
-        Color color = Color.WHITE;
-        Integer newShiftValue = getDateShiftValueFromGUI();
-        if (newShiftValue == null) {
-            color = Color.YELLOW;
-            newShiftValue = 0;
-        }
-
-        dateShiftField.setBackground(color);
-
-        if (newShiftValue != dateShiftValue) {
-            dateShiftValue = newShiftValue;
-
-            if (preview != null) {
-                preview.updateHighlightedTextIfAppropriate();
-            }
-        }
-    }
-
-    @Override
-    public void insertUpdate(DocumentEvent e) {
-        handleDateShiftChange();
-    }
-
-    @Override
-    public void removeUpdate(DocumentEvent e) {
-        handleDateShiftChange();
-    }
-
-    @Override
-    public void changedUpdate(DocumentEvent e) {
-        handleDateShiftChange();
     }
 
     public PACS getCurrentPacs() {
@@ -1842,10 +1766,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return searchSubdirs;
     }
 
-    public static boolean doYearTruncation() {
-        return yearTruncation;
-    }
-
     public static String getDefaultPatientId() {
         return defaultPatientId;
     }
@@ -2040,14 +1960,6 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     commandLineMode = true;
                     continue;
                 }
-                if (args[a].equals("-y")) {
-                    yearTruncation = true;
-                    if (dateShiftValue != 0) {
-                        fail("Can not specify both year truncation (-y) and date shift (-r)");
-                    }
-                    continue;
-                }
-
                 if (args[a].equals("-t")) {
                     showDetails = true;
                     continue;
@@ -2094,21 +2006,45 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     continue;
                 }
 
-                if (args[a].equals("-r")) { // date shift
-                    a++;
-                    try {
-                        Integer shift = Integer.parseInt(args[a]);
-                        dateShiftValue = shift;
-                        if (yearTruncation && (dateShiftValue != 0)) {
-                            fail("Can not specify both  date shift (-r) and year truncation (-y)");
-                        }
+                if (args[a].equals("-y")) {
+                    if (AnonymizeDate.getInstance().getMode() != DateMode.None) {
+                        fail("Conflict with -y option.  Can only use one date anonymization mode of -y, -s, or -a.");
+                    }
+                    AnonymizeDate.getInstance().setMode(DateMode.Year);
+                    continue;
+                }
 
+                if (args[a].equals("-s")) { // date shift
+                    if (AnonymizeDate.getInstance().getMode() != DateMode.None) {
+                        fail("Conflict with -s option.  Can only use one date anonymization mode of -y, -s, or -a.");
+                    }
+                    a++;
+                    if (a >= args.length) fail("Missing value for -s (date shift) option.");
+                    try {
+                        Integer shift = Integer.parseInt(args[a].trim());
+                        AnonymizeDate.getInstance().setMode(DateMode.Shift);
+                        AnonymizeDate.getInstance().setShiftValue(shift);
                     }
                     catch (Exception e) {
-                        fail("Unable to parse date shift -r value " + args[a] + " as integer.");
+                        fail("Unable to parse date shift -s value " + args[a] + " as integer.");
                     }
+                    continue;
+                }
 
-                    preloadFile = new File(args[a]);
+                if (args[a].equals("-a")) { // date anonymization
+                    if (AnonymizeDate.getInstance().getMode() != DateMode.None) {
+                        fail("Conflict with -a option.  Can only use one date anonymization mode of -y, -s, or -a.");
+                    }
+                    a++;
+                    if (a >= args.length) fail("Missing date value for -a (date anonymization) option.  Format is yyyyMMDDD, as in 19560124");
+                    try {
+                        Date anon = Util.dateFormat.parse(args[a].trim());
+                        AnonymizeDate.getInstance().setMode(DateMode.Anon);
+                        AnonymizeDate.getInstance().setAnonValue(anon);
+                    }
+                    catch (Exception e) {
+                        fail("Unable to parse date shift -a value " + args[a] + " as date. Format is yyyyMMDDD, as in 19560124");
+                    }
                     continue;
                 }
 

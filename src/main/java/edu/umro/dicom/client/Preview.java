@@ -1443,7 +1443,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
                 textPreview.setText(origText.toString());
             }
             else {
-                Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList(), DicomClient.doYearTruncation(), DicomClient.getDateShiftValue());
+                Anonymize.anonymize(editedAttributeList, series.getAnonymizingReplacementList());
                 addTextAttributes(editedAttributeList, anonText, 0, attributeLocation);
                 if (currentViewMode == ViewMode.ANONYMIZED) {
                     textPreview.setText(anonText.toString());
@@ -1543,13 +1543,9 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * screen and immediately seeing the result in the preview.
      */
     public void updateHighlightedTextIfAppropriate() {
-        System.out.println("textPreview.isVisible: " + textPreview.isVisible()); // TODO rm
-
         if (attributeList != null) {
-            System.out.println("Util.isImageStorage(attributeList): " + Util.isImageStorage(attributeList)); // TODO rm
             if ((textRadioButton.isSelected()) || (!Util.isImageStorage(attributeList))) {
                 if (!viewingModeLabel.getText().equalsIgnoreCase(ViewMode.PLAIN.displayName)) {
-                    System.out.println("updateHighlightedTextIfAppropriate showing"); // TODO rm
                     showDicom();
                 }
             }
