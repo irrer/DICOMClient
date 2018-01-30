@@ -94,7 +94,6 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
     }
 
     private void initDateMode(DateMode dm) {
-        System.out.println("dm.display: " + dm.display); // TODO rm
         dm.radioButton = new JRadioButton(dm.display.toString());
         dm.panel = new JPanel();
         dm.panel.setToolTipText(dm.toolTip);
@@ -102,6 +101,7 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
         dm.panel.add(dm.radioButton);
         dm.radioButton.addActionListener(this);
         buttonGroup.add(dm.radioButton);
+        dm.radioButton.setSelected(false);
     }
 
     private JPanel buildGUI() {
@@ -113,8 +113,6 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
         for (DateMode dm : valueList) {
             initDateMode(dm);
         }
-
-        setMode(DateMode.None);
 
         int space = 20;
         DateMode.None.panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, space));
@@ -129,7 +127,7 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
         shiftTextField.setToolTipText(DateMode.Shift.toolTip);
         anonTextField.setToolTipText(DateMode.Anon.toolTip);
 
-        DateMode.None.radioButton.setSelected(true);
+        dateMode.radioButton.setSelected(true);
 
         panel.setToolTipText("Type of anonymization for dates.");
         panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
@@ -139,10 +137,13 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
     private JPanel mainPanel = null;
 
     public JPanel getMainPanel() {
+        if (mainPanel == null) {
+            mainPanel = buildGUI();
+        }
         return mainPanel;
     }
 
-    private DateMode dateMode = null;
+    private static DateMode dateMode = DateMode.None;
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -301,7 +302,6 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
 
     public void setMode(DateMode dm) {
         dateMode = dm;
-        DicomClient.getInstance().updatePreviewIfAppropriate();
     }
 
     private void initAnonValue() {
@@ -314,7 +314,6 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
     }
 
     private AnonymizeDate() {
-        mainPanel = buildGUI();
         initAnonValue();
     }
 
