@@ -260,9 +260,14 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
     private void selectByMouse(MouseEvent e) {
         if (e.getSource() == shiftTextField) {
             DateMode.Shift.radioButton.setSelected(true);
-            // DateMode.Shift.radioButton.action(this, ActionEvent.ACTION_PERFORMED); TODO fire event
+            dateMode = DateMode.Shift;
+            DicomClient.getInstance().updatePreviewIfAppropriate();
         }
-        DateMode.Anon.radioButton.setSelected(e.getSource() == anonTextField);
+        if (e.getSource() == anonTextField) {
+            DateMode.Anon.radioButton.setSelected(true);
+            dateMode = DateMode.Anon;
+            DicomClient.getInstance().updatePreviewIfAppropriate();
+        }
     }
 
     @Override

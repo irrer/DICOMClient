@@ -91,7 +91,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
      * @author Jim Irrer irrer@umich.edu
      *
      */
-    public class AnonymizeAttribute extends JPanel implements ActionListener, ItemListener {
+    public class AnonymizeAttribute extends JPanel implements ActionListener, ItemListener, DocumentListener {
         /** Default ID */
         private static final long serialVersionUID = 1L;
 
@@ -139,6 +139,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
             checkBox = new JCheckBox();
             checkBox.setToolTipText("<html>Select for<br>anonymizing</html>");
             textField = new JTextField(12);
+            textField.getDocument().addDocumentListener(this);
 
             Attribute attr = defaultList.get(tag);
             if (attr != null) textField.setText(attr.getSingleStringValueOrEmptyString());
@@ -204,6 +205,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         public void actionPerformed(ActionEvent e) {
             if (isEditable(tag)) textField.setEnabled(getActive());
             attrNameLabel.setEnabled(getActive());
+            DicomClient.getInstance().updatePreviewIfAppropriate();
         }
 
         @Override
@@ -213,6 +215,21 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
 
         public JTextField getTextField() {
             return attrNameLabel;
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            DicomClient.getInstance().updatePreviewIfAppropriate();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            DicomClient.getInstance().updatePreviewIfAppropriate();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            DicomClient.getInstance().updatePreviewIfAppropriate();
         }
     }
 
@@ -365,6 +382,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
         if (ev.getSource().equals(showDetails)) {
             redrawAnonList();
         }
+        DicomClient.getInstance().updatePreviewIfAppropriate();
     }
 
     private void redrawAnonList() {
