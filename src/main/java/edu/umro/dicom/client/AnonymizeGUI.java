@@ -626,8 +626,7 @@ public class AnonymizeGUI implements ActionListener, DocumentListener {
 
     private JPanel constructNorthPanel() {
         JPanel panel = new JPanel();
-        panel.add(AnonymizeDate.getInstance().getMainPanel());
-        panel.add(new JLabel("dummy filler"));
+        panel.add(AnonymizeDateTime.getInstance().getMainPanel());
         return panel;
     }
 

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>DICOM+</title>
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap.min.css" />
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap-theme.min.css" />
+<script src="../../../jquery/1.11.3/jquery.min.js"></script>
+<script src="../../../bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<style>
+body {
+	max-width: 1024px;
+}
+
+@media ( min-width : 768px) {
+	.sidebar-nav .navbar .navbar-collapse {
+		padding: 0;
+		max-height: none;
+	}
+	.sidebar-nav .navbar ul {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li a {
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+}
+</style>
+</head>
+<body>
+
+	<div style="margin-top: 20px;margin-bottom: 50px;" class="row">
+		<div class="col-md-3 col-md-offset-1">
+			<h1 class="fill">
+                <a href="index.html"> <img  
+                    src="../../../images/DICOM+.png" height="232"/>
+                </a>
+			</h1>
+			<div class="sidebar-nav">
+				<div class="navbar navbar-default" role="navigation">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse"
+							data-target=".sidebar-navbar-collapse">
+							<span class="sr-only">Toggle navigation</span> <span
+								class="icon-bar"></span> <span class="icon-bar"></span> <span
+								class="icon-bar"></span>
+						</button>
+						<span class="visible-xs navbar-brand">Sidebar menu</span>
+					</div>
+
+
+					<div class="navbar-collapse collapse sidebar-navbar-collapse">
+						<ul class="nav navbar-nav">
+							<li><a href="index.html">Starting the
+									program</a></li>
+							<li><a href="main.html">Main Window Layout</a></li>
+							<li><a href="preview.html">Previewing Files</a></li>
+							<li><a href="anonymizingFiles.html">Anonymizing Files</a></li>
+							<li><a href="anonymizeOptions.html">Anonymize Options</a></li>
+							<li><a href="edit.html">Editing</a></li>
+							<li><a href="quickTips.html">Quick Start and Tips</a></li>
+							<li><a href="faq.html">Frequently Asked Questions</a></li>
+							<li><a href="commandLine.html">Running as a command line
+									program</a></li>
+							<!-- <li><a style="margin-left:40px;" href="preload.html">Saving and loading a session</a> TODO </li> -->
+							<li><a
+								href="http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1" target="_blank">DICOM
+									Value Representations (from the DICOM standard)</a></li>
+							<li><a href="valueMultiplicity.html">DICOM Value
+									Multiplicity</a></li>
+
+						</ul>
+					</div>
+					<!--/.nav-collapse -->
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-8">
+			
+        <h2>Starting the Program</h2>
+        The program may be started by either:
+
+        <ul>
+          <li>on UMHS installations clicking Start --&gt; Accessories --&gt; DICOM+</li>
+          <li>dragging one or more DICOM files or directories onto the desktop icon</li>
+          <li>double clicking the icon</li>
+          <li>invoking the <code>DICOM+.bat</code> file from the command line (Windows)</li>
+          <li>invoking the <code>DICOM+MIL.bat</code> file from the command line (Windows for VA)</li>
+          <li>invoking the <code>DICOM+.sh</code> file from the command line (Linux)</li>
+        </ul>
+
+        <p>
+        Arguments, including files to be loaded, may be appended as command line arguments.
+        See <a href="commandLine.html">Running as a command line program</a> for
+        more details on command line invocation.
+        </p>
+
+        <p>
+        After the program has been started, more files may be loaded by dragging them onto the
+        main window.  If a directory is dragged, then all the immediate files under that directory
+        will be loaded.  Directories under a dragged directory will not be loaded.  This is by design, to
+        prevent inadvertent dragging of a top level directory that would cause the program to traverse
+        a large number of files, possibly an entire disk.
+        </p>
+
+        <p>
+        Loading files does not change them, and the default behavior is to never over-write an existing file.
+        </p>
+
+        <p>
+        Any file that is not a DICOM file (such as txt or zip files) will be ignored.  The
+        requirements for a file to be considered a DICOM file are very loose - it must have at least
+        one DICOM attribute.  This loose requirement was intentional so as to allow the user to examine
+        damaged or poorly constructed DICOM files.  If a DICOM file has errors that make it partially
+        unreadable, then DICOM+ will read as much as possible.
+        </p>
+
+		</div>
+
+	</div>
+</body>
+</html>

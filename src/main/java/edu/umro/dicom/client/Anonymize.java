@@ -20,6 +20,7 @@ import java.io.FileInputStream;
  */
 
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -366,8 +367,8 @@ public class Anonymize {
         }
     }
 
-    private static boolean isDate(byte[] vr) {
-        return ValueRepresentation.isDateVR(vr) || ValueRepresentation.isDateVR(vr);
+    private static boolean isDateOrDateTime(byte[] vr) {
+        return ValueRepresentation.isDateVR(vr) || ValueRepresentation.isDateTimeVR(vr);
     }
 
     private static String truncToYear(String text) {
@@ -405,7 +406,7 @@ public class Anonymize {
      * @param dateShiftValue
      * @return
      */
-    private static String shiftDate(String text, int dateShiftValue) {
+    private static String shiftDate(String text, Long dateShiftValue) {
         String maxDate = "99991231";
         String minDate = "00010101";
         long msInDay = 24 * 60 * 60 * 1000;
@@ -430,7 +431,7 @@ public class Anonymize {
         }
     }
 
-    private static void shiftDateAttr(Attribute attribute, int dateShiftValue) {
+    private static void shiftDateAttr(Attribute attribute, Long dateShiftValue) {
         try {
             String[] originalValueList = attribute.getStringValues();
             attribute.removeValues();
@@ -443,18 +444,69 @@ public class Anonymize {
         }
     }
 
-    private static void anonDateAttr(Attribute attribute, Date dateAnonValue) {
+    private static void replaceAllValues(Attribute attribute, String value) {
         try {
-            String dateText = Util.dateFormat.format(dateAnonValue);
             String[] originalValueList = attribute.getStringValues();
             attribute.removeValues();
             for (@SuppressWarnings("unused")
             String s : originalValueList) {
-                attribute.addValue(dateText);
+                attribute.addValue(value);
             }
         }
         catch (Exception e) {
 
+        }
+    }
+
+    private static void dateTimeAnon(AttributeList attributeList) {
+        String dateTimeText = AnonymizeDateTime.dateTimeFormat.format(AnonymizeDateTime.getAnonValue());
+        String dateText = dateTimeText.substring(0, 8);
+        String timeText = dateTimeText.substring(9, 15);
+        for (Attribute at : attributeList.values()) {
+            byte[] vr = at.getVR();
+            if (ValueRepresentation.isDateVR(vr)) {
+                replaceAllValues(at, dateText);
+            }
+            if (ValueRepresentation.isTimeVR(vr)) {
+                replaceAllValues(at, timeText);
+            }
+            if (ValueRepresentation.isDateTimeVR(vr)) {
+                replaceAllValues(at, dateTimeText);
+            }
+        }
+    }
+
+    private static void dateTimeYearTruncate(AttributeList attributeList) {
+        for (Attribute at : attributeList.values()) {
+            if (isDateOrDateTime(at.getVR())) {
+                truncateYear(at);
+            }
+        }
+    }
+
+    private static void dateTimeShift(AttributeList attributeList) {
+        // TODO
+    }
+
+    private static void anonymizeDatesAndTimes(AttributeList attributeList) {
+
+        switch (AnonymizeDateTime.getMode()) {
+        case Anon: {
+            dateTimeAnon(attributeList);
+            break;
+        }
+
+        case Year: {
+            dateTimeYearTruncate(attributeList);
+            break;
+        }
+
+        case Shift: {
+            dateTimeShift(attributeList);
+            break;
+        }
+
+        default:
         }
     }
 
@@ -473,6 +525,7 @@ public class Anonymize {
     private static void anonymize(String anonymizedPatientId, AttributeList attributeList, AttributeList replacementAttributeList,
             HashMap<String, String> aggressiveReplaceList,
             String originalPatientId) {
+        anonymizeDatesAndTimes(attributeList);
         for (Attribute attribute : getAttributeListValues(attributeList).values()) {
             AttributeTag tag = attribute.getTag();
             if (attribute instanceof SequenceAttribute) {
@@ -483,30 +536,6 @@ public class Anonymize {
                 }
             }
             else {
-                if (isDate(attribute.getVR())) {
-                    switch (AnonymizeDate.getInstance().getMode()) {
-                    case Anon: {
-                        if (AnonymizeDate.getInstance().getAnonValue() != null) {
-                            anonDateAttr(attribute, AnonymizeDate.getInstance().getAnonValue());
-                        }
-                        break;
-                    }
-
-                    case Year: {
-                        truncateYear(attribute);
-                        break;
-                    }
-
-                    case Shift: {
-                        if (AnonymizeDate.getInstance().getShiftValue() != 0) {
-                            shiftDateAttr(attribute, AnonymizeDate.getInstance().getShiftValue());
-                        }
-                        break;
-                    }
-
-                    default:
-                    }
-                }
                 Attribute replacement = replacementAttributeList.get(tag);
                 if (replacement != null) {
                     anonymizeNonSequenceAttribute(anonymizedPatientId, attribute, replacement, originalPatientId);

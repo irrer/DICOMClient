@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>DICOM+</title>
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap.min.css" />
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap-theme.min.css" />
+<script src="../../../jquery/1.11.3/jquery.min.js"></script>
+<script src="../../../bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<style>
+body {
+	max-width: 1024px;
+}
+
+@media ( min-width : 768px) {
+	.sidebar-nav .navbar .navbar-collapse {
+		padding: 0;
+		max-height: none;
+	}
+	.sidebar-nav .navbar ul {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li a {
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+}
+</style>
+</head>
+<body>
+
+	<div style="margin-top: 20px;margin-bottom: 50px;" class="row">
+		<div class="col-md-3 col-md-offset-1">
+			<h1 class="fill">
+                <a href="index.html"> <img  
+                    src="../../../images/DICOM+.png" height="232"/>
+                </a>
+			</h1>
+			<div class="sidebar-nav">
+				<div class="navbar navbar-default" role="navigation">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse"
+							data-target=".sidebar-navbar-collapse">
+							<span class="sr-only">Toggle navigation</span> <span
+								class="icon-bar"></span> <span class="icon-bar"></span> <span
+								class="icon-bar"></span>
+						</button>
+						<span class="visible-xs navbar-brand">Sidebar menu</span>
+					</div>
+
+
+					<div class="navbar-collapse collapse sidebar-navbar-collapse">
+						<ul class="nav navbar-nav">
+							<li><a href="index.html">Starting the
+									program</a></li>
+							<li><a href="main.html">Main Window Layout</a></li>
+							<li><a href="preview.html">Previewing Files</a></li>
+							<li><a href="anonymizingFiles.html">Anonymizing Files</a></li>
+							<li><a href="anonymizeOptions.html">Anonymize Options</a></li>
+							<li><a href="edit.html">Editing</a></li>
+							<li><a href="quickTips.html">Quick Start and Tips</a></li>
+							<li><a href="faq.html">Frequently Asked Questions</a></li>
+							<li><a href="commandLine.html">Running as a command line
+									program</a></li>
+							<!-- <li><a style="margin-left:40px;" href="preload.html">Saving and loading a session</a> TODO </li> -->
+							<li><a
+								href="http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1" target="_blank">DICOM
+									Value Representations (from the DICOM standard)</a></li>
+							<li><a href="valueMultiplicity.html">DICOM Value
+									Multiplicity</a></li>
+
+						</ul>
+					</div>
+					<!--/.nav-collapse -->
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-8">
+			
+<h2>Anonymizing Files</h2>
+
+Before anonymizing, first make sure that the application is in
+anonymize mode using the <code>Anonymize</code> radio
+button at the top left of the main window.
+
+<p/>
+<br/>
+
+If a particular patient ID is desired, enter it in the <code>New Patient ID</code> 
+field.  This field is initialized to a random value at startup.  The pattern for
+this is defined in the configuration file.
+
+<p/>
+<br/>
+
+Be default, the patient name is set to the same value as the patient ID.  If they
+need to be different, click the checkbox to the right of the <code>New Patient Name</code> 
+field, which will enable the field and a different name to be entered.
+
+<p/>
+<br/>
+To anonymize a series,
+click the <code>Anonymize</code> button to the
+right of the series.  When complete, the green and white plus sign will
+indicate that the series has been anonymized.
+
+<p/>
+<br/>
+
+One of the features of the program is to properly handle the anonymization of UIDs
+across files within a series and study.
+<moreinfo 
+title='This is true for many uses, but in
+particular for Radiotherapy where the
+relationships and cross-references between
+DICOM files is complex.'>(more info)</moreinfo>
+After anonymization, the generated files will have new UIDs and the relationships
+between files will be maintained, provided that the files were anonymized in the
+same session.
+
+<p/>
+When files are anonymized, they are put in the <code>Destination</code> shown near the
+top of the main screen.  The destination may be changed by using the <code>Browse</code> button.
+<p/>
+If the <code>Destination</code> does not exist, it will be created as anonymization begins.
+If you do not have permission to write files, then anonymization will fail.
+Note that repeatedly anonymizations will create a new set of files on each invocation.
+<p/>
+An entire patient may be anonymized by clicking the <code>Anonymize Patient</code>
+button in the uppor right hand corner of each patient's information.
+
+<p/>
+
+Multiple patients may be anonymized by clicking the <code>Anonymize All</code>
+button at the bottom of the main window.
+
+
+		</div>
+
+	</div>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>DICOM+</title>
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap.min.css" />
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap-theme.min.css" />
+<script src="../../../jquery/1.11.3/jquery.min.js"></script>
+<script src="../../../bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<style>
+body {
+	max-width: 1024px;
+}
+
+@media ( min-width : 768px) {
+	.sidebar-nav .navbar .navbar-collapse {
+		padding: 0;
+		max-height: none;
+	}
+	.sidebar-nav .navbar ul {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li a {
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+}
+</style>
+</head>
+<body>
+
+	<div style="margin-top: 20px;margin-bottom: 50px;" class="row">
+		<div class="col-md-3 col-md-offset-1">
+			<h1 class="fill">
+                <a href="index.html"> <img  
+                    src="../../../images/DICOM+.png" height="232"/>
+                </a>
+			</h1>
+			<div class="sidebar-nav">
+				<div class="navbar navbar-default" role="navigation">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse"
+							data-target=".sidebar-navbar-collapse">
+							<span class="sr-only">Toggle navigation</span> <span
+								class="icon-bar"></span> <span class="icon-bar"></span> <span
+								class="icon-bar"></span>
+						</button>
+						<span class="visible-xs navbar-brand">Sidebar menu</span>
+					</div>
+
+
+					<div class="navbar-collapse collapse sidebar-navbar-collapse">
+						<ul class="nav navbar-nav">
+							<li><a href="index.html">Starting the
+									program</a></li>
+							<li><a href="main.html">Main Window Layout</a></li>
+							<li><a href="preview.html">Previewing Files</a></li>
+							<li><a href="anonymizingFiles.html">Anonymizing Files</a></li>
+							<li><a href="anonymizeOptions.html">Anonymize Options</a></li>
+							<li><a href="edit.html">Editing</a></li>
+							<li><a href="quickTips.html">Quick Start and Tips</a></li>
+							<li><a href="faq.html">Frequently Asked Questions</a></li>
+							<li><a href="commandLine.html">Running as a command line
+									program</a></li>
+							<!-- <li><a style="margin-left:40px;" href="preload.html">Saving and loading a session</a> TODO </li> -->
+							<li><a
+								href="http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1" target="_blank">DICOM
+									Value Representations (from the DICOM standard)</a></li>
+							<li><a href="valueMultiplicity.html">DICOM Value
+									Multiplicity</a></li>
+
+						</ul>
+					</div>
+					<!--/.nav-collapse -->
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-8">
+			<h2>Edit.html</h2>
+
+The <code>Edit... </code> button near the lower right in the <a href='preview.html#PreviewText'>preview</a> 
+window (in text mode only) opens the window shown below:
+
+<p/>
+<br/>
+<img src='../editMain.png' width='837'/>
+<br/>
+<p/>
+
+<h2>Notes on Editing</h2>
+
+<h3>Selecting an Attribute</h3>
+To select an attribute for editing, use the mouse to click on it in the
+preview screen.  The selection will be highlighted in grey as shown here:
+<br/>
+<p/>
+<img src='../editSelectAttributeOrig.png' style='margin-left:40px;'/>
+<br/>
+<p/>
+
+
+<h3>Validating Attributes</h3>
+Cursory validation is performed on the changes made to files, but the
+user is largely responsible for entering valid data.
+<p/>
+It is also possible to make a DICOM file invalid by deleting required attributes or
+adding attributes that are not allowed for the given modality.  Again, the use is
+responsible for using attributes correctly.
+<p/>
+
+
+<h3>Update</h3>
+<br/>
+The most frequent editing operation is to update (change) an existing value.  To update, select an
+attribute and then click the <code>Update</code> button.
+<p/>
+The window will show the current value(s) of the attribute.  Enter the changes and
+then click the <code>Update</code> button in the lower right corner.
+<p/>
+Note that you can only update primitive values such as numbers and strings.  If a sequence attribute
+is selected, then the <code>Update</code> button is disabled.
+
+<p/>
+<h3>Create</h3>
+<br/>
+When creating a new value, the root of the attribute tree is assumed by default.  If you want to
+create a value in a sub-tree sequence, then select an attribute at the same level, or the parent attribute.
+When the <code>Create</code> is clicked a window like this will be shown:
+<p/>
+<img src='../editCreateSelect.png' width='837'/>
+<p/>
+After selecting the attribute to be created, fill in value(s) as shown:
+<img src='../editCreateValues.png'  width='837'/>
+
+
+<p/>
+<h3>Copy</h3>
+<br/>
+The DICOM specification does not allow duplicate attributes, so only sequence items can be copied. The
+<code>Copy</code> button will only be enabled when a sequence item is selected.
+<p/>
+To perform a copy, select the sequence item and then click <code>Copy</code>.  If an item contains a tree
+of sub-items, then the entire tree will be copied.
+
+
+<p/>
+<h3>Delete</h3>
+<br/>
+Any item may be deleted.  To delete an item, select it, and then click the <code>Delete</code> button.  If the
+attribute contains other attributes, then the entire tree is removed.
+
+
+
+<p/>
+<h3>Options</h3>
+<br/>
+
+The <code>Editing Options</code> window lets you control how editing changes are saved.
+The default is to save all slices in the series as DICOM without overwriting the original files, as shown below:
+<p/>
+<br/>
+<img src='../editOptionsOrig.png' width='837' style='margin-left:40px;'/>
+<p/>
+Any combination of boxes may be selected, though at least one of the last four should be selected or nothing will be saved.
+
+<p/>
+
+<ul>
+	<li><code>Save to all slices in series</code> If selected, the
+		edits will be made to all slices and they will all be written to disk.
+		If not selected, only the current slice will be changed and saved.<p/></li>
+	<li><code>Over-write original file(s)</code> If selected, the
+		original files are over written, otherwise new files are created and
+		put in the destination folder indicated in the main window.<p/></li>
+	<li><code>Save as DICOM</code> Save the files as DICOM<p/></li>
+	<li><code>Save as text</code> Save metadata as text. This can be
+		useful for later viewing or processing with other tools.<p/></li>
+	<li><code>Save as PNG image</code> Saving as PNG allows importing
+		the image into other tools or web pages. This is ignored if the file
+		is not an image modality, such as RTSTRUCT.<p/></li>
+	<li><code>Save as XML</code> Saving as XML puts the metadata in a
+		structured format that can be interpreted with other software tools.<p/></li>
+</ul>
+
+
+		</div>
+
+	</div>
+</body>
+</html>

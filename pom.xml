@@ -94,7 +94,7 @@
                             <tasks>
                                 <echo>Hello from generate.docs</echo>
                                 
-                                <property name="doc.version"     value="1.0.51" />
+                                <property name="doc.version"     value="1.0.53" />
                                 <property name="doc.dir"         value="docs/user_manual/user_manual_${doc.version}" />
                                 <property name="doc.dest.dir"    value="${doc.dir}/output" />
                                 <property name="code.version"    value="${version}" />

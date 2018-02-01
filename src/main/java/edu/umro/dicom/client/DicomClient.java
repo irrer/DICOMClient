@@ -70,7 +70,7 @@ import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.TagFromName;
 
-import edu.umro.dicom.client.AnonymizeDate.DateMode;
+import edu.umro.dicom.client.AnonymizeDateTime.DateMode;
 import edu.umro.util.Exec;
 import edu.umro.util.Log;
 import edu.umro.util.OpSys;
@@ -1893,7 +1893,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 "        -P Specify new patient ID for anonymization\n" +
                 "        -o Specify output file for anonymization (single file only, command line only)\n" +
                 "        -d Specify output directory for anonymization (can not be used with -o option)\n" +
-                "        -y Truncate all dates to just the year, eg: 19670225 -> 19670101\n" +
+                "        -a Set all dates and times to the same value, eg: 19670225.092251 -> 19560124.105959\n" +
+                "        -i Shift all dates and times by adding the given amount.  Amount may be pos or neg.  eg: -128.050000 -> subtract 128 days and 5 hours from all dates and times.\n"
+                +
+                "        -y Truncate all dates to just the year, eg: 19670225 -> 19670101 . Leave month, day, and time intact.\n" +
                 "        -s When reading files, keep recursively searching through sub-directories\n" +
                 "        -F (Flat) The default.  Store created files into the same directory.  Use only one of -F, -T, or -L\n" +
                 "        -T (Tree) Store created files in patient ID / series tree under specified directory\n" +
@@ -2007,40 +2010,42 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 }
 
                 if (args[a].equals("-y")) {
-                    if (AnonymizeDate.getInstance().getMode() != DateMode.None) {
-                        fail("Conflict with -y option.  Can only use one date anonymization mode of -y, -s, or -a.");
+                    if (AnonymizeDateTime.getMode() != DateMode.None) {
+                        fail("Conflict with -y option.  Can only use one date anonymization mode of -y, -i, or -a.");
                     }
-                    AnonymizeDate.getInstance().setMode(DateMode.Year);
+                    AnonymizeDateTime.setMode(DateMode.Year);
                     continue;
                 }
 
-                if (args[a].equals("-s")) { // date shift
-                    if (AnonymizeDate.getInstance().getMode() != DateMode.None) {
-                        fail("Conflict with -s option.  Can only use one date anonymization mode of -y, -s, or -a.");
+                if (args[a].equals("-i")) { // date shift
+                    if (AnonymizeDateTime.getMode() != DateMode.None) {
+                        fail("Conflict with -s option.  Can only use one date anonymization mode of -y, -i, or -a.");
                     }
                     a++;
                     if (a >= args.length) fail("Missing value for -s (date shift) option.");
                     try {
-                        Integer shift = Integer.parseInt(args[a].trim());
-                        AnonymizeDate.getInstance().setMode(DateMode.Shift);
-                        AnonymizeDate.getInstance().setShiftValue(shift);
+                        String text = args[a].trim();
+                        Long shift = AnonymizeDateTime.parseShiftText(text);
+                        AnonymizeDateTime.setMode(DateMode.Shift);
+                        AnonymizeDateTime.getInstance().setShiftValue(shift);
                     }
                     catch (Exception e) {
-                        fail("Unable to parse date shift -s value " + args[a] + " as integer.");
+                        fail("Unable to parse date shift -s value " + args[a] + " as days.HHMMSS ");
                     }
                     continue;
                 }
 
                 if (args[a].equals("-a")) { // date anonymization
-                    if (AnonymizeDate.getInstance().getMode() != DateMode.None) {
-                        fail("Conflict with -a option.  Can only use one date anonymization mode of -y, -s, or -a.");
+                    if (AnonymizeDateTime.getMode() != DateMode.None) {
+                        fail("Conflict with -a option.  Can only use one date anonymization mode of -y, -i, or -a.");
                     }
                     a++;
-                    if (a >= args.length) fail("Missing date value for -a (date anonymization) option.  Format is yyyyMMDDD, as in 19560124");
+                    if (a >= args.length) fail("Missing date value for -a (date anonymization) option.  Format is yyyyMMDDD.HHMMSS, as in 19560124.115959");
                     try {
-                        Date anon = Util.dateFormat.parse(args[a].trim());
-                        AnonymizeDate.getInstance().setMode(DateMode.Anon);
-                        AnonymizeDate.getInstance().setAnonValue(anon);
+                        String text = args[a].trim();
+                        Date anon = AnonymizeDateTime.dateTimeFormat.parse(text);
+                        AnonymizeDateTime.setMode(DateMode.Anon);
+                        AnonymizeDateTime.setAnonValue(anon);
                     }
                     catch (Exception e) {
                         fail("Unable to parse date shift -a value " + args[a] + " as date. Format is yyyyMMDDD, as in 19560124");

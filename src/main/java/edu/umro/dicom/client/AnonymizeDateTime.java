@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.swing.BorderFactory;
@@ -43,17 +45,25 @@ import edu.umro.util.Log;
  *
  */
 
-public class AnonymizeDate implements ActionListener, DocumentListener, MouseListener {
+public class AnonymizeDateTime implements ActionListener, DocumentListener, MouseListener {
+
+    public static final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMdd.HHmmss");
+    private static final Long msPerSecond = new Long(1000);
+    private static final Long msPerMinute = msPerSecond * 60;
+    private static final Long msPerHour = msPerMinute * 60;
+    private static final long msPerDay = 24 * msPerHour;
 
     private ButtonGroup buttonGroup = new ButtonGroup();
 
     private JTextField anonTextField = null;
     private JTextField shiftTextField = null;
+    private JLabel anonLabel = null;
+    private JLabel shiftLabel = null;
 
     enum DateMode {
         None("None", "Leave dates as they are except for those individually tagged for anonymization."), //
-        Year("Year", "Remove the month and day from each date, leaving only the year."), //
-        Anon("Anonymize", "Set dates to a specific value.  Example: 19560124 for Jan 24, 1956."), //
+        Year("Year", "Remove the month and day from each date, leaving only the year.  Do not change times."), //
+        Anon("Anonymize", "Set dates and time to a specific value.  Example: 19560124.095400 for Jan 24, 1956 09:54:00."), //
         Shift("Shift", "Shift dates forward (positive) or back (negative) by the given number of days.");//
 
         /** Name displayed to the user. */
@@ -72,24 +82,62 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
         }
     }
 
+    private static String formatAnonValueToHuman(Date anonVal) {
+        String text = (new SimpleDateFormat("d MMM yyyy  HH:mm:ss")).format(anonVal);
+        return text;
+    }
+
     private JPanel buildAnon() {
         JPanel panel = DateMode.Anon.panel;
-        anonTextField = new JTextField(6);
-        anonTextField.setText("18000101");
+        anonTextField = new JTextField(13);
+        anonTextField.setText(dateTimeFormat.format(anonValue));
+        panel.add(anonTextField);
+        anonLabel = new JLabel(formatAnonValueToHuman(anonValue));
+        panel.add(anonLabel);
         anonTextField.getDocument().addDocumentListener(this);
         anonTextField.addMouseListener(this);
-        panel.add(anonTextField);
         return panel;
+    }
+
+    private static String formatShiftValue(Long shftVal) {
+        long sv = (shftVal >= 0) ? shftVal : -shftVal;
+
+        Long days = sv / msPerDay;
+        sv = sv - (days * msPerDay);
+
+        Long hours = sv / msPerHour;
+        sv = sv - (hours * msPerHour);
+
+        Long minutes = sv / msPerMinute;
+        sv = sv - (minutes * msPerMinute);
+
+        Long seconds = sv / msPerSecond;
+
+        String text = String.format("%d.%02d%02d%02d", days, hours, minutes, seconds);
+        text = (shftVal >= 0) ? text : "-" + text;
+        return text;
+    }
+
+    private static String formatShiftValueToHuman() {
+        long sv = (shiftValue >= 0) ? shiftValue : -shiftValue;
+        String[] daysTime = formatShiftValue(sv).split("\\.");
+
+        String text = daysTime[0] + " days " + daysTime[1].substring(0, 2) + ":" + daysTime[1].substring(2, 4) + ":" + daysTime[1].substring(4, 6);
+
+        text = (shiftValue >= 0) ? text : "-" + text;
+        return text;
     }
 
     private JPanel buildShift() {
         JPanel panel = DateMode.Shift.panel;
-        shiftTextField = new JTextField(6);
-        shiftTextField.setText("0");
+        shiftTextField = new JTextField(13);
+        shiftTextField.setText(formatShiftValue(shiftValue));
         shiftTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+        panel.add(shiftTextField);
+        shiftLabel = new JLabel(formatShiftValueToHuman());
+        panel.add(shiftLabel);
         shiftTextField.getDocument().addDocumentListener(this);
         shiftTextField.addMouseListener(this);
-        panel.add(shiftTextField);
         return panel;
     }
 
@@ -130,7 +178,6 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
         dateMode.radioButton.setSelected(true);
 
         panel.setToolTipText("Type of anonymization for dates.");
-        panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         return panel;
     }
 
@@ -156,60 +203,73 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
         DicomClient.getInstance().updatePreviewIfAppropriate();
     }
 
-    private Date anonValue = null;
+    private static Long parseTime(String text) throws ParseException {
+        text = (text + "000000").substring(0, 6);
+        // If the time format is not valid, then throw an exception.
 
-    public Date getAnonValue() {
-        return anonValue;
-    }
+        Long hour = Long.parseLong(text.substring(0, 2));
+        Long minute = Long.parseLong(text.substring(2, 4));
+        Long second = Long.parseLong(text.substring(4, 6));
 
-    public void setAnonValue(Date anon) {
-        anonValue = anon;
-        DicomClient.getInstance().updatePreviewIfAppropriate();
+        if ((hour < 0) || (hour > 23) || (minute < 0) || (minute > 59) || (second < 0) || (second > 59)) throw new ParseException("Invalid Time", 0);
+
+        long time = (hour * msPerHour) + (minute * msPerMinute) + (second * msPerSecond);
+        return time;
     }
 
     /**
-     * The number of days to shift dates that are not otherwise anonymized.
+     * Check to see if the shift text is valid. If valid, return the ms to shift. Leading and trailing whitespace is
+     * ignored.
+     * 
+     * @param text
+     *            Text to convert.
+     * 
+     * @return Long (if valid), null if not.
      */
-    private Integer shiftValue = 0;
-
-    public int getShiftValue() {
-        if (shiftValue == null) {
-            return 0;
-        }
-        else {
-            return shiftValue;
-        }
-    }
-
-    public void setShiftValue(Integer dsv) {
-        shiftValue = dsv;
-        DicomClient.getInstance().updatePreviewIfAppropriate();
-    }
-
-    private Integer getDateShiftValueFromGUI() {
-        Integer shift = null;
+    public static Long parseShiftText(String text) {
         try {
-            shift = Integer.parseInt(shiftTextField.getText().trim());
-            shiftTextField.setBackground(Color.WHITE);
+            String[] parts = text.trim().split("\\.");
+            switch (parts.length) {
+            case 1: {
+                return Long.parseLong(parts[0]) * msPerDay;
+            }
+            case 2: {
+                boolean negative = parts[0].startsWith("-");
+                if (negative) {
+                    parts[0] = parts[0].substring(1);
+                }
+
+                parts[1] = (parts[1] + "000000").substring(0, 6);
+                long shift = (Long.parseLong(parts[0]) * msPerDay) + parseTime(parts[1]);
+
+                if (negative) {
+                    shift = -shift;
+                }
+
+                return new Long(shift);
+            }
+            default: // text must be either NNN or NNN.NNN
+                return null;
+            }
         }
         catch (Exception e) {
-            shift = null;
+            return null;
         }
-        return shift;
     }
 
     private void updateShiftText() {
-        Color color = Color.WHITE;
-        Integer newShiftValue = getDateShiftValueFromGUI();
-        if (newShiftValue == null) {
-            color = Color.YELLOW;
-            newShiftValue = 0;
-        }
+        String text = shiftTextField.getText().trim();
+        Long newShiftValue = parseShiftText(text);
 
+        boolean ok = (newShiftValue != null) && (text.equalsIgnoreCase(formatShiftValue(newShiftValue)));
+
+        Color color = (ok) ? Color.WHITE : Color.YELLOW;
+        newShiftValue = (ok) ? newShiftValue : new Long(0);
         shiftTextField.setBackground(color);
 
         if (newShiftValue != shiftValue) {
             shiftValue = newShiftValue;
+            shiftLabel.setText(formatShiftValueToHuman());
             DicomClient.getInstance().updatePreviewIfAppropriate();
         }
     }
@@ -217,20 +277,29 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
     private void updateAnonText() {
         Date date = null;
         try {
-            date = Util.dateFormat.parse(anonTextField.getText());
-            if ((anonValue == null) || ((anonValue.getTime() != date.getTime()))) {
+            // try to put the value into the standard format
+            String text = anonTextField.getText().trim();
+            if (!text.contains(".")) text = text + ".000000";
+            text = (text + "000000").substring(0, 15);
+
+            date = dateTimeFormat.parse(text);
+
+            if ((date == null) || (!text.equalsIgnoreCase(dateTimeFormat.format(date)))) {
+                anonTextField.setBackground(Color.YELLOW);
+                initAnonValue();
+            }
+            else {
                 anonValue = date;
                 anonTextField.setBackground(Color.WHITE);
-                DicomClient.getInstance().updatePreviewIfAppropriate();
             }
         }
         catch (Exception e) {
             anonTextField.setBackground(Color.YELLOW);
-            anonValue = null;
+            initAnonValue();
         }
 
+        anonLabel.setText(formatAnonValueToHuman(anonValue));
         DicomClient.getInstance().updatePreviewIfAppropriate();
-
     }
 
     private void textChanged(DocumentEvent e) {
@@ -296,15 +365,38 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
         ;
     }
 
-    public DateMode getMode() {
+    public static DateMode getMode() {
         return dateMode;
     }
 
-    public void setMode(DateMode dm) {
+    public static void setMode(DateMode dm) {
         dateMode = dm;
     }
 
-    private void initAnonValue() {
+    private static Date anonValue = null;
+
+    public static Date getAnonValue() {
+        return anonValue;
+    }
+
+    public static void setAnonValue(Date anon) {
+        anonValue = anon;
+    }
+
+    /**
+     * The dates and times to shift dates that are not otherwise anonymized.
+     */
+    private static Long shiftValue = new Long(0);
+
+    public Long getShiftValue() {
+        return shiftValue;
+    }
+
+    public void setShiftValue(Long sv) {
+        shiftValue = sv;
+    }
+
+    private static void initAnonValue() {
         try {
             anonValue = Util.dateFormat.parse("18000101");
         }
@@ -313,15 +405,18 @@ public class AnonymizeDate implements ActionListener, DocumentListener, MouseLis
         }
     }
 
-    private AnonymizeDate() {
+    static {
         initAnonValue();
     }
 
-    private static AnonymizeDate instance = null;
+    private AnonymizeDateTime() {
+    }
 
-    public static AnonymizeDate getInstance() {
+    private static AnonymizeDateTime instance = null;
+
+    public static AnonymizeDateTime getInstance() {
         if (instance == null) {
-            instance = new AnonymizeDate();
+            instance = new AnonymizeDateTime();
         }
         return instance;
     }

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>DICOM+</title>
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap.min.css" />
+<link rel="stylesheet"
+	href="../../../bootstrap/3.3.6/css/bootstrap-theme.min.css" />
+<script src="../../../jquery/1.11.3/jquery.min.js"></script>
+<script src="../../../bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+<style>
+body {
+	max-width: 1024px;
+}
+
+@media ( min-width : 768px) {
+	.sidebar-nav .navbar .navbar-collapse {
+		padding: 0;
+		max-height: none;
+	}
+	.sidebar-nav .navbar ul {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li {
+		float: none;
+		display: block;
+	}
+	.sidebar-nav .navbar li a {
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+}
+</style>
+</head>
+<body>
+
+	<div style="margin-top: 20px;margin-bottom: 50px;" class="row">
+		<div class="col-md-3 col-md-offset-1">
+			<h1 class="fill">
+                <a href="index.html"> <img  
+                    src="../../../images/DICOM+.png" height="232"/>
+                </a>
+			</h1>
+			<div class="sidebar-nav">
+				<div class="navbar navbar-default" role="navigation">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse"
+							data-target=".sidebar-navbar-collapse">
+							<span class="sr-only">Toggle navigation</span> <span
+								class="icon-bar"></span> <span class="icon-bar"></span> <span
+								class="icon-bar"></span>
+						</button>
+						<span class="visible-xs navbar-brand">Sidebar menu</span>
+					</div>
+
+
+					<div class="navbar-collapse collapse sidebar-navbar-collapse">
+						<ul class="nav navbar-nav">
+							<li><a href="index.html">Starting the
+									program</a></li>
+							<li><a href="main.html">Main Window Layout</a></li>
+							<li><a href="preview.html">Previewing Files</a></li>
+							<li><a href="anonymizingFiles.html">Anonymizing Files</a></li>
+							<li><a href="anonymizeOptions.html">Anonymize Options</a></li>
+							<li><a href="edit.html">Editing</a></li>
+							<li><a href="quickTips.html">Quick Start and Tips</a></li>
+							<li><a href="faq.html">Frequently Asked Questions</a></li>
+							<li><a href="commandLine.html">Running as a command line
+									program</a></li>
+							<!-- <li><a style="margin-left:40px;" href="preload.html">Saving and loading a session</a> TODO </li> -->
+							<li><a
+								href="http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1" target="_blank">DICOM
+									Value Representations (from the DICOM standard)</a></li>
+							<li><a href="valueMultiplicity.html">DICOM Value
+									Multiplicity</a></li>
+
+						</ul>
+					</div>
+					<!--/.nav-collapse -->
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-8">
+			<h2>Command Line</h2>
+
+<p/>
+By default DICOM+ runs as a GUI, but if given the <code>-c</code> option it will run as a command line.
+Running as a command line can be useful when processing a large number of files.
+<br/>
+<p/>
+When used this way, only anonymize one patient at a time.
+<br/>
+After the options, any number of files or directories may be listed for input.
+<p/>
+The following usage is shown when giving the command with the <code>-h</code> option:
+<p/>
+<code>DICOM+ -h</code>
+<p/>
+<div >
+Usage:
+    DICOMClient [ -h ] [ -c ] [ -P patient_id ] [ -o output_file ] [ -3 ] [ -z ] [ -g ] inFile1 inFile2 inDir1 inDir2 ...
+    <br/>
+    <div style="margin-left:40px;">
+        <p/>
+        <strong>-h</strong> Show this help and then exit (without GUI)
+        <p/>
+        <strong>-c</strong> Run in command line mode (without GUI)
+        <p/>
+        <strong>-P</strong> Specify new patient ID for anonymization
+        <p/>
+        <strong>-o</strong> Specify output file for anonymization (single file only, command line only)
+        <p/>
+        <strong>-d</strong> Specify output directory for anonymization (can not be used with -o option)
+        <p/>
+        <strong>-y</strong> Truncate all dates to just the year, eg: 19670225 -> 19670101
+        <p/>
+        <strong>-s</strong> When reading files, keep recursively searching through sub-directories
+        <p/>
+        <strong>-F</strong> (Flat) The default.  Store created files into the same directory.  Use only one of -F, -T, or -L
+        <p/>
+        <strong>-T</strong> (Tree) Store created files in patient ID / series tree under specified directory
+        <p/>
+        <strong>-L</strong> (Local) Store created files in local directory as a child of their source directory.  Requires write access to source directories.        
+        <p/>
+        <strong>-3</strong> Restrict generated XML to 32 character tag names, as required by the SAS software package
+        <p/>
+        <strong>-t</strong> Show attribute tag details in text dump (effective in command line mode only)
+        <p/>
+        <strong>-l</strong> preload.xml Preload UIDs for anonymization.  This allows anonymizing to take place over multiple sessions.
+        <p/>
+        <strong>-z</strong> Replace each control character in generated XML files that describe DICOM attributes with a blank.  Required by SAS
+        <p/>
+        <strong>-g</strong> Perform aggressive anonymization - anonymize fields that are not marked for
+           anonymization but contain strings found in fields that are marked for anonymization.
+        <p/>
+    </div>
+</div>
+
+<h4>Command Line Options</h4>
+
+<strong>Help: -h</strong>
+Shows the above usage message and then exits regarless of any other options.
+<div style="margin-top:25px;"></div>
+<strong>Command Line Mode: -c</strong>
+Required for operating the program in command line mode.
+
+<div style="margin-top:25px;"></div>
+<strong>Output File: -o [file]</strong>
+Specify the output file for anonymization.  This option can not be used with the -d option.
+
+<div style="margin-top:25px;"></div>
+<strong>Output Directory: -d [dir]</strong>
+Specify the output directory for anonymization.  Valid in command line mode only, and also only when anonymizing a
+single file.  This option can not be used with the -o option.
+
+<div style="margin-top:25px;"></div>
+<strong>Truncate to Year: -y</strong>
+When anonymizing, change the month and day for all dates to 1.  For example, the date 19560321 would change to 19560101.
+This is applied to all attributes with the VR of DA or DT (Date or Date Time).
+
+<div style="margin-top:25px;"></div>
+<strong>Read files recursively: -s</strong>
+When reading files, search recursively through the inputs given.
+
+<div style="margin-top:25px;"></div>
+<strong>Flat: -F</strong>
+When writing files, put them all in the same directory.  Can not be specified with either -L or -T.
+
+<div style="margin-top:25px;"></div>
+<strong>Tree: -T</strong>
+When writing files, put them in a tree by patient and series.  Can not be specified with either -F or -L.
+
+<div style="margin-top:25px;"></div>
+<strong>Local: -L</strong>
+When writing files, put them under the directory that originally contained them.  Can not be specified with either -F or -T.
+
+<div style="margin-top:25px;"></div>
+<strong>Shorten XML Tags: -3</strong>
+When generating XML, restrict tag names to 32 characters. This is to support the consumption of the
+XML by the <a href='https://en.wikipedia.org/wiki/SAS_(software)'>SAS</a> packages.  Note that there is no
+official DICOM for tag names.  
+
+<div style="margin-top:25px;"></div>
+<strong>Attribute Details in Text: -t</strong>
+When generating text files, add the attribute details instead of just the attribute names.  This includes the group number,
+element number, 
+<a href="http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1">VR</a>
+and 
+<a href="valueMultiplicity.html">VM</a>.  This is similar to clicking the <code>Details</code> checkbox in the GUI text preview.
+
+<div style="margin-top:25px;"></div>
+<strong>Preload Anonymization UIDs: -l</strong>
+This feature is not fully implemented.  The intent of this feature is to support the saving and
+restoring of a DICOM+ session.
+
+<div style="margin-top:25px;"></div>
+<strong>Remove CTRL from XML Tags: -z</strong>
+When generating XML, replace control characters with a blank.  This is to support the XML interpreter used by
+the <a href='https://en.wikipedia.org/wiki/SAS_(software)'>SAS</a> packages.
+
+<div style="margin-top:25px;"></div>
+<strong>Aggressive Anonymization: -g</strong>
+When anonymizing, look for instances of the patient's name in text fields, such as StudyDescription and other description
+fields.  If found, replace it with <code>none</code>.
+
+		</div>
+
+	</div>
+</body>
+</html>

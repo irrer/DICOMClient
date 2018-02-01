@@ -1,0 +1,91 @@
+<h2>Frequently Asked Questions</h2>
+
+<p />
+<br />
+<strong>Will DICOM+ over-write my existing files?</strong>
+<br />
+In general, no - The program is designed to preserve existing files. Both
+anonymization and editing create new copies of the files. Before a new
+file is written, the program checks to make sure that the name it is
+using is unique.
+<br />
+
+The only exceptions are:
+
+<ul>
+
+    <li>When editing a file, the user overrides the default and indicates that the
+        original file should be over-written.</li>
+
+    <li>When the user repeatedly saves during an edit session, the
+        same destination file is used.</li>
+
+</ul>
+<p />
+Note that if the same series is anonymized multiple times, it will
+result in multiple sets of files. This is by design, as a common use
+case is to anonymize the same set of files multiple times with different
+user IDs to create test data.
+
+
+
+<p />
+<br />
+<strong>How does DICOM+ anonymize UIDs?</strong>
+<br />
+It replaces all of them with new ones, maintaining the cross-references
+between files. This is especially important in radiotherapy, where a
+patient often has a set of files including images (CT, MR, etc.),
+RTSTRUCT, RTPLAN, RTDOSE, and other files that share UIDs between
+series.
+<p />
+To maintain the cross-references, all files for a given patient must be
+anonymized in the same session.
+<p />
+This is also required by the DICOM specification. See the DICOM
+standard:
+<p />
+
+
+<ul>
+	<li><a href="@@vr.ref@@">Supplement
+			55: Attribute Level Confidentiality (including De-identification)</a></li>
+	<li><a
+		href="ftp://medical.nema.org/medical/dicom/final/sup142_ft.pdf">Supplement
+			142:Clinical Trial De-identification Profiles</a></li>
+</ul>
+
+
+<p />
+
+
+
+<p />
+<br />
+<strong>How does DICOM+ construct file names?</strong>
+<br />
+File names are constructed so as to be human readable, and are formatted
+with the following fields (if they are present in the source DICOM file)
+separated by underscore:
+
+<ul>
+	<li>Patient ID</li>
+	<li>Modality</li>
+	<li>Series Number</li>
+	<li>Instance Number</li>
+</ul>
+
+If the resulting file already exists, an integer is appended to the name
+to make it unique.
+
+
+
+<p />
+<br />
+<strong>Does DICOM+ use 32 or 64 bit?</strong>
+<br />
+Either. The version of the Java runtime on your machine determines which
+will be used, but DICOM+ uses the same BAT and library files regardless.
+The advantage of 64 bit is the ability to work with larger data sets,
+but otherwised they behave identically.
+
