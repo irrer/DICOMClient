@@ -61,10 +61,10 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
     private JLabel shiftLabel = null;
 
     enum DateMode {
-        None("None", "Leave dates as they are except for those individually tagged for anonymization."), //
+        None("None", "Leave dates and times as they are except for those individually tagged for anonymization."), //
         Year("Year", "Remove the month and day from each date, leaving only the year.  Do not change times."), //
         Anon("Anonymize", "Set dates and time to a specific value.  Example: 19560124.095400 for Jan 24, 1956 09:54:00."), //
-        Shift("Shift", "Shift dates forward (positive) or back (negative) by the given number of days.");//
+        Shift("Shift", "Shift dates forward (positive) or back (negative) by the given number of days and time.");//
 
         /** Name displayed to the user. */
         final String display;
@@ -177,7 +177,7 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
 
         dateMode.radioButton.setSelected(true);
 
-        panel.setToolTipText("Type of anonymization for dates.");
+        panel.setToolTipText("Type of anonymization for dates and times.");
         return panel;
     }
 
@@ -388,11 +388,11 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
      */
     private static Long shiftValue = new Long(0);
 
-    public Long getShiftValue() {
+    public static Long getShiftValue() {
         return shiftValue;
     }
 
-    public void setShiftValue(Long sv) {
+    public static void setShiftValue(Long sv) {
         shiftValue = sv;
     }
 

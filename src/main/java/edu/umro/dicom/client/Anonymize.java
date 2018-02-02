@@ -22,11 +22,14 @@ import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 import org.w3c.dom.Document;
@@ -37,6 +40,7 @@ import com.pixelmed.dicom.Attribute;
 import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
+import com.pixelmed.dicom.DateTimeAttribute;
 import com.pixelmed.dicom.DicomException;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.SequenceItem;
@@ -398,49 +402,158 @@ public class Anonymize {
         }
     }
 
-    /**
-     * Perform the mechanics of calculating a string that represents the
-     * shifted date. Limit the date to DICOM valid bounded values.
-     * 
-     * @param text
-     * @param dateShiftValue
-     * @return
-     */
-    private static String shiftDate(String text, Long dateShiftValue) {
-        String maxDate = "99991231";
-        String minDate = "00010101";
-        long msInDay = 24 * 60 * 60 * 1000;
-        try {
-            Date date = Util.dateFormat.parse(text);
-            Date shiftedDate = new Date(date.getTime() + (dateShiftValue * msInDay));
-            String shiftedDateText = Util.dateFormat.format(shiftedDate);
-            if (shiftedDateText.length() > 8) {
-                if (dateShiftValue > 0) {
-                    return maxDate;
-                }
-                else {
-                    return minDate;
+    private static HashMap<AttributeTag, AttributeTag> dateTimePairs = null;
+
+    private static void initDateTimePairs() {
+        dateTimePairs = new HashMap<AttributeTag, AttributeTag>();
+        CustomDictionary dict = CustomDictionary.getInstance();
+        @SuppressWarnings("unchecked")
+        Iterator<AttributeTag> iter = dict.getTagIterator();
+        while (iter.hasNext()) {
+            AttributeTag dateTag = iter.next();
+            if (ValueRepresentation.isDateVR(dict.getValueRepresentationFromTag(dateTag))) {
+                String timeName = dict.getNameFromTag(dateTag).replace("Date", "Time");
+                AttributeTag timeTag = dict.getTagFromName(timeName);
+                if ((timeTag != null) && (ValueRepresentation.isTimeVR(dict.getValueRepresentationFromTag(timeTag)))) {
+                    dateTimePairs.put(dateTag, timeTag);
                 }
             }
-            else {
-                return shiftedDateText;
-            }
-        }
-        catch (Exception e) {
-            return text;
         }
     }
 
-    private static void shiftDateAttr(Attribute attribute, Long dateShiftValue) {
-        try {
-            String[] originalValueList = attribute.getStringValues();
-            attribute.removeValues();
-            for (String s : originalValueList) {
-                attribute.addValue(shiftDate(s, dateShiftValue));
+    private static AttributeTag getDateMate(AttributeTag dateTag) {
+
+        if (dateTimePairs == null) {
+            initDateTimePairs();
+        }
+
+        return dateTimePairs.get(dateTag);
+    }
+
+    private static String getSubSecText(String sec) {
+        String[] parts = sec.split("\\.");
+        if (parts.length > 1)
+            return "." + parts[1];
+        else
+            return "";
+    }
+
+    // TODO Might want to impose sane date limits, such as:
+    // String maxDate = "99991231";
+    // String minDate = "00010101";
+    // to both shiftAllDateTimePairAttributes and shiftAllDateAttributes
+
+    /**
+     * Find date-time pairs within an attribute list and shift them. These have to be done as
+     * pairs because the DICOM 142 supplement states that they should be done together.
+     * 
+     * @param attributeList
+     * @return
+     */
+    private static AttributeList shiftAllDateTimePairAttributes(AttributeList attributeList) {
+
+        AttributeList done = new AttributeList();
+
+        Long shiftValue = AnonymizeDateTime.getShiftValue();
+
+        SimpleDateFormat fullFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        fullFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        // TODO this should handle date-time pairs with Value Multiplicity greater than one
+
+        for (Attribute attribute : attributeList.values()) {
+            try {
+                AttributeTag dateTag = attribute.getTag();
+                AttributeTag timeTag = getDateMate(dateTag);
+                if (timeTag != null) {
+                    Attribute timeAttr = attributeList.get(timeTag);
+                    if (timeAttr != null) {
+                        try {
+                            Attribute dateAttr = attribute;
+                            Date oldDate = DateTimeAttribute.getDateFromFormattedString(attributeList, dateTag, timeTag);
+                            Date newDate = new Date(oldDate.getTime() + shiftValue);
+                            String fullText = fullFormat.format(newDate);
+                            String dateText = fullText.substring(0, 8);
+                            String subSec = getSubSecText(timeAttr.getSingleStringValueOrNull());
+                            String timeText = fullText.substring(8) + subSec;
+
+                            dateAttr.removeValues();
+                            dateAttr.addValue(dateText);
+                            timeAttr.removeValues();
+                            timeAttr.addValue(timeText);
+                            done.put(dateAttr);
+                            done.put(timeAttr);
+                        }
+                        catch (Exception e) {
+                        }
+                    }
+                }
+
+            }
+            catch (Exception e) {
+                ;
+            }
+
+        }
+
+        return done;
+    }
+
+    /**
+     * Shift dates that were not paired with a time.
+     * 
+     * @param attributeList
+     * @param done
+     */
+    private static void shiftAllDateAttributes(AttributeList attributeList, AttributeList done) {
+        Long shiftValue = AnonymizeDateTime.getShiftValue();
+
+        SimpleDateFormat fullFormat = new SimpleDateFormat("yyyyMMdd");
+        fullFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        for (Attribute dateAttr : attributeList.values()) {
+            try {
+                if (ValueRepresentation.isDateVR(dateAttr.getVR()) && (done.get(dateAttr.getTag()) == null)) {
+                    String[] originalValueList = dateAttr.getStringValues();
+                    dateAttr.removeValues();
+                    for (String oldDateText : originalValueList) {
+                        Date oldDate = fullFormat.parse(oldDateText);
+                        Date newDate = new Date(oldDate.getTime() + shiftValue);
+                        String newDateText = fullFormat.format(newDate);
+                        if (!oldDateText.equalsIgnoreCase(newDateText)) {
+                            dateAttr.addValue(newDateText);
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                ;
             }
         }
-        catch (Exception e) {
+    }
 
+    private static void shiftAllTimeAttributes(AttributeList attributeList, AttributeList done) {
+        Long shiftValue = AnonymizeDateTime.getShiftValue();
+
+        SimpleDateFormat fullFormat = new SimpleDateFormat("HHmmss");
+        fullFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        for (Attribute timeAttr : attributeList.values()) {
+            try {
+                if (ValueRepresentation.isTimeVR(timeAttr.getVR()) && (done.get(timeAttr.getTag()) == null)) {
+                    String[] originalValueList = timeAttr.getStringValues();
+                    timeAttr.removeValues();
+                    for (String oldTimeText : originalValueList) {
+                        Date oldTime = fullFormat.parse(oldTimeText);
+                        Date newTime = new Date(oldTime.getTime() + shiftValue);
+                        String newTimeText = fullFormat.format(newTime) + getSubSecText(oldTimeText);
+                        timeAttr.addValue(newTimeText);
+                    }
+                }
+            }
+            catch (Exception e) {
+                ;
+            }
         }
     }
 
@@ -477,15 +590,44 @@ public class Anonymize {
     }
 
     private static void dateTimeYearTruncate(AttributeList attributeList) {
-        for (Attribute at : attributeList.values()) {
-            if (isDateOrDateTime(at.getVR())) {
-                truncateYear(at);
+        for (Attribute attribute : attributeList.values()) {
+            if (isDateOrDateTime(attribute.getVR())) {
+                truncateYear(attribute);
             }
         }
     }
 
+    /**
+     * Shift all attributes with value representation DT (datetime).
+     * 
+     * @param attributeList
+     */
+    private static void shiftAllDateTimeAttributes(AttributeList attributeList) {
+        for (Attribute attribute : attributeList.values()) {
+            try {
+                if (ValueRepresentation.isDateTimeVR(attribute.getVR())) {
+                    String[] originalValueList = attribute.getStringValues();
+                    attribute.removeValues();
+                    for (String s : originalValueList) {
+                        Date orig = DateTimeAttribute.getDateFromFormattedString(s);
+                        Date shifted = new Date(orig.getTime() + AnonymizeDateTime.getShiftValue());
+                        attribute.addValue(DateTimeAttribute.getFormattedStringDefaultTimeZone(shifted));
+                    }
+                }
+            }
+            catch (Exception e) {
+            }
+
+        }
+    }
+
     private static void dateTimeShift(AttributeList attributeList) {
-        // TODO
+        if (AnonymizeDateTime.getShiftValue() != 0) {
+            shiftAllDateTimeAttributes(attributeList);
+            AttributeList done = shiftAllDateTimePairAttributes(attributeList);
+            shiftAllDateAttributes(attributeList, done);
+            shiftAllTimeAttributes(attributeList, done);
+        }
     }
 
     private static void anonymizeDatesAndTimes(AttributeList attributeList) {

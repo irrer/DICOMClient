@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.management.RuntimeErrorException;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
@@ -2019,36 +2020,44 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
                 if (args[a].equals("-i")) { // date shift
                     if (AnonymizeDateTime.getMode() != DateMode.None) {
-                        fail("Conflict with -s option.  Can only use one date anonymization mode of -y, -i, or -a.");
+                        fail("Conflict with -i option.  Can only use one date anonymization mode of -y, -i, or -a.");
                     }
                     a++;
-                    if (a >= args.length) fail("Missing value for -s (date shift) option.");
+                    if (a >= args.length) fail("Missing value for -i (date shift) option.");
                     try {
                         String text = args[a].trim();
                         Long shift = AnonymizeDateTime.parseShiftText(text);
+                        if (shift == null) fail("Unable to parse -i shift value: " + text +
+                                "\nShould be of the form d.HHMMSS, as in 46.152345 for 46 days, 15 hours, 23 minutes and 45 seconds (15:23:45)");
                         AnonymizeDateTime.setMode(DateMode.Shift);
-                        AnonymizeDateTime.getInstance().setShiftValue(shift);
+                        AnonymizeDateTime.setShiftValue(shift);
                     }
                     catch (Exception e) {
-                        fail("Unable to parse date shift -s value " + args[a] + " as days.HHMMSS ");
+                        fail("Unable to parse date shift -i value " + args[a] + " as days.HHMMSS ");
                     }
                     continue;
                 }
 
                 if (args[a].equals("-a")) { // date anonymization
+                    final String example = "Format is yyyyMMDDD.HHmmss, as in 19560124.115959 for Jan 24, 1956, 11:59:59";
                     if (AnonymizeDateTime.getMode() != DateMode.None) {
                         fail("Conflict with -a option.  Can only use one date anonymization mode of -y, -i, or -a.");
                     }
                     a++;
-                    if (a >= args.length) fail("Missing date value for -a (date anonymization) option.  Format is yyyyMMDDD.HHMMSS, as in 19560124.115959");
+                    if (a >= args.length) fail("Missing date value for -a (date anonymization) option.  " + example);
                     try {
                         String text = args[a].trim();
                         Date anon = AnonymizeDateTime.dateTimeFormat.parse(text);
+
+                        if ((anon == null) || (!text.equalsIgnoreCase(AnonymizeDateTime.dateTimeFormat.format(anon)))) {
+                            fail("Unable to parse -a (anonymize date) value " + text + "\n" + example);
+                        }
+
                         AnonymizeDateTime.setMode(DateMode.Anon);
                         AnonymizeDateTime.setAnonValue(anon);
                     }
                     catch (Exception e) {
-                        fail("Unable to parse date shift -a value " + args[a] + " as date. Format is yyyyMMDDD, as in 19560124");
+                        fail("Unable to parse date shift -a value " + args[a] + " as date. " + example);
                     }
                     continue;
                 }
