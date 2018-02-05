@@ -49,8 +49,10 @@ import edu.umro.util.Log;
 public class AnonymizeDateTime implements ActionListener, DocumentListener, MouseListener {
 
     public static final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMdd.HHmmss");
+    public static final SimpleDateFormat dateTimeHumanFormat = new SimpleDateFormat("d MMM yyyy  HH:mm:ss");
     static {
         dateTimeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateTimeHumanFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
     private static final Long msPerSecond = new Long(1000);
     private static final Long msPerMinute = msPerSecond * 60;
@@ -115,8 +117,7 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
     }
 
     private static String formatAnonValueToHuman(Date anonVal) {
-        String text = (new SimpleDateFormat("d MMM yyyy  HH:mm:ss")).format(anonVal);
-        return text;
+        return dateTimeHumanFormat.format(anonVal);
     }
 
     private JPanel buildAnon() {
