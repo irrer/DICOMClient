@@ -1896,7 +1896,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 "        -i Shift all dates and times by adding the given amount.  Amount may be pos or neg.\n" +
                 "           eg: -128.050000 -> subtract 128 days and 5 hours from all dates and times.  Alternately, use a\n" +
                 "           comma-separated pair to pick a random value between them.\n" +
-                "        -y Truncate all dates to just the year, eg: 19670225 -> 19670101 . Leave month, day, and time intact.\n" +
+                "        -y Truncate all dates to just the year, eg: 19670225 -> 19670101 . Leave the time intact.\n" +
                 "        -s When reading files, keep recursively searching through sub-directories\n" +
                 "        -F (Flat) The default.  Store created files into the same directory.  Use only one of -F, -T, or -L\n" +
                 "        -T (Tree) Store created files in patient ID / series tree under specified directory\n" +

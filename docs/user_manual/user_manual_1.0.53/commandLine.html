@@ -29,6 +29,13 @@ Usage:
         <p/>
         <strong>-d</strong> Specify output directory for anonymization (can not be used with -o option)
         <p/>
+        <strong>-a</strong> Set all dates and times to the same value, eg: 19670225.092251 -> 19560124.105959<b></b>
+           &nbsp; &nbsp; &nbsp; &nbsp; Alternately, use a comma-separated pair to pick a random value between them.<b></b>
+        <p/>
+        <strong>-i</strong> Shift all dates and times by adding the given amount.  Amount may be pos or neg.<b></b>
+           &nbsp; &nbsp; &nbsp; &nbsp; eg: -128.050000 -> subtract 128 days and 5 hours from all dates and times.  Alternately, use a<b></b>
+           &nbsp; &nbsp; &nbsp; &nbsp; comma-separated pair to pick a random value between them.
+        <p/>
         <strong>-y</strong> Truncate all dates to just the year, eg: 19670225 -> 19670101
         <p/>
         <strong>-s</strong> When reading files, keep recursively searching through sub-directories
@@ -70,6 +77,27 @@ Specify the output file for anonymization.  This option can not be used with the
 Specify the output directory for anonymization.  Valid in command line mode only, and also only when anonymizing a
 single file.  This option can not be used with the -o option.
 
+<div style="margin-top:25px;"></div>
+<strong>Anonymize all dates and times: -a [yyyyMMdd.HHmmss] <em>or</em> [yyyyMMdd.HHmmss,yyyyMMdd.HHmmss]</strong>
+When anonymizing, change the dates and times to the given value.  For example, the
+date 19560124.111952 is 24 Jan, 1956 11:19:52.  Dates and times that are explicitly checked for anonymization will
+override this setting.  Optionally, a range of date+times may be given, separated by a comma (no blanks).  In this case they are
+interpreted as a range, and the program will pick a single random value within that range and apply it for the duration of execution.
+For example: <em>-a 19600101.000000,19691231.235959</em> would pick a random date and time in the 1960's.
+
+<div style="margin-top:25px;"></div>
+<strong>Shift date and time: -i [dddd.HHmmss] <em>or</em> [dddd.HHmmss,dddd.HHmmss] </strong>
+When anonymizing, add the given offset to all dates and times.  The <em>ddd</em> specifies the days (must be 1 or more digits) and
+<em>HHmmss</em> specifies the time.  If the value is negative then times and dates will shifted into the past,
+otherwise they will be shifted into the future.  Example: <em>-i -10.120000</em> Shift all dates back in time by 10 days, and all
+times back by 12 hours.  Note that some date-time attributes are handled as two parts of the same value.  For example, <em>AcquisitionDate</em> and
+<em>AcquisitionTime</em>, so if shifting the time results in crossing midnight, the date will be shifted accordingly.  This is in compliance with
+the DICOM specification, supplement 142.
+<br></br>
+The value may also be a pair of values that specify a range.  When used in this way, a single random shift value will be generated
+and applied to all dates and times.  For example, <em>-i -100.000000,-500.000000</em> would shift back in time from 100 to 500 days,
+and might generate the value <em>-287.214630</em>, which will be applied to all dates and times.
+ 
 <div style="margin-top:25px;"></div>
 <strong>Truncate to Year: -y</strong>
 When anonymizing, change the month and day for all dates to 1.  For example, the date 19560321 would change to 19560101.
