@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import javax.management.RuntimeErrorException;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
@@ -60,8 +59,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicArrowButton;
 
 import com.pixelmed.dicom.Attribute;
@@ -1895,13 +1892,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 "        -o Specify output file for anonymization (single file only, command line only)\n" +
                 "        -d Specify output directory for anonymization (can not be used with -o option)\n" +
                 "        -a Set all dates and times to the same value, eg: 19670225.092251 -> 19560124.105959\n" +
-                "        -i Shift all dates and times by adding the given amount.  Amount may be pos or neg.  eg: -128.050000 -> subtract 128 days and 5 hours from all dates and times.\n"
-                +
+                "           Alternately, use a comma-separated pair to pick a random value between them.\n" +
+                "        -i Shift all dates and times by adding the given amount.  Amount may be pos or neg.\n" +
+                "           eg: -128.050000 -> subtract 128 days and 5 hours from all dates and times.  Alternately, use a\n" +
+                "           comma-separated pair to pick a random value between them.\n" +
                 "        -y Truncate all dates to just the year, eg: 19670225 -> 19670101 . Leave month, day, and time intact.\n" +
                 "        -s When reading files, keep recursively searching through sub-directories\n" +
                 "        -F (Flat) The default.  Store created files into the same directory.  Use only one of -F, -T, or -L\n" +
                 "        -T (Tree) Store created files in patient ID / series tree under specified directory\n" +
-                "        -L (Local) Store created files in local directory as a child of their source directory.  Requires write access to source directories.\n" +
+                "        -L (Local) Store created files in local directory as a child of their source directory.  Requires\n" +
+                "           write access to source directories.\n" +
                 "        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package\n" +
                 "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
                 "        -l preload.xml Preload UIDs for anonymization.  This allows anonymizing to take place over multiple sessions.\n" +
@@ -2026,7 +2026,24 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     if (a >= args.length) fail("Missing value for -i (date shift) option.");
                     try {
                         String text = args[a].trim();
-                        Long shift = AnonymizeDateTime.parseShiftText(text);
+
+                        Long shift = null;
+                        if (args[a].contains(",")) {
+                            String[] textArray = args[a].split(",");
+                            Long shift0 = AnonymizeDateTime.parseShift(textArray[0]);
+                            Long shift1 = AnonymizeDateTime.parseShift(textArray[1]);
+                            Long loMs = Math.min(shift0, shift1);
+                            Long hiMs = Math.max(shift0, shift1);
+
+                            Long rangeSec = (hiMs - loMs) / 1000;
+                            Long sec = (Long) (Math.round(Util.random.nextDouble() * rangeSec));
+                            shift = loMs + (sec * 1000);
+                            Log.get().info("Randomly chosen shift for anonymization: " + AnonymizeDateTime.formatShiftValue(shift));
+                        }
+                        else {
+                            shift = AnonymizeDateTime.parseShift(text);
+                        }
+
                         if (shift == null) fail("Unable to parse -i shift value: " + text +
                                 "\nShould be of the form d.HHMMSS, as in 46.152345 for 46 days, 15 hours, 23 minutes and 45 seconds (15:23:45)");
                         AnonymizeDateTime.setMode(DateMode.Shift);
@@ -2046,15 +2063,33 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     a++;
                     if (a >= args.length) fail("Missing date value for -a (date anonymization) option.  " + example);
                     try {
-                        String text = args[a].trim();
-                        Date anon = AnonymizeDateTime.dateTimeFormat.parse(text);
+                        Date anon = null;
 
-                        if ((anon == null) || (!text.equalsIgnoreCase(AnonymizeDateTime.dateTimeFormat.format(anon)))) {
-                            fail("Unable to parse -a (anonymize date) value " + text + "\n" + example);
+                        // if two dates are specified, then pick a random one between them
+                        if (args[a].contains(",")) {
+                            String[] textArray = args[a].split(",");
+
+                            Date date0 = AnonymizeDateTime.parseAnon(textArray[0]);
+                            Date date1 = AnonymizeDateTime.parseAnon(textArray[1]);
+                            Long loMs = Math.min(date0.getTime(), date1.getTime());
+                            Long hiMs = Math.max(date0.getTime(), date1.getTime());
+                            Long rangeSec = (hiMs - loMs) / 1000;
+                            Long sec = (Long) (Math.round(Util.random.nextDouble() * rangeSec));
+                            Long ms = loMs + (sec * 1000);
+                            anon = new Date(ms);
+                            Log.get().info("Randomly chosen date for anonymization: " + AnonymizeDateTime.dateTimeFormat.format(anon));
+                        }
+                        else {
+                            anon = AnonymizeDateTime.parseAnon(args[a]);
+                        }
+
+                        if (anon == null) {
+                            fail("Unable to parse -a (anonymize date) value " + args[a] + "\n" + example);
                         }
 
                         AnonymizeDateTime.setMode(DateMode.Anon);
                         AnonymizeDateTime.setAnonValue(anon);
+                        Log.get().info("Using -a date-time of " + AnonymizeDateTime.dateTimeFormat.format(anon));
                     }
                     catch (Exception e) {
                         fail("Unable to parse date shift -a value " + args[a] + " as date. " + example);

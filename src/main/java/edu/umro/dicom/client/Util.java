@@ -85,6 +85,8 @@ public class Util {
     public static final String DEFAULT_STORAGE_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
     // public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
 
+    public static final Random random = new Random();
+
     /** For getting values from the MANIFEST.MF file in the jar. */
     private static JarInfo jarInfo = null;
 

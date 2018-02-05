@@ -8,6 +8,7 @@ import java.awt.event.MouseListener;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 import javax.swing.BorderFactory;
 
@@ -48,10 +49,41 @@ import edu.umro.util.Log;
 public class AnonymizeDateTime implements ActionListener, DocumentListener, MouseListener {
 
     public static final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMdd.HHmmss");
+    static {
+        dateTimeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+    }
     private static final Long msPerSecond = new Long(1000);
     private static final Long msPerMinute = msPerSecond * 60;
     private static final Long msPerHour = msPerMinute * 60;
     private static final long msPerDay = 24 * msPerHour;
+
+    /** Maximum date-time allowed as text. */
+    public static final String maxDateText = "99991231.235959";
+    /** Minimum date-time allowed as text. */
+    public static final String minDateText = "00010101.000000";
+
+    /**
+     * Parse the given text with the given format and trust that nothing will go wrong.
+     * 
+     * @param format
+     * @param text
+     * @return
+     */
+    private static Date trustedParse(SimpleDateFormat format, String text) {
+        Date date = null;
+        try {
+            date = format.parse(text);
+        }
+        catch (Exception e) {
+            Log.get().severe("trustedParse failed to parse " + text);
+        }
+        return date;
+    }
+
+    /** Maximum date-time allowed. */
+    public static final Date maxDate = trustedParse(dateTimeFormat, maxDateText);
+    /** Minimum date-time allowed. */
+    public static final Date minDate = trustedParse(dateTimeFormat, minDateText);
 
     private ButtonGroup buttonGroup = new ButtonGroup();
 
@@ -99,7 +131,7 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
         return panel;
     }
 
-    private static String formatShiftValue(Long shftVal) {
+    public static String formatShiftValue(Long shftVal) {
         long sv = (shftVal >= 0) ? shftVal : -shftVal;
 
         Long days = sv / msPerDay;
@@ -203,7 +235,7 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
         DicomClient.getInstance().updatePreviewIfAppropriate();
     }
 
-    private static Long parseTime(String text) throws ParseException {
+    static Long parseTime(String text) throws ParseException {
         text = (text + "000000").substring(0, 6);
         // If the time format is not valid, then throw an exception.
 
@@ -226,7 +258,7 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
      * 
      * @return Long (if valid), null if not.
      */
-    public static Long parseShiftText(String text) {
+    public static Long parseShift(String text) {
         try {
             String[] parts = text.trim().split("\\.");
             switch (parts.length) {
@@ -258,8 +290,9 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
     }
 
     private void updateShiftText() {
+        DateMode.Shift.radioButton.setSelected(true);
         String text = shiftTextField.getText().trim();
-        Long newShiftValue = parseShiftText(text);
+        Long newShiftValue = parseShift(text);
 
         boolean ok = (newShiftValue != null) && (text.equalsIgnoreCase(formatShiftValue(newShiftValue)));
 
@@ -274,17 +307,51 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
         }
     }
 
-    private void updateAnonText() {
-        Date date = null;
+    /**
+     * Parse the given text that represents a date-time string. If a date-only is given, then the time portion is
+     * assumed to be zero. If date is out of bounds (must be from year 0001 to 9999) then return the closest bound.
+     * 
+     * <p/>
+     * Part of the checking is to 'round trip' the value by converting it back to text and require that
+     * it matches the original.
+     * 
+     * @param dateTimeText
+     *            Date and time as text, as in 19562401.153021
+     * 
+     * @return Date if valid, null if not.
+     */
+    public static Date parseAnon(String dateTimeText) {
         try {
             // try to put the value into the standard format
-            String text = anonTextField.getText().trim();
+            String text = dateTimeText.trim();
             if (!text.contains(".")) text = text + ".000000";
             text = (text + "000000").substring(0, 15);
 
-            date = dateTimeFormat.parse(text);
+            Date date = dateTimeFormat.parse(text);
 
+            // Convert date back to text and compare to be sure it is correct. This
+            // fixes problems like saying February 31st.
             if ((date == null) || (!text.equalsIgnoreCase(dateTimeFormat.format(date)))) {
+                return null;
+            }
+            else {
+                if (date.getTime() > maxDate.getTime()) date = maxDate;
+                if (date.getTime() < minDate.getTime()) date = minDate;
+                return date;
+            }
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void updateAnonText() {
+        try {
+            DateMode.Anon.radioButton.setSelected(true);
+
+            Date date = parseAnon(anonTextField.getText());
+
+            if (date == null) {
                 anonTextField.setBackground(Color.YELLOW);
                 initAnonValue();
             }

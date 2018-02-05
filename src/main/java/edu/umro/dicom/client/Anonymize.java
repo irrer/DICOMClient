@@ -20,16 +20,12 @@ import java.io.FileInputStream;
  */
 
 import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
-import java.util.TimeZone;
 import java.util.TreeMap;
 
 import org.w3c.dom.Document;
@@ -144,11 +140,10 @@ public class Anonymize {
         StringBuffer patientId = new StringBuffer();
         char[] tmpl = template.toCharArray();
         int t = 0;
-        Random random = new Random();
         while (t < tmpl.length) {
             switch (tmpl[t]) {
             case '*':
-                int r = random.nextInt(36);
+                int r = Util.random.nextInt(36);
                 if (r < 10) {
                     patientId.append((char) ('0' + r));
                 }
@@ -157,10 +152,10 @@ public class Anonymize {
                 }
                 break;
             case '?':
-                patientId.append((char) ('A' + random.nextInt(26)));
+                patientId.append((char) ('A' + Util.random.nextInt(26)));
                 break;
             case '#':
-                patientId.append((char) ('0' + random.nextInt(10)));
+                patientId.append((char) ('0' + Util.random.nextInt(10)));
                 break;
             case '%':
                 t++;
@@ -407,10 +402,9 @@ public class Anonymize {
     private static void initDateTimePairs() {
         dateTimePairs = new HashMap<AttributeTag, AttributeTag>();
         CustomDictionary dict = CustomDictionary.getInstance();
-        @SuppressWarnings("unchecked")
-        Iterator<AttributeTag> iter = dict.getTagIterator();
+        Iterator<?> iter = dict.getTagIterator();
         while (iter.hasNext()) {
-            AttributeTag dateTag = iter.next();
+            AttributeTag dateTag = (AttributeTag) iter.next();
             if (ValueRepresentation.isDateVR(dict.getValueRepresentationFromTag(dateTag))) {
                 String timeName = dict.getNameFromTag(dateTag).replace("Date", "Time");
                 AttributeTag timeTag = dict.getTagFromName(timeName);
@@ -438,11 +432,6 @@ public class Anonymize {
             return "";
     }
 
-    // TODO Might want to impose sane date limits, such as:
-    // String maxDate = "99991231";
-    // String minDate = "00010101";
-    // to both shiftAllDateTimePairAttributes and shiftAllDateAttributes
-
     /**
      * Find date-time pairs within an attribute list and shift them. These have to be done as
      * pairs because the DICOM 142 supplement states that they should be done together.
@@ -456,31 +445,57 @@ public class Anonymize {
 
         Long shiftValue = AnonymizeDateTime.getShiftValue();
 
-        SimpleDateFormat fullFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        fullFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-        // TODO this should handle date-time pairs with Value Multiplicity greater than one
-
         for (Attribute attribute : attributeList.values()) {
             try {
+                Attribute dateAttr = attribute;
                 AttributeTag dateTag = attribute.getTag();
                 AttributeTag timeTag = getDateMate(dateTag);
                 if (timeTag != null) {
                     Attribute timeAttr = attributeList.get(timeTag);
                     if (timeAttr != null) {
                         try {
-                            Attribute dateAttr = attribute;
-                            Date oldDate = DateTimeAttribute.getDateFromFormattedString(attributeList, dateTag, timeTag);
-                            Date newDate = new Date(oldDate.getTime() + shiftValue);
-                            String fullText = fullFormat.format(newDate);
-                            String dateText = fullText.substring(0, 8);
-                            String subSec = getSubSecText(timeAttr.getSingleStringValueOrNull());
-                            String timeText = fullText.substring(8) + subSec;
-
+                            String[] originalDateValueList = dateAttr.getStringValues();
+                            String[] originalTimeValueList = timeAttr.getStringValues();
                             dateAttr.removeValues();
-                            dateAttr.addValue(dateText);
                             timeAttr.removeValues();
-                            timeAttr.addValue(timeText);
+                            int numPairs = Math.min(originalDateValueList.length, originalTimeValueList.length);
+
+                            for (int pair = 0; pair < numPairs; pair++) {
+                                try {
+                                    Date oldDate = AnonymizeDateTime.parseAnon(originalDateValueList[pair] + "." + originalTimeValueList[pair]);
+                                    Date newDate = new Date(oldDate.getTime() + shiftValue);
+                                    String fullText = AnonymizeDateTime.dateTimeFormat.format(newDate);
+                                    String dateText = fullText.substring(0, 8);
+                                    String subSec = getSubSecText(originalTimeValueList[pair]);
+                                    String timeText = fullText.substring(9) + subSec;
+
+                                    dateAttr.addValue(dateText);
+                                    timeAttr.addValue(timeText);
+                                }
+                                catch (Exception e) {
+                                }
+                            }
+
+                            // If there were more dates than pairs, shift them and add them to the list. This would be
+                            // sooooo weird.
+                            for (int pair = numPairs; pair < originalDateValueList.length; pair++) {
+                                Date oldDate = AnonymizeDateTime.parseAnon(originalDateValueList[pair]);
+                                Date newDate = new Date(oldDate.getTime() + shiftValue);
+                                String fullText = AnonymizeDateTime.dateTimeFormat.format(newDate);
+                                String dateText = fullText.substring(0, 8);
+                                dateAttr.addValue(dateText);
+                            }
+
+                            // If there were more times than pairs, shift them and add them to the list. This also would
+                            // be sooooo weird.
+                            for (int pair = numPairs; pair < originalTimeValueList.length; pair++) {
+                                Date oldDate = AnonymizeDateTime.parseAnon("19700101." + originalTimeValueList[pair]);
+                                Date newDate = new Date(oldDate.getTime() + shiftValue);
+                                String fullText = AnonymizeDateTime.dateTimeFormat.format(newDate);
+                                String timeText = fullText.substring(9) + getSubSecText(originalTimeValueList[pair]);
+                                timeAttr.addValue(timeText);
+                            }
+
                             done.put(dateAttr);
                             done.put(timeAttr);
                         }
@@ -508,18 +523,15 @@ public class Anonymize {
     private static void shiftAllDateAttributes(AttributeList attributeList, AttributeList done) {
         Long shiftValue = AnonymizeDateTime.getShiftValue();
 
-        SimpleDateFormat fullFormat = new SimpleDateFormat("yyyyMMdd");
-        fullFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-
         for (Attribute dateAttr : attributeList.values()) {
             try {
                 if (ValueRepresentation.isDateVR(dateAttr.getVR()) && (done.get(dateAttr.getTag()) == null)) {
                     String[] originalValueList = dateAttr.getStringValues();
                     dateAttr.removeValues();
                     for (String oldDateText : originalValueList) {
-                        Date oldDate = fullFormat.parse(oldDateText);
+                        Date oldDate = AnonymizeDateTime.dateTimeFormat.parse(oldDateText);
                         Date newDate = new Date(oldDate.getTime() + shiftValue);
-                        String newDateText = fullFormat.format(newDate);
+                        String newDateText = AnonymizeDateTime.dateTimeFormat.format(newDate).substring(0, 8);
                         if (!oldDateText.equalsIgnoreCase(newDateText)) {
                             dateAttr.addValue(newDateText);
                         }
@@ -535,18 +547,15 @@ public class Anonymize {
     private static void shiftAllTimeAttributes(AttributeList attributeList, AttributeList done) {
         Long shiftValue = AnonymizeDateTime.getShiftValue();
 
-        SimpleDateFormat fullFormat = new SimpleDateFormat("HHmmss");
-        fullFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-
         for (Attribute timeAttr : attributeList.values()) {
             try {
                 if (ValueRepresentation.isTimeVR(timeAttr.getVR()) && (done.get(timeAttr.getTag()) == null)) {
                     String[] originalValueList = timeAttr.getStringValues();
                     timeAttr.removeValues();
                     for (String oldTimeText : originalValueList) {
-                        Date oldTime = fullFormat.parse(oldTimeText);
+                        Date oldTime = AnonymizeDateTime.dateTimeFormat.parse(oldTimeText);
                         Date newTime = new Date(oldTime.getTime() + shiftValue);
-                        String newTimeText = fullFormat.format(newTime) + getSubSecText(oldTimeText);
+                        String newTimeText = AnonymizeDateTime.dateTimeFormat.format(newTime).substring(9) + getSubSecText(oldTimeText);
                         timeAttr.addValue(newTimeText);
                     }
                 }
@@ -561,8 +570,7 @@ public class Anonymize {
         try {
             String[] originalValueList = attribute.getStringValues();
             attribute.removeValues();
-            for (@SuppressWarnings("unused")
-            String s : originalValueList) {
+            for (int i = 0; i < originalValueList.length; i++) {
                 attribute.addValue(value);
             }
         }
