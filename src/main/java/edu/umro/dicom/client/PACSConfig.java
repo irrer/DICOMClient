@@ -36,7 +36,7 @@ import edu.umro.util.XML;
 public class PACSConfig {
 
     /** Name of configuration file. */
-    private static final String CONFIG_FILE_NAME = "PACSConfig.xml";
+    private static final String PACS_CONFIG_FILE_NAME = "PACSConfig.xml";
 
     private volatile static boolean configHasBeenTried = false;
 
@@ -45,7 +45,7 @@ public class PACSConfig {
             JarInfo jarInfo = new JarInfo(this.getClass());
             File jarFile = new File(jarInfo.getFullJarFilePath());
             File dir = jarFile.getParentFile();
-            File configFile = new File(dir, CONFIG_FILE_NAME);
+            File configFile = new File(dir, PACS_CONFIG_FILE_NAME);
             Document config = XML.parseToDocument(Utility.readFile(configFile));
             if (config != null) {
                 Log.get().info("Using configuration file " + configFile.getAbsolutePath());
@@ -58,12 +58,30 @@ public class PACSConfig {
         }
     }
 
-    /** List of all possible configuration files. */
-    private static final String[] CONFIG_FILE_LIST = {
-            System.getProperty("pacsconfig"),
-            CONFIG_FILE_NAME,
-            "src\\main\\resources\\" + CONFIG_FILE_NAME
-    };
+    /** List of all possible configuration files. Look in standard places and then in class path folders. */
+    private static ArrayList<String> getPacsConfigFileList() {
+
+        final String[] PACS_CONFIG_FILE_LIST = {
+                System.getProperty("pacsconfig"),
+                ".\\" + PACS_CONFIG_FILE_NAME,
+                PACS_CONFIG_FILE_NAME,
+                "src\\main\\resources\\" + PACS_CONFIG_FILE_NAME
+        };
+
+        String[] classPathList = System.getProperties().getProperty("java.class.path").split(";");
+        ArrayList<String> list = new ArrayList<String>();
+        for (String cf : PACS_CONFIG_FILE_LIST) {
+            list.add(cf);
+        }
+        for (String cp : classPathList) {
+            File f = new File(cp);
+            File dir = (f.isDirectory()) ? f : f.getParentFile();
+            File cfgFile = new File(dir, PACS_CONFIG_FILE_NAME);
+            list.add(cfgFile.getAbsolutePath());
+        }
+
+        return list;
+    }
 
     /** Instance of this object. */
     private volatile static PACSConfig pacsConfig = null;
@@ -78,7 +96,8 @@ public class PACSConfig {
      */
     private void parseConfigFile() {
         Document config = null;
-        for (String configFileName : CONFIG_FILE_LIST) {
+        ArrayList<String> configFileList = getPacsConfigFileList();
+        for (String configFileName : configFileList) {
             try {
                 Log.get().info("Trying configuration file " + (new File(configFileName)).getAbsolutePath());
                 config = XML.parseToDocument(Utility.readFile(new File(configFileName)));
@@ -120,7 +139,7 @@ public class PACSConfig {
         }
 
         if (config == null) {
-            String msg = "Unable to read and parse any PACS configuration file of: " + CONFIG_FILE_LIST;
+            String msg = "Unable to read and parse any PACS configuration file of: " + configFileList;
             Log.get().severe(msg);
             // DicomClient.getInstance().showMessage(msg);
         }
@@ -143,11 +162,9 @@ public class PACSConfig {
         return identity;
     }
 
-    
     public String getMyDicomAETitle() {
         return identity.aeTitle;
     }
-
 
     /**
      * Get the list of PACS we know about.

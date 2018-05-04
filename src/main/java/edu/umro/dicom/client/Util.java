@@ -510,7 +510,7 @@ public class Util {
         class ReadTermStrat implements ReadTerminationStrategy {
             public AttributeList latest = null;
 
-            @Override
+            //@Override
             public boolean terminate(AttributeList attributeList, AttributeTag tag, long byteOffset) {
                 latest = attributeList;
                 return false;

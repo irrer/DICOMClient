@@ -225,7 +225,7 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
 
     private static DateMode dateMode = DateMode.None;
 
-    @Override
+    //@Override
     public void actionPerformed(ActionEvent e) {
         for (DateMode m : DateMode.values()) {
             if (m.radioButton.isSelected()) {
@@ -380,17 +380,17 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
         }
     }
 
-    @Override
+    //@Override
     public void insertUpdate(DocumentEvent e) {
         textChanged(e);
     }
 
-    @Override
+    //@Override
     public void removeUpdate(DocumentEvent e) {
         textChanged(e);
     }
 
-    @Override
+    //@Override
     public void changedUpdate(DocumentEvent e) {
         textChanged(e);
     }
@@ -408,27 +408,27 @@ public class AnonymizeDateTime implements ActionListener, DocumentListener, Mous
         }
     }
 
-    @Override
+    //@Override
     public void mouseClicked(MouseEvent e) {
         selectByMouse(e);
     }
 
-    @Override
+    //@Override
     public void mousePressed(MouseEvent e) {
         selectByMouse(e);
     }
 
-    @Override
+    //@Override
     public void mouseReleased(MouseEvent e) {
         selectByMouse(e);
     }
 
-    @Override
+    //@Override
     public void mouseEntered(MouseEvent e) {
         ;
     }
 
-    @Override
+    //@Override
     public void mouseExited(MouseEvent e) {
         ;
     }

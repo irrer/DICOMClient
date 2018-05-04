@@ -55,12 +55,30 @@ public class ClientConfig {
     private static final String DEFAULT_PHI_DISQUALIFYING_CHARACTERS = "0123456789$%";
     private HashSet<Character> phiDisqualifyingCharacters = null;
 
-    /** List of all possible configuration files. */
-    private static final String[] CONFIG_FILE_LIST = {
-            System.getProperty("dicomclient.config"),
-            CONFIG_FILE_NAME,
-            "src\\main\\resources\\" + CONFIG_FILE_NAME
-    };
+    /** List of all possible configuration files. Look in standard places and then in class path folders. */
+    private static ArrayList<String> getConfigFileList() {
+
+        final String[] CONFIG_FILE_LIST = {
+                System.getProperty("dicomclient.config"),
+                ".\\" + CONFIG_FILE_NAME,
+                CONFIG_FILE_NAME,
+                "src\\main\\resources\\" + CONFIG_FILE_NAME
+        };
+
+        String[] classPathList = System.getProperties().getProperty("java.class.path").split(";");
+        ArrayList<String> list = new ArrayList<String>();
+        for (String cf : CONFIG_FILE_LIST) {
+            list.add(cf);
+        }
+        for (String cp : classPathList) {
+            File f = new File(cp);
+            File dir = (f.isDirectory()) ? f : f.getParentFile();
+            File cfgFile = new File(dir, CONFIG_FILE_NAME);
+            list.add(cfgFile.getAbsolutePath());
+        }
+
+        return list;
+    }
 
     /** Instance of this object. */
     private volatile static ClientConfig clientConfig = null;
@@ -116,7 +134,8 @@ public class ClientConfig {
      * all files on the list and use the first one that parses.
      */
     private void tryConfigDirs() {
-        for (String configFileName : CONFIG_FILE_LIST) {
+        ArrayList<String> configFileList = getConfigFileList();
+        for (String configFileName : configFileList) {
             config = parseConfigFile(configFileName);
             if (config != null) {
                 break;
@@ -126,7 +145,7 @@ public class ClientConfig {
         if (config == null) config = getConfigFromJarPath();
 
         if (config == null) {
-            String message = "Unable to read and parse any configuration file of: " + CONFIG_FILE_LIST;
+            String message = "Unable to read and parse any configuration file of: " + configFileList;
             Log.get().severe(message);
             if (!DicomClient.inCommandLineMode()) {
                 String msg = "<html>The application could not find a configuration file.<br>&nbsp<p>\n" +

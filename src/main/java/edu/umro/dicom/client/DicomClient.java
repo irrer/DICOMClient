@@ -1024,7 +1024,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         showMessageText.delete(0, showMessageText.length());
     }
 
-    @Override
+    //@Override
     public void actionPerformed(ActionEvent ev) {
         markScreenAsModified();
         Object source = ev.getSource();
