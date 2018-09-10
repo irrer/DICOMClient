@@ -251,6 +251,7 @@
         <Tag Name='StorageMediaFileSetUID'              ></Tag>
         <Tag Name='ReferencedFrameOfReferenceUID'       ></Tag>
         <Tag Name='RelatedFrameOfReferenceUID'          ></Tag>
+        <Tag Name='SourceFrameOfReferenceUID'           ></Tag>
         <Tag Name='RTPlanName'                          >none</Tag>  <!-- UMPlan sometimes puts patient info here -->
         <Tag Name='DoseReferenceUID'                    ></Tag>
         <Tag Name='ReferencedPrimaryDoseRefUID'         ></Tag>
