@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.TreeMap;
 
 import org.w3c.dom.Document;
@@ -136,6 +135,9 @@ public class Anonymize {
             uidHistory.remove(uid);
     }
 
+    /**
+     * Generate a patient ID based on the <code>AnonPatientIdTemplate</code> template in the configuration.
+     */
     private static String genId() {
         StringBuffer patientId = new StringBuffer();
         char[] tmpl = template.toCharArray();

@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.umro.DICOM</groupId>
     <artifactId>dicomclient</artifactId>
-    <version>1.0.54</version>
+    <version>1.0.55</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <properties>

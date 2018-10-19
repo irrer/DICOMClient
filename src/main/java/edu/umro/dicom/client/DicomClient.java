@@ -217,6 +217,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     /** The default patient ID to use. */
     private static String defaultPatientId = null;
 
+    /**
+     * Single patient mode. If this is set with the -1 flag, then the application will exit if more than one incoming
+     * patient is found. This is only honored when in command line mode.
+     */
+    private static boolean singlePatient = false;
+
     /** Put single anonymized file here. */
     private static File commandParameterOutputFile = null;
 
@@ -1024,7 +1030,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         showMessageText.delete(0, showMessageText.length());
     }
 
-    //@Override
+    // @Override
     public void actionPerformed(ActionEvent ev) {
         markScreenAsModified();
         Object source = ev.getSource();
@@ -1574,6 +1580,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
             Patient patient = findPatient(patientId);
             if (patient == null) {
+                if (commandLineMode && singlePatient && (!(getPatientList().isEmpty()))) {
+                    System.err.println("A second patient was found when the -1 parameter was set (limits processing to a single patient)." +
+                            "\n    Second patient ID: " + patientId + " in file " + file.getAbsolutePath());
+                    System.exit(1);
+                }
                 patient = new Patient(file, attributeList, makeNewPatientId());
                 patientListPanel.add(patient);
                 setColor(patientListPanel);
@@ -1906,6 +1917,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
                 "        -l preload.xml Preload UIDs for anonymization.  This allows anonymizing to take place over multiple sessions.\n" +
                 "        -z Replace each control character in generated XML files that describe DICOM attributes with a blank.  Required by SAS\n" +
+                "        -1 Limit processing to a single patient.  If a second patient is found then the program will exit.  Valid in command line mode only.\n" +
                 "        -g Perform aggressive anonymization - anonymize fields that are not marked for\n" +
                 "           anonymization but contain strings found in fields that are marked for anonymization.\n";
         System.err.println(usage);
@@ -1964,6 +1976,12 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     commandLineMode = true;
                     continue;
                 }
+
+                if (args[a].equals("-1")) {
+                    singlePatient = true;
+                    continue;
+                }
+
                 if (args[a].equals("-t")) {
                     showDetails = true;
                     continue;

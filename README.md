@@ -10,7 +10,7 @@
 Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>
 Developer: Jim Irrer  irrer@umich.edu
 
-## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.53_Install.zip?raw=true">package</a>
+## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.55_Install.zip?raw=true">package</a>
 Latest release: 5-Feb-2018
 
 ## To Run
@@ -25,4 +25,4 @@ Requires Java 7 or later.  Unzip the pre-built package and run:
 Pro-tip: Make a shortcut to the bat on your desktop, then drag-and-drop DICOM files and folders to run it.
 
 
-## View <a href="http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.53/output/index.html">Instructions and how to's</a>
+## View <a href="http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.55/output/index.html">Instructions and how to's</a>
