@@ -33,6 +33,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -1581,9 +1582,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             Patient patient = findPatient(patientId);
             if (patient == null) {
                 if (commandLineMode && singlePatient && (!(getPatientList().isEmpty()))) {
+                    Study study = getPatientList().get(0).getStudyList().get(0);
+                    File prevFile = study.seriesList().get(0).getFileList().iterator().next();
                     System.err.println("A second patient was found when the -1 parameter was set (limits processing to a single patient)." +
-                            "\n    First  patient" + getPatientList().get(0) +
-                            "\n    Second patient ID: " + patientId + " in file " + file.getAbsolutePath());
+                            "\n    First  patient in file " + prevFile.getAbsolutePath() +
+                            "\n    Second patient in file " + file.getAbsolutePath());
                     System.exit(1);
                 }
                 patient = new Patient(file, attributeList, makeNewPatientId());
@@ -1917,8 +1920,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 "        -3 Restrict generated XML to 32 character tag names, as required by the SAS software package\n" +
                 "        -t Show attribute tag details in text dump (effective in command line mode only)\n" +
                 "        -l preload.xml Preload UIDs for anonymization.  This allows anonymizing to take place over multiple sessions.\n" +
-                "        -z Replace each control character in generated XML files that describe DICOM attributes with a blank.  Required by SAS\n" +
-                "        -1 Limit processing to a single patient.  If a second patient is found then the program will exit.  Valid in command line mode only.\n" +
+                "        -z Replace each control character in generated XML files that describe DICOM attributes\n" +
+                "           with a blank.  Required by SAS\n" +
+                "        -1 Limit processing to a single patient.  If a second patient is found then the program will print a\n" +
+                "           message listing two files containing the different patient IDs and exit.  Valid in command line\n" +
+                "           mode only.  If not given, then the patient ID is incremented as needed.\n" +
                 "        -g Perform aggressive anonymization - anonymize fields that are not marked for\n" +
                 "           anonymization but contain strings found in fields that are marked for anonymization.\n";
         System.err.println(usage);
