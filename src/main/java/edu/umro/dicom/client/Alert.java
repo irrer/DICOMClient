@@ -26,6 +26,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -127,12 +128,21 @@ public class Alert extends JDialog implements ActionListener {
         return selectedButton;
     }
 
+    private static JFrame getFrame(String msg, String title) {
+        if (DicomClient.inCommandLineMode()) {
+            System.err.println("\nFatal error : " + title + " : " + msg);
+            System.err.println("Exiting with error status");
+            Util.exitFail();
+        }
+        return DicomClient.getInstance().getFrame();
+    }
+
 
     /**
      * Build the GUI and display it.
      */
     public Alert(String msg, String title, String[] buttonNameList, Dimension preferredSize, boolean modal) {
-        super(DicomClient.getInstance().getFrame(), modal);
+        super(getFrame(msg, title), modal);
 
         if (!DicomClient.inCommandLineMode()) {
             buttonNameList = (buttonNameList == null) ? DEFAULT_BUTTON_NAME_LIST : buttonNameList;

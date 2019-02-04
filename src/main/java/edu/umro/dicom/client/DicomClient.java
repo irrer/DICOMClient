@@ -1253,8 +1253,15 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 "<p/><br/>An alternative is to run on a 64 bit machine with" +
                 "<br/>the 64 bit version of the code.</html>";
         Log.get().severe(fullMessage);
-        DicomClient.getInstance().showMessage(fullMessage);
-        new Alert(fullMessage, "Out of Memory");
+        if (DicomClient.inCommandLineMode()) {
+            System.err.println("The program has run out of memory.  This is usually caused by loading very large data sets.");
+            System.err.println(msg);
+            Util.exitFail();
+        }
+        else {
+            DicomClient.getInstance().showMessage(fullMessage);
+            new Alert(fullMessage, "Out of Memory");
+        }
     }
 
     /**
