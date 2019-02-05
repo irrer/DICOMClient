@@ -53,6 +53,7 @@ import com.pixelmed.dicom.XMLRepresentationOfDicomObjectFactory;
 import com.pixelmed.dicom.AttributeList.ReadTerminationStrategy;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
+import edu.umro.util.Exec;
 import edu.umro.util.JarInfo;
 import edu.umro.util.Log;
 import edu.umro.util.OpSys;
@@ -474,16 +475,33 @@ public class Util {
     }
 
     /**
-     * Try to warn the user about using up memory.
+     * Try to warn the user about using up memory, and try freeing it up.
      * 
      * @param file
      *            Incoming DICOM file.
      */
+    private static long bytesSinceFree = 0;
+    private static double garbageCollectThreshold = -1;
+    private static final long garbageCollectWait = 50; // time in ms to wait for GC
+
     private static void checkMemory(File file) {
         try {
+            if (garbageCollectThreshold < 0) {
+                garbageCollectThreshold = ClientConfig.getInstance().getGarbageCollectThreshold() * 1024 * 1024 * 1024;
+            }
+
             long fileLength = file.length();
-            if (fileLength > Runtime.getRuntime().freeMemory()) {
+            bytesSinceFree += fileLength;
+
+            if (bytesSinceFree > garbageCollectThreshold) {
+                Runtime runtime = Runtime.getRuntime();
+                long usedBefore = runtime.totalMemory() - runtime.freeMemory();
+                Log.get().info("Attempting to garbage collect memory.  Used: " + usedBefore);
+                bytesSinceFree = 0;
                 Runtime.getRuntime().gc(); // take a shot at freeing memory
+                Exec.sleep(garbageCollectWait);
+                long usedAfter = runtime.totalMemory() - runtime.freeMemory();
+                Log.get().info("After garbage collection, memory used: " + usedAfter + "    bytes freed: " + (usedBefore - usedAfter));
             }
             if (fileLength > Runtime.getRuntime().freeMemory()) {
                 DicomClient.getInstance().showMessage("Extremely large file " + file.getAbsolutePath() + " of size " + fileLength + " might need more memory than is available.");
@@ -510,7 +528,7 @@ public class Util {
         class ReadTermStrat implements ReadTerminationStrategy {
             public AttributeList latest = null;
 
-            //@Override
+            // @Override
             public boolean terminate(AttributeList attributeList, AttributeTag tag, long byteOffset) {
                 latest = attributeList;
                 return false;
@@ -541,6 +559,7 @@ public class Util {
             else
                 throw e;
         }
+
         return attributeList;
     }
 

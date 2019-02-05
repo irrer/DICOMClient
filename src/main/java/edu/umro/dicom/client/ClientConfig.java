@@ -205,6 +205,22 @@ public class ClientConfig {
         return null;
     }
 
+    /**
+     * Get the threshold number of GB to be used as a point at which to try garbage collection.  If not in the
+     * configuration, the default t0 1.0 GB.  May be specified as a fraction of a GB.
+     * 
+     * @return Number of GB.
+     */
+    public double getGarbageCollectThreshold() {
+        try {
+            String text = XML.getValue(config, "/DicomClientConfig/GarbageCollectThreshold/text()");
+            return Double.parseDouble(text);
+        }
+        catch (Exception e) {
+            return 1.0;
+        }
+    }
+
     private HashSet<Character> getPhiDisqualifyingCharacters() {
         if (phiDisqualifyingCharacters == null) {
             String pdcText = DEFAULT_PHI_DISQUALIFYING_CHARACTERS;
