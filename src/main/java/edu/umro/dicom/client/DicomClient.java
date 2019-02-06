@@ -1594,7 +1594,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                     System.err.println("A second patient was found when the -1 parameter was set (limits processing to a single patient)." +
                             "\n    First  patient in file " + prevFile.getAbsolutePath() +
                             "\n    Second patient in file " + file.getAbsolutePath());
-                    System.exit(1);
+                    Util.exitFail();
                 }
                 patient = new Patient(file, attributeList, makeNewPatientId());
                 patientListPanel.add(patient);
