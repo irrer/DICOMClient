@@ -33,7 +33,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -396,21 +395,21 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         outputOrgGroup = new ButtonGroup();
 
         outputOrgFlat = new JRadioButton("Flat");
-        outputOrgFlat.setSelected(true);
+        outputOrgFlat.setSelected(outputOrgMode == OutputFileOrganization.FLAT);
         outputOrgFlat.addActionListener(this);
         outputOrgFlat.setToolTipText("<html>Store created files into the same directory</html>");
         outputOrgGroup.add(outputOrgFlat);
         panel.add(outputOrgFlat);
 
         outputOrgTree = new JRadioButton("Tree");
-        outputOrgTree.setSelected(false);
+        outputOrgTree.setSelected(outputOrgMode == OutputFileOrganization.TREE);
         outputOrgTree.addActionListener(this);
         outputOrgTree.setToolTipText("<html>Store created files in patient ID / series<br/>tree under specified directory</html>");
         outputOrgGroup.add(outputOrgTree);
         panel.add(outputOrgTree);
 
         outputOrgLocal = new JRadioButton("Local");
-        outputOrgLocal.setSelected(false);
+        outputOrgLocal.setSelected(outputOrgMode == OutputFileOrganization.LOCAL);
         outputOrgLocal.addActionListener(this);
         outputOrgLocal
                 .setToolTipText("<html>Store created files in local directory as a child of their source<br/>directory.  Requires write access to source directories.</html>");
@@ -601,6 +600,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         searchSubdirsCheckbox = new JCheckBox("Search Subdirs");
         searchSubdirsCheckbox.addActionListener(this);
         searchSubdirsCheckbox.setToolTipText("When reading files, recursively search sub-directories.");
+        searchSubdirsCheckbox.setSelected(searchSubdirs);
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(searchSubdirsCheckbox, BorderLayout.CENTER);
