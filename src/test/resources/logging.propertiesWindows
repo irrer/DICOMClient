@@ -38,7 +38,6 @@ handlers=java.util.logging.ConsoleHandler
 #handlers=edu.umro.util.LogFileHandler
 #handlers=java.util.logging.ConsoleHandler edu.umro.util.LogFileHandler
 
-
 # default file output is in user's home directory.
 #java.util.logging.FileHandler.pattern=%h/java%u.log
 #java.util.logging.FileHandler.limit=5000
