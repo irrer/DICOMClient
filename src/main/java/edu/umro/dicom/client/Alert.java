@@ -33,7 +33,6 @@ import javax.swing.JScrollPane;
 
 import edu.umro.util.Utility;
 
-
 /**
  * Show a dialog that gives the user basic instructions on
  * how to use the application.  An HTML based JLabel is used
