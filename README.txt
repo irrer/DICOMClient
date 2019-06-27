@@ -18,7 +18,7 @@ To run:
      DICOM+.bat        : Windows 32 or 64 bit
      
      DICOM+MIL.bat     : Windows 32 or 64 bit, with with special options set for the VA (US Veterans Affairs)
-     
+    
      DICOMClient.sh    : Linux
 
 From the command line to build everything and put the jars into the repository:
