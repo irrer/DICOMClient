@@ -21,7 +21,6 @@ To run:
      
      DICOMClient.sh    : Linux
 
-
 From the command line to build everything and put the jars into the repository:
 
     mvn -DskipTests=true --settings "D:\pf\Maven\m2\settings.xml" install
