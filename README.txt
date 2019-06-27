@@ -86,7 +86,6 @@ src/main/resources/DICOMUploadHelp.html
 
 
 
-
 For anonymizing files, study IDs (and probably series IDs) should be modified consistently
     in order to be accepted by software that expects them to be so.  By 'consistent', we mean
     that cross-references between series should still be operable, even though they have changed.
