@@ -105,7 +105,6 @@ For anonymizing files, study IDs (and probably series IDs) should be modified co
 
 
 
-
 It is possible to preload anonymizing UIDs, which makes it possible to perform anonymizations in
 separate sessions.  This done using '-p preload.xml' on the command line.  The file may have any name,
 but must be an XML file in the format shown in the example below:
