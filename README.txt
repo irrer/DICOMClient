@@ -141,7 +141,7 @@ but must be an XML file in the format shown in the example below:
 
     <
      <b>Copyright 2016 Regents of the University of Michigan</b>
-  
+ 
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
