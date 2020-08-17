@@ -905,6 +905,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
                             newFile = DicomClient.getAvailableFile(attributeList, Util.DICOM_SUFFIX, seriesOutDir, instance.file);
                             seriesOutDir = newFile.getParentFile();
                         }
+                        newFile = new File(newFile.getAbsolutePath());
                         newFile.getParentFile().mkdirs();
                         attributeList.write(newFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
                         saveTextAndXmlAndImageFiles(attributeList, newFile);
