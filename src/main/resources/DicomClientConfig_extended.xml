@@ -910,4 +910,15 @@
         <PresentationLUTShape                       group='2050' element='0020' vr='CS' fullName='PresentationLUTShape'/>
 
     </PrivateTagList>
+    
+    <!-- 
+    Note: Simply including all attribute tags from all vendors does not work because
+    the following are defined by more than one vendor, with differing definitions. 
+        group='0019' element='100F' 
+        group='0019' element='1011'
+        group='0019' element='1012'
+        group='0019' element='1017'
+        group='0019' element='1018'
+        group='0029' element='1018'
+     -->
 </DicomClientConfig>
