@@ -50,7 +50,7 @@ import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.SetOfDicomFiles;
 import com.pixelmed.dicom.TagFromName;
 import edu.umro.dicom.client.DicomClient.ProcessingMode;
-import edu.umro.dicom.client.test.AutoTest;
+//import edu.umro.dicom.client.test.AutoTest;
 import edu.umro.util.Log;
 import edu.umro.util.UMROException;
 
@@ -530,8 +530,8 @@ public class Series extends JPanel implements ActionListener, Runnable {
      * Build a GUI component that displays and controls the uploading of a
      * single series.
      * 
-     * @param fileName
-     *            Name of DICOM file from which the series originated.
+     * @param file
+     *            DICOM file from which the series originated.
      * 
      * @param attributeList
      *            Parsed version of DICOM file contents.
@@ -693,12 +693,6 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
     /**
      * Upload the given list of attribute lists to the current PACS.
-     * 
-     * @param description
-     *            Description of this series.
-     * 
-     * @param attrListList
-     *            Content to upload.
      * 
      * @return True on success.
      */
@@ -1097,7 +1091,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
     /**
      * Add the given file to this series.
      * 
-     * @param fileName
+     * @param file
      *            The file to add.
      * 
      * @param attributeList
@@ -1228,7 +1222,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
     /**
      * Support for testing.
      */
-    @AutoTest
+    // @AutoTest
     public void doClickPreviewButtonTest() {
         previewButton.doClick();
     }

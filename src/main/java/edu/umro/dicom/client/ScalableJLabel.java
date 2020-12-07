@@ -78,7 +78,7 @@ public class ScalableJLabel extends JLabel {
             //     RenderingHints.VALUE_INTERPOLATION_BILINEAR 
             //     RenderingHints.VALUE_INTERPOLATION_BICUBIC
             // and they were really slow.
-            ((Graphics2D)graphics).drawImage(bufferedImage, 0, 0, width, height, null);
+            graphics.drawImage(bufferedImage, 0, 0, width, height, null);
         }
     }
 

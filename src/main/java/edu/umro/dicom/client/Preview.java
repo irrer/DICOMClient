@@ -88,7 +88,7 @@ import com.pixelmed.dicom.ValueRepresentation;
 import com.pixelmed.display.ConsumerFormatImageMaker;
 
 import edu.umro.dicom.client.DicomClient.ProcessingMode;
-import edu.umro.dicom.client.test.AutoTest;
+//import edu.umro.dicom.client.test.AutoTest;
 import edu.umro.util.Log;
 
 /**
@@ -745,7 +745,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     /**
      * Set the currently selected text to the given matching entry.
      * 
-     * @param index
+     * @param oldIndex
      *            Entry on list that should be shown as currently selected.
      */
     private void setCurrentlySelectedMatch(int oldIndex, int newIndex) {
@@ -1262,13 +1262,13 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
      * 
      * @param text
      *            Existing text to append to.
-     * 
-     * @param dicomDictionary
-     *            DICOM dictionary to use.
-     * 
+     *
      * @param indentLevel
      *            Indicates the depth of recursion and drives the amount of
      *            whitespace prepended to each line.
+     *
+     * @param attributeLocation
+     *            Location of attribute in text.
      */
     public void addTextAttributes(AttributeList attributeList, StringBuffer text, int indentLevel, AttributeLocation attributeLocation) {
         String searchText = searchField.getText().toLowerCase();
@@ -1672,12 +1672,12 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
     public void windowDeactivated(WindowEvent e) {
     }
 
-    @AutoTest
+    // @AutoTest
     public void doClickTextPreview() {
         textRadioButton.doClick();
     }
 
-    @AutoTest
+    // @AutoTest
     public String getTextTest() {
         return textPreview.getText();
     }
