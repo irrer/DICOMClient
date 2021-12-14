@@ -6,6 +6,7 @@
 * editing DICOM files
 * uploading DICOM files to a PACS
 
+Note: This software is not vulnerable to the log4j exploit CVE-2021-44228 .
 
 Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>
 Developer: Jim Irrer  irrer@umich.edu
