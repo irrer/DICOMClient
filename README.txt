@@ -5,7 +5,7 @@ Developer: Jim Irrer  irrer@umich.edu
 
 Most recent documentation:
 
-    http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.53/output/index.html
+    http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.61/output/index.html
 
 The DICOM project.  This project provides support for:
     - anonymizing DICOM files
@@ -17,7 +17,7 @@ To run:
 
      DICOM+.bat        : Windows 32 or 64 bit
      
-     DICOM+MIL.bat     : Windows 32 or 64 bit, with with special options set for the VA (US Veterans Affairs)
+     DICOM+MIL.bat     : Windows 32 or 64 bit, with special options set for the VA (US Veterans Affairs)
     
      DICOMClient.sh    : Linux
 
@@ -49,7 +49,21 @@ changes to the code that warrant a version change, then change this
 value before building a new package.
 
 
+To change the version of the documentation:
+   1. Copy all the files (except output dir) from an old
+      version (e.g. docs/user_manual/user_manual_1.0.53) to
+      your new version (e.g. docs/user_manual/user_manual_1.0.61)
 
+   2. Make the modifications to the input files as necessary.
+
+   3. Change the doc.version in the pom.xml file to the new version number.
+
+   4. Update the doc version in the README.md file.
+
+   5. Run maven --> package to rebuild everything.
+
+The DicomDump program will print the contents of a DICOM file and the corresponding binary.  To run it:
+   java -cp dicomclient-1.0.61-jar-with-dependencies.jar edu.umro.dicom.client.DicomDump MyFile.dcm
 
 Files of interest:
 
@@ -81,7 +95,7 @@ src/main/resources/DICOMUploadHelp.html
     
         :%s/.*/"&<br>\\n" +/
         
-    and then paste into into the Help.java file.
+    and then paste into the Help.java file.
 
 
 

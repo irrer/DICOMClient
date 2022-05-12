@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="DICOM+ Documentation Build" basedir="." default="generate.docs">
+
+	<!--  This is invoked from the pom.xml file.  
+    <property name="doc.version"     value="1.0.49" />
+    <property name="code.version"    value="1.0.48" />
+    <property name="doc.dir"         value="." />
+    <property name="doc.dest.dir"    value="${doc.dir}/output" />
+    -->
+
+	<condition property="doc.version" else="1.0.49">
+		<isset property="doc.version" />
+	</condition>
+
+	<condition property="code.version" else="1.0.48">
+		<isset property="code.version" />
+	</condition>
+
+	<condition property="doc.dir" else=".">
+		<isset property="doc.dir" />
+	</condition>
+
+	<condition property="doc.dest.dir" else="${doc.dir}/output">
+		<isset property="doc.dest.dir" />
+	</condition>
+
+	<echo>doc.version: ${doc.version}</echo>
+	<echo>code.version: ${code.version}</echo>
+	<echo>doc.dir: ${doc.dir}</echo>
+	<echo>doc.dest.dir: ${doc.dest.dir}</echo>
+
+
+	<property name="vr.ref" value="http://dicom.nema.org/medical/dicom/current/output/chtml/part05/sect_6.2.html#table_6.2-1" />
+
+	<tstamp>
+		<format property="doc.timestamp" pattern="yyyy-MMM-dd hh:mm:ss aa" locale="en,US" />
+	</tstamp>
+
+	<target name="clean">
+		<delete dir="${doc.dest.dir}" />
+	</target>
+
+	<target name="prepare">
+		<mkdir dir="${doc.dest.dir}" />
+	</target>
+
+	<target name="makehtml">
+		<echo>Generating: ${htmlIn}</echo>
+
+		<loadfile property="content" srcFile="${doc.dir}/${htmlIn}" />
+
+		<copy file="${doc.dir}/wrapper.html" toFile="${doc.dest.dir}/${htmlIn}" />
+
+		<replace file="${doc.dest.dir}/${htmlIn}">
+			<replacefilter token="@@content@@" value="${content}" />
+			<replacefilter token="@@doc.timestamp@@" value="${doc.timestamp}" />
+			<replacefilter token="@@doc.version@@" value="${doc.version}" />
+			<replacefilter token="@@code.version@@" value="${code.version}" />
+			<replacefilter token="@@vr.ref@@" value="${vr.ref}" />
+		</replace>
+	</target>
+
+	<target name="generate.docs" depends="clean,prepare">
+		<antcall target="makehtml">
+			<param name="htmlIn" value="anonymizeOptions.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="anonymizingFiles.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="commandLine.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="faq.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="index.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="main.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="preview.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="edit.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="quickTips.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="preload.html" />
+		</antcall>
+		<antcall target="makehtml">
+			<param name="htmlIn" value="valueMultiplicity.html" />
+		</antcall>
+	</target>
+</project>

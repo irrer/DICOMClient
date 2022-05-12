@@ -16,56 +16,25 @@ package edu.umro.dicom.client;
  * limitations under the License.
  */
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.rmi.server.UID;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Random;
-import java.util.StringTokenizer;
+import com.pixelmed.dicom.*;
+import com.pixelmed.dicom.AttributeList.*;
+import com.pixelmed.display.*;
+import edu.umro.util.*;
+import org.w3c.dom.*;
 
-import javax.imageio.ImageIO;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-
-import com.pixelmed.dicom.Attribute;
-import com.pixelmed.dicom.AttributeFactory;
-import com.pixelmed.dicom.AttributeList;
-import com.pixelmed.dicom.AttributeTag;
-import com.pixelmed.dicom.DateAttribute;
-import com.pixelmed.dicom.DicomException;
-import com.pixelmed.dicom.DicomInputStream;
-import com.pixelmed.dicom.DicomOutputStream;
-import com.pixelmed.dicom.PersonNameAttribute;
-import com.pixelmed.dicom.SOPClass;
-import com.pixelmed.dicom.SequenceAttribute;
-import com.pixelmed.dicom.TagFromName;
-import com.pixelmed.dicom.TimeAttribute;
-import com.pixelmed.dicom.TransferSyntax;
-import com.pixelmed.dicom.XMLRepresentationOfDicomObjectFactory;
-import com.pixelmed.dicom.AttributeList.ReadTerminationStrategy;
-import com.pixelmed.display.ConsumerFormatImageMaker;
-
-import edu.umro.util.Exec;
-import edu.umro.util.JarInfo;
-import edu.umro.util.Log;
-import edu.umro.util.OpSys;
-import edu.umro.util.UMROException;
-import edu.umro.util.Utility;
-import edu.umro.util.XML;
+import javax.imageio.*;
+import javax.xml.parsers.*;
+import java.awt.image.*;
+import java.io.*;
+import java.net.*;
+import java.rmi.server.*;
+import java.text.*;
+import java.util.*;
 
 /**
  * General purpose methods.
- * 
+ *
  * @author Jim Irrer irrer@umich.edu
- * 
  */
 public class Util {
 
@@ -75,20 +44,28 @@ public class Util {
      */
     private final static int TRANSFER_BUFFER_SIZE = 64 * 1024;
 
-    /** The root UID which is used to prefix files constructed by the University of Michigan. */
+    /**
+     * The root UID which is used to prefix files constructed by the University of Michigan.
+     */
     public static final String UMRO_ROOT_UID = "1.3.6.1.4.1.22361";
 
-    /** The name of the System property to define to enable testing. */
+    /**
+     * The name of the System property to define to enable testing.
+     */
     public static final String TESTING_PROPERTY = "TESTING";
 
-    /** Default transfer syntax for serializing DICOM files. */
+    /**
+     * Default transfer syntax for serializing DICOM files.
+     */
     public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ImplicitVRLittleEndian;
     public static final String DEFAULT_STORAGE_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
     // public static final String DEFAULT_TRANSFER_SYNTAX = TransferSyntax.ExplicitVRLittleEndian;
 
     public static final Random random = new Random();
 
-    /** For getting values from the MANIFEST.MF file in the jar. */
+    /**
+     * For getting values from the MANIFEST.MF file in the jar.
+     */
     private static JarInfo jarInfo = null;
 
     /**
@@ -97,22 +74,30 @@ public class Util {
      */
     private static long macAddress = 0;
 
-    /** Flag to determine whether MAC address has been initialized. */
+    /**
+     * Flag to determine whether MAC address has been initialized.
+     */
     private static boolean initialized = false;
 
-    /** Root UID used as a prefix when building UIDs. */
+    /**
+     * Root UID used as a prefix when building UIDs.
+     */
     private static String rootUid = null;
 
-    /** DICOM postal address. */
+    /**
+     * DICOM postal address.
+     */
     public static final String UMRO_POSTAL_ADDRESS = "University of Michigan Health System, 1500 E. Medical Center Drive Ann Arbor, MI 48109";
 
-    /** Suffixes used when writing files. */
+    /**
+     * Suffixes used when writing files.
+     */
     public static final String TEXT_SUFFIX = ".TXT";
     public static final String PNG_SUFFIX = ".PNG";
     public static final String XML_SUFFIX = ".XML";
     public static final String DICOM_SUFFIX = ".DCM";
 
-    public static final String[] allSuffixes = { TEXT_SUFFIX, PNG_SUFFIX, XML_SUFFIX, DICOM_SUFFIX };
+    public static final String[] allSuffixes = {TEXT_SUFFIX, PNG_SUFFIX, XML_SUFFIX, DICOM_SUFFIX};
 
     public static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
@@ -138,15 +123,11 @@ public class Util {
     /**
      * Get an attribute value, or null if anything goes wrong. Also, if there is a value,
      * replace all null characters with blanks, and trim whitespace.
-     * 
-     * @param attributeList
-     *            Get it from this list.
-     * 
-     * @param tag
-     *            The attribute to get.
-     * 
+     *
+     * @param attributeList Get it from this list.
+     * @param tag           The attribute to get.
      * @return The value of the attribute as a string, or null if either the
-     *         value is not on the list or the attribute does not have a value.
+     * value is not on the list or the attribute does not have a value.
      */
     public static String getAttributeValue(AttributeList attributeList, AttributeTag tag) {
         Attribute attribute = attributeList.get(tag);
@@ -162,8 +143,7 @@ public class Util {
                 Date date = null;
                 try {
                     date = new Date(Long.parseLong(text) * 1000);
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     // if there is a badly formatted time, then just return the unprocessed value.
                     return value;
                 }
@@ -200,20 +180,17 @@ public class Util {
             if (testing()) {
                 rootUid = "0.0.0.0.0.0.0.0.0.0";
                 macAddress = 0;
-            }
-            else {
+            } else {
                 try {
                     rootUid = ClientConfig.getInstance().getRootUid();
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     Log.get().severe("Unable to get root UID from configuration.  Instead using Univ Mich Hosp UID: " + UMRO_ROOT_UID);
                     rootUid = UMRO_ROOT_UID;
                 }
 
                 try {
                     macAddress = OpSys.getMACAddress();
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     macAddress = Long.parseLong(OpSys.getHostIPAddress().replace('.', 'x').replaceAll("x", ""));
                     // if localhost (127.0.0.1) is returned, then try something
                     // random instead. The risk is
@@ -230,7 +207,7 @@ public class Util {
 
     /**
      * Generate a DICOM compliant UID using the UMRO root.
-     * 
+     *
      * @return A DICOM compliant UID using the UMRO root.
      * @throws SocketException
      * @throws UnknownHostException
@@ -264,10 +241,8 @@ public class Util {
     /**
      * Get parameter value from jar of the given key. If there is
      * an error, return "unknown" instead.
-     * 
-     * @param key
-     *            Tag for parameter.
-     * 
+     *
+     * @param key Tag for parameter.
      * @return
      */
     private static String getJarInfo(String key) {
@@ -279,7 +254,7 @@ public class Util {
 
     /**
      * Get the vendor organization of this application.
-     * 
+     *
      * @return Organization or "unknown".
      */
     public static String getImplementationVendor() {
@@ -288,7 +263,7 @@ public class Util {
 
     /**
      * Get the version of this application.
-     * 
+     *
      * @return Version or "unknown".
      */
     public static String getImplementationVersion() {
@@ -297,7 +272,7 @@ public class Util {
 
     /**
      * Get the build date of this application.
-     * 
+     *
      * @return Version or "unknown".
      */
     public static String getBuildDate() {
@@ -306,7 +281,7 @@ public class Util {
 
     /**
      * Get the build date of this application.
-     * 
+     *
      * @return Version or "unknown".
      */
     public static String getBuiltBy() {
@@ -315,14 +290,10 @@ public class Util {
 
     /**
      * Make a new copy of an attribute list, not sharing any data with the original.
-     * 
-     * @param source
-     *            List to copy.
-     * 
+     *
+     * @param source List to copy.
      * @return Copy of list.
-     * 
      * @throws IOException
-     * 
      * @throws DicomException
      */
     public static AttributeList cloneTopLevelAttributeList(AttributeList source) throws IOException, DicomException {
@@ -330,7 +301,8 @@ public class Util {
 
         Attribute transferSyntaxAttr = source.get(TagFromName.TransferSyntaxUID);
         String transferSyntax = TransferSyntax.ExplicitVRLittleEndian; // DEFAULT_TRANSFER_SYNTAX;
-        if (transferSyntaxAttr != null) transferSyntax = transferSyntaxAttr.getSingleStringValueOrDefault(DEFAULT_TRANSFER_SYNTAX);
+        if (transferSyntaxAttr != null)
+            transferSyntax = transferSyntaxAttr.getSingleStringValueOrDefault(DEFAULT_TRANSFER_SYNTAX);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DicomOutputStream dicomOutputStream = new DicomOutputStream(byteArrayOutputStream, transferSyntax, transferSyntax);
         source.write(dicomOutputStream);
@@ -343,14 +315,10 @@ public class Util {
 
     /**
      * Make a new copy of an attribute list, not sharing any data with the original.
-     * 
-     * @param source
-     *            List to copy.
-     * 
+     *
+     * @param source List to copy.
      * @return Copy of list.
-     * 
      * @throws IOException
-     * 
      * @throws DicomException
      */
 
@@ -380,11 +348,9 @@ public class Util {
         attributeList.put(attribute);
         try {
             return cloneAttributeList(attributeList).get(attribute.getTag());
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             Log.get().severe("cloneAttribute Unexpected IOException: " + Log.fmtEx(e));
-        }
-        catch (DicomException e) {
+        } catch (DicomException e) {
             Log.get().severe("cloneAttribute Unexpected DicomException: " + Log.fmtEx(e));
         }
         return null;
@@ -394,9 +360,9 @@ public class Util {
      * Determine if the given UID is syntactically valid, which
      * means that it must start and end with a digit and contain
      * only digits and periods (.) .
-     * 
+     * <p>
      * Example of valid UID: 98.09877.897.908.9
-     * 
+     *
      * @param uid
      * @return
      */
@@ -413,11 +379,9 @@ public class Util {
     /**
      * Write the given attribute list to a PNG file. If the attribute list does
      * not describe an image file, then do nothing.
-     * 
-     * @param attributeList
-     *            DICOM source.
-     * @param pngFile
-     *            PNG image file to create.
+     *
+     * @param attributeList DICOM source.
+     * @param pngFile       PNG image file to create.
      */
     public static void writePngFile(AttributeList attributeList, File pngFile) throws DicomException, IOException {
         if (SOPClass.isImageStorage(Attribute.getSingleStringValueOrEmptyString(attributeList, TagFromName.SOPClassUID))) {
@@ -431,13 +395,9 @@ public class Util {
     /**
      * Write the given attribute list to a text file as a user would see it in
      * the text previewer.
-     * 
-     * @param attributeList
-     *            DICOM source.
-     * 
-     * @param textFile
-     *            Text file to create.
-     * 
+     *
+     * @param attributeList DICOM source.
+     * @param textFile      Text file to create.
      * @throws IOException
      * @throws UMROException
      */
@@ -452,13 +412,9 @@ public class Util {
 
     /**
      * Write the given attribute list to a text file as a user would see it in the text previewer.
-     * 
-     * @param attributeList
-     *            DICOM source.
-     * 
-     * @param xmlFile
-     *            XML file to create.
-     * 
+     *
+     * @param attributeList DICOM source.
+     * @param xmlFile       XML file to create.
      * @throws IOException
      * @throws UMROException
      * @throws ParserConfigurationException
@@ -476,9 +432,9 @@ public class Util {
 
     /**
      * Try to warn the user about using up memory, and try freeing it up.
-     * 
+     *
      * @param file
-     *            Incoming DICOM file.
+     * Incoming DICOM file.
      */
     private static long bytesSinceFree = 0;
     private static double garbageCollectThreshold = -1;
@@ -506,19 +462,68 @@ public class Util {
             if (fileLength > Runtime.getRuntime().freeMemory()) {
                 DicomClient.getInstance().showMessage("Extremely large file " + file.getAbsolutePath() + " of size " + fileLength + " might need more memory than is available.");
             }
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             DicomClient.getInstance().showMessage("Problem reading file (partially read) " + file.getAbsolutePath() + " : " + t);
             Runtime.getRuntime().gc();
         }
 
     }
 
+    private static boolean isGroupLengthAttributeTag(AttributeTag tag) {
+        boolean isGroupLength =
+                (tag.getElement() == 0) &&
+                        (tag.getGroup() != 0) &&
+                        (tag.getGroup() != 2);
+        return isGroupLength;
+    }
+
+
+    private static boolean isGroupLengthAttribute(Attribute attribute) {
+        boolean isGroupLength =
+                (attribute.getElement() == 0) &&
+                        (attribute.getGroup() != 0) &&
+                        (attribute.getGroup() != 2);
+        return isGroupLength;
+    }
+
+
+    /**
+     * If the -k (keepGroupLength flag) is false, modify the given DICOM by removing all GroupLength attributes.
+     *
+     * @param attributeList Remove attributes from here.
+     */
+    public static void removeGroupListAttributes(AttributeList attributeList) { // throws IOException, DicomException {
+        if (!DicomClient.getKeepGroupLength()) {
+            Collection<AttributeTag> tagList = attributeList.keySet();
+            ArrayList<AttributeTag> toRemove = new ArrayList<>();
+
+            for (AttributeTag tag : tagList) {
+                if (isGroupLengthAttributeTag(tag)) {
+                    toRemove.add(tag);
+                }
+            }
+
+            for (AttributeTag tag : toRemove) {
+                attributeList.remove(tag);
+            }
+
+            tagList = attributeList.keySet();
+            for (AttributeTag tag : tagList) {
+                if (attributeList.get(tag) instanceof SequenceAttribute) {
+                    SequenceAttribute sa = (SequenceAttribute) attributeList.get(tag);
+                    for (int i = 0; i < sa.getNumberOfItems(); i++) {
+                        AttributeList al = sa.getItem(i).getAttributeList();
+                        removeGroupListAttributes(al);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Read a DICOM file after checking that there is sufficient heap space to read it.
-     * 
-     * @param File
-     *            to read
+     *
+     * @param file to read
      * @return Parsed DICOM.
      * @throws IOException
      * @throws DicomException
@@ -542,21 +547,18 @@ public class Util {
         ReadTermStrat rts = new ReadTermStrat();
         try {
             attributeList.read(file, rts);
-        }
-        catch (IOException e) {
+            removeGroupListAttributes(attributeList);
+        } catch (IOException e) {
             if (rts.latest != null) {
                 DicomClient.getInstance().showMessage("Warning!  Problem reading DICOM file " + file.getAbsolutePath() + " : " + e.getMessage());
                 return rts.latest;
-            }
-            else
+            } else
                 throw e;
-        }
-        catch (DicomException e) {
+        } catch (DicomException e) {
             if (rts.latest != null) {
                 DicomClient.getInstance().showMessage("Warning!  DICOM file " + file.getAbsolutePath() + " has problems: " + e.getMessage());
                 return rts.latest;
-            }
-            else
+            } else
                 throw e;
         }
 
@@ -581,14 +583,11 @@ public class Util {
 
     /**
      * Replace all characters in a name that are not supported by the Windows file system.
-     * 
-     * @param name:
-     *            File name
-     * 
-     * @param replacement:
-     *            Character to be used instead of original.
-     *            This will work for *nix systems too. It will replace some characters that would be
-     *            allowed in *nix, but using them is generally not a good idea anyway.
+     *
+     * @param name:        File name
+     * @param replacement: Character to be used instead of original.
+     *                     This will work for *nix systems too. It will replace some characters that would be
+     *                     allowed in *nix, but using them is generally not a good idea anyway.
      */
     public static String replaceInvalidFileNameCharacters(String name, char replacement) {
         byte[] original = name.getBytes();
@@ -616,14 +615,51 @@ public class Util {
 
     /**
      * Determine if the attribute list is an image.
-     * 
-     * @param attributeList
-     *            Used as input.
-     * 
+     *
+     * @param attributeList Used as input.
      * @return True if image.
      */
     public static boolean isImageStorage(AttributeList attributeList) {
         String sopClassUID = Attribute.getSingleStringValueOrEmptyString(attributeList, TagFromName.SOPClassUID);
         return SOPClass.isImageStorage(sopClassUID);
     }
+
+    public static void main(String[] args) throws DicomException, IOException, InterruptedException {
+        AttributeList al = new AttributeList();
+
+        File dir = new File("D:\\tmp\\maggie\\RS_phantom");
+        for (File f : dir.listFiles()) {
+
+            if (f.isFile()) {
+                File outFile = new File("D:\\tmp\\maggie\\NoGroupLength\\" + f.getName());
+                if (outFile.isFile()) System.out.println("Deleting file " + outFile.getName());
+                outFile.delete();
+            }
+        }
+
+        Thread.sleep(2 * 1000);
+
+        for (File f : dir.listFiles()) {
+            if (f.isFile() && f.getName().startsWith("D")) {
+                System.out.println("Processing file " + f.getName());
+                al.read(f);
+                removeGroupListAttributes(al);
+                File outFile = new File("D:\\tmp\\maggie\\NoGroupLength\\" + f.getName());
+                outFile.delete();
+
+                Attribute transferSyntaxAttribute = al.get(TagFromName.TransferSyntaxUID);
+                String transferSyntax = TransferSyntax.ImplicitVRLittleEndian;
+                if ((transferSyntaxAttribute != null) && (transferSyntaxAttribute.getSingleStringValueOrNull() != null)) {
+                    transferSyntax = transferSyntaxAttribute.getSingleStringValueOrNull();
+                }
+
+                FileMetaInformation.addFileMetaInformation(al, transferSyntax, "DICOM+");
+
+                al.write(outFile, transferSyntax, true, true);
+            }
+        }
+
+        // removeGroupListAttributes(al);
+    }
+
 }

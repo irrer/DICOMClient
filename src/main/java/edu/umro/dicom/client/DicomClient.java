@@ -206,6 +206,14 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     private static boolean commandLineMode = false;
 
     /**
+     * True if the application should keep Group Length (gggg,0000) attributes when reading files.
+     * From the 2022 DICOM spec:
+     *
+     * Group Length (gggg,0000) Standard Data Elements have been retired. See PS3.5-2007.
+     */
+    private static boolean keepGroupLength = false;
+
+    /**
      * True if, when writing output files, they should be put in a tree with patient ID as directory containing series
      * directories.
      */
@@ -1466,6 +1474,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
             try {
                 // this does not show any annoying messages in the log
                 attributeList.read(file);
+                Util.removeGroupListAttributes(attributeList);
             } catch (Exception e) {
                 // Exceptions do not matter because
                 // 1: If reading a partial file, there will always be an exception
@@ -1760,6 +1769,10 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         return commandLineMode;
     }
 
+    public static boolean getKeepGroupLength() {
+        return keepGroupLength;
+    }
+
     public static OutputFileOrganization getOutputOrg() {
         return outputOrgMode;
     }
@@ -1899,6 +1912,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
                 "        -1 Limit processing to a single patient.  If a second patient is found then the program will print a\n" +
                 "           message listing two files containing the different patient IDs and exit.  Valid in command line\n" +
                 "           mode only.  If not given, then the patient ID is incremented as needed.\n" +
+                "        -k If given, keep Group Length (gggg,0000) attributes.  These were retired from DICOM in 2007.\n" +
                 "        -g Perform aggressive anonymization - anonymize fields that are not marked for\n" +
                 "           anonymization but contain strings found in fields that are marked for anonymization.\n";
         System.err.println(usage);
@@ -1956,6 +1970,11 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
 
                 if (args[a].equals("-c")) {
                     commandLineMode = true;
+                    continue;
+                }
+
+                if (args[a].equals("-k")) {
+                    keepGroupLength = true;
                     continue;
                 }
 

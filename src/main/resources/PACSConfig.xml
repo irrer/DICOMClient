@@ -14,6 +14,6 @@
 		<PACS AETitle='MyPACS' Host='localhost' Port='1234' />
 		<PACS AETitle='SomePACS' Host='192.30.252.131' Port='104' />
 		<PACS AETitle='MRCT_DEV' Host='somehost' Port='5680' />
-        <PACS AETitle='IRRER' Host='mymachine' Port='15678' />
+        <PACS AETitle='IRRER' Host='localhost' Port='15678' />
 	</PacsList>
 </PacsConfiguration> 

@@ -23,6 +23,8 @@ public class CustomAttributeList extends AttributeList {
     /** Default ID */
     private static final long serialVersionUID = 1L;
 
+    static DicomDictionary dictionary = new DicomDictionary();
+
     public static void setDictionary(DicomDictionary dicomDictionary) {
         CustomAttributeList.dictionary = dicomDictionary;
     }

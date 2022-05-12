@@ -16,12 +16,8 @@ package edu.umro.dicom.client;
  * limitations under the License.
  */
 
-import com.pixelmed.dicom.Attribute;
-import com.pixelmed.dicom.AttributeList;
-import com.pixelmed.dicom.AttributeList.ReadTerminationStrategy;
-import com.pixelmed.dicom.AttributeTag;
-import com.pixelmed.dicom.SOPClass;
-import com.pixelmed.dicom.TagFromName;
+import com.pixelmed.dicom.*;
+import com.pixelmed.dicom.AttributeList.*;
 
 /*
  * Tags referenced application sorted by group and element.
@@ -53,12 +49,12 @@ import com.pixelmed.dicom.TagFromName;
 public class DicomClientReadStrategy implements ReadTerminationStrategy {
 
     public static final DicomClientReadStrategy dicomClientReadStrategy = new DicomClientReadStrategy();
-    
+
     private static final AttributeTag lastTag = TagFromName.SliceLocation;
-    
+
     private static final int MIN_ATTR_COUNT = 10;
     private static final long ATTR_COUNT_DEADLINE = 512;
-    
+
     public AttributeList latest = null;
 
     public boolean terminate(AttributeList attributeList, AttributeTag tag, long bytesRead) {
@@ -71,15 +67,14 @@ public class DicomClientReadStrategy implements ReadTerminationStrategy {
                     return true;
                 if ((tag.getGroup() == TagFromName.RTPlanTime.getGroup()) && (tag.getElement() >= TagFromName.RTPlanTime.getElement()))
                     return true;
-            }
-            else {
+            } else {
                 if (tag.getGroup() > lastTag.getGroup())
                     return true;
                 if ((tag.getGroup() == lastTag.getGroup()) && (tag.getElement() > lastTag.getElement()))
                     return true;
             }
         }
-        
+
         // If many bytes have been read but very few attributes recognized, then terminat.
         if ((bytesRead > ATTR_COUNT_DEADLINE) && (attributeList.size() < MIN_ATTR_COUNT)) {
             return true;

@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DicomClientConfig>
+
+<!--
+   Copyright 2012 Regents of the University of Michigan
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+
+    <!-- URL for the DICOM service used for authenticating and authorizing users.  If
+    this is not specified, then no authentication or authorization will be done, and
+    any user may upload DICOM files. -->
+    <!-- <DicomServiceUrl>https://localhost:8091</DicomServiceUrl> -->
+
+    <!-- Used to generate the default patient id.  Special character meanings:
+        * : a random (capital) alpha or digit : ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+        ? : random capital letter : ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        # : a random digit : 0123456789
+        % : escape a special character
+
+        Other characters are taken literally.  Examples:
+
+          input         could generate
+          - - - - - - - - - - - - - - -
+          ANON??##  ==> ANON3J42
+          %?FOO%%   ==> ?FOO%  (no randomness)
+          X######   ==> X087853
+
+        -->
+    <AnonPatientIdTemplate>$######</AnonPatientIdTemplate>
+
+    <!-- Every time this many GB is read in, try to perform garbage collection.   If not given, then default to 1.0 GB. -->
+    <GarbageCollectThreshold>1.0</GarbageCollectThreshold>
+
+    <!-- When generating UIDs for anonymization, this prefix is used.   If not specified, a default is used.
+    Note that a value of 1.3.6.1.4.1.22361. is for University of Michigan Department of Radiation Oncology. -->
+    <RootUid>1.3.6.1.4.1.22361.</RootUid>
+
+    <!-- If true, upload help is shown.  It makes sense to not show the upload help for sites where the server is not installed. -->
+    <ShowUploadHelp>true</ShowUploadHelp>
+
+    <!-- When using aggressive anonymization, if DICOM field contains any one of these characters, then it is not considered PHI. 
+    For example, if this field is 0123456789, and a DICOM field is TEST5, then it would not be anonymized because it contains the
+    character '5'.  This is an attempt to fix operational problems with aggressive anonymization where a patient name was already
+    anonymized to 123, and then a subsequent anonymization anonymized all occurrences of 123, which wreaked havoc on UIDs.
+    
+    If this value is not specified in this config file, then it defaults to:
+
+        0123456789$%
+
+    -->
+    <PhiDisqualifyingCharacters>0123456789$%</PhiDisqualifyingCharacters>
+
+   <!-- If a value is given, search all text fields for the for the original values in these fields and replace them with 'replacement'. -->
+   <AggressiveAnonymization replacement='anon'>PatientName</AggressiveAnonymization>
+   <AggressiveAnonymization replacement='anon'>PatientID</AggressiveAnonymization>
+
+   <!-- The following words will not be aggressively anonymized. -->
+   <ReservedWordList>
+        abdomen
+        anon
+        anonymous
+        auto
+        axial
+        bladder
+        bone
+        bowel
+        brain
+        breast
+        bulb
+        by
+        cap
+        carbon
+        chest
+        chiasm
+        contours
+        cord
+        coselmon
+        ct
+        date
+        decubitus
+        density
+        description
+        dicom
+        electron
+        ext
+        external
+        eye
+        feet
+        ffdl
+        ffdr
+        ffp
+        ffs
+        file
+        first
+        galien
+        gtv
+        gtvonly
+        head
+        headext
+        head_neck
+        helix
+        hfdl
+        hfdr
+        hfp
+        hfs
+        host
+        image
+        imrt_prostate
+        kidney
+        left
+        list
+        liver
+        l_lung
+        l_neck
+        lnptv
+        lt_eye
+        lt_femur
+        lt_kidney
+        lt_node
+        lung
+        lymph
+        medical
+        mm
+        monochrome
+        mr
+        name
+        neck
+        node
+        nodes
+        none
+        only
+        optext
+        optext_pelv
+        optic
+        original
+        pelvic
+        pelvis
+        penile
+        penilebulb
+        philips
+        photon
+        plan
+        primary
+        prone
+        prostate
+        prostpelv
+        proxsv
+        ps_node
+        psptv
+        ptv
+        rectum
+        retro_ln
+        right
+        r_lung
+        r_neck
+        rnptv
+        rt_eye
+        rt_femur
+        rtimage
+        rt_kidney
+        rt_node
+        rtplan
+        rtstruct
+        seminal
+        semves
+        site
+        spinal
+        spine
+        struct
+        structure
+        supine
+        system
+        systems
+        target
+        target_2mm
+        template
+        test
+        top
+        track
+        tumor
+        tumor_1mm
+        tumor_2mm
+        varian
+        version
+        vesicles
+        volume
+        whole
+        written
+        xml
+   </ReservedWordList>
+
+    <!-- List of tags whose contents should be anonymized.  Note that for UIDs, the replacement
+    value is ignored, and instead a new unique UID is constructed (with a Univ of Mich Radiation
+    Oncology prefix) -->
+    <AnonymizeDefaultList>
+        <Tag Name='PatientID'                           >11111111</Tag>
+        <Tag Name='PatientName'                         ></Tag>
+        <Tag Name='PatientBirthDate'                    >18000101</Tag>
+        <Tag Name='PatientBirthTime'                    >000000.0</Tag>
+        <Tag Name='PatientSex'                          >O</Tag>
+        <Tag Name='OtherPatientIDs'                     >none</Tag>
+        <Tag Name='OtherPatientNames'                   >none</Tag>
+        <Tag Name='PatientAge'                          >200</Tag>
+        <Tag Name='PatientSize'                         >0.0</Tag>
+        <Tag Name='PatientWeight'                       >0</Tag>
+        <Tag Name='InstanceCreatorUID'                  ></Tag>
+        <Tag Name='SOPInstanceUID'                      ></Tag>
+        <Tag Name='AccessionNumber'                     >none</Tag>
+        <Tag Name='InstitutionName'                     >none</Tag>
+        <Tag Name='InstitutionAddress'                  >none</Tag>
+        <Tag Name='ReferringPhysicianName'              >none</Tag>
+        <Tag Name='ReferringPhysicianAddress'           >none</Tag>
+        <Tag Name='ReferringPhysicianTelephoneNumbers'  >none</Tag>
+        <Tag Name='ReferringPhysicianTelephoneNums'     >none</Tag>  <!-- check for shortened version also -->
+        <Tag Name='StationName'                         >none</Tag>
+   <!-- <Tag Name='StudyDescription'                    >none</Tag> -->
+   <!-- <Tag Name='SeriesDescription'                   >none</Tag> -->
+        <Tag Name='InstitutionalDepartmentName'         >none</Tag>
+        <Tag Name='PhysiciansOfRecord'                  >none</Tag>
+        <Tag Name='PerformingPhysicianName'             >none</Tag>
+        <Tag Name='NameOfPhysiciansReadingStudy'        >none</Tag>
+        <Tag Name='OperatorsName'                       >none</Tag>
+   <!-- <Tag Name='AdmittingDiagnosesDescription'       >none</Tag> -->
+        <Tag Name='ReferencedSOPInstanceUID'            ></Tag>
+   <!-- <Tag Name='DerivationDescription'               >none</Tag> -->
+        <Tag Name='MedicalRecordLocator'                >none</Tag>
+        <Tag Name='EthnicGroup'                         >none</Tag>
+        <Tag Name='Occupation'                          >none</Tag>
+        <Tag Name='AdditionalPatientHistory'            >none</Tag>
+        <Tag Name='PatientComments'                     >none</Tag>
+        <Tag Name='DeviceSerialNumber'                  >none</Tag>
+        <Tag Name='ProtocolName'                        >none</Tag>
+        <Tag Name='StudyInstanceUID'                    ></Tag>
+        <Tag Name='SeriesInstanceUID'                   ></Tag>
+        <Tag Name='StudyID'                             >none</Tag>
+        <Tag Name='FrameOfReferenceUID'                 ></Tag>
+        <Tag Name='SynchronizationFrameOfReferenceUID'  ></Tag>
+        <Tag Name='SynchronizationFrameOfRefUID'        ></Tag>   <!-- check for shortened version also -->
+        <Tag Name='ImageComments'                       >none</Tag>
+        <!-- <Tag Name='RequestAttributesSequence'           ></Tag>  -->
+        <Tag Name='UID'                                 ></Tag>
+        <!-- <Tag Name='ContentSequence'                     >remove</Tag>  -->
+        <Tag Name='StorageMediaFileSetUID'              ></Tag>
+        <Tag Name='ReferencedFrameOfReferenceUID'       ></Tag>
+        <Tag Name='RelatedFrameOfReferenceUID'          ></Tag>
+        <Tag Name='SourceFrameOfReferenceUID'           ></Tag>
+        <Tag Name='RTPlanName'                          >none</Tag>  <!-- UMPlan sometimes puts patient info here -->
+        <Tag Name='DoseReferenceUID'                    ></Tag>
+        <Tag Name='ReferencedPrimaryDoseRefUID'         ></Tag>
+    </AnonymizeDefaultList>
+
+    <!-- The following list defines private tags that are not in the DICOM standard.
+    Modify this list as needed so that private tag data can be viewed and anonymized.
+    For repetitive tags, the group may be specified as first:last:increment, where
+    a loop will be executed to create multiple tags.  For example, the specification:
+
+            <TypeOfData      group='5000:5010:2' element='0020' vr='CS' fullName='Type Of Data'             />
+
+    would create:
+
+            <TypeOfData5000  group='5000' element='0020' vr='CS' fullName='Type Of Data 5000'/>
+            <TypeOfData5002  group='5002' element='0020' vr='CS' fullName='Type Of Data 5002'/>
+            <TypeOfData5004  group='5004' element='0020' vr='CS' fullName='Type Of Data 5004'/>
+            <TypeOfData5006  group='5006' element='0020' vr='CS' fullName='Type Of Data 5006'/>
+            <TypeOfData5008  group='5008' element='0020' vr='CS' fullName='Type Of Data 5008'/>
+            <TypeOfData500A  group='500A' element='0020' vr='CS' fullName='Type Of Data 500A'/>
+            <TypeOfData500C  group='500C' element='0020' vr='CS' fullName='Type Of Data 500C'/>
+            <TypeOfData500E  group='500E' element='0020' vr='CS' fullName='Type Of Data 500E'/>
+            <TypeOfData5010  group='5010' element='0020' vr='CS' fullName='Type Of Data 5010'/>
+
+    -->
+    <PrivateTagList>
+
+        <!-- Varian private tags -->
+        <ExtendedInterfaceData                      group='3253' element='1000' vr='OB' fullName='Varian XML Stream'/>
+        <ExtendedInterfaceLength                    group='3253' element='1001' vr='IS' fullName='Varian Data length of XML stream'/>
+        <ExtendedInterfaceFormat                    group='3253' element='1002' vr='CS' fullName='Varian Extended Interface Format tag.  A possible falue is ExtendedIF'/>
+        <BeamSecondaryName                          group='3243' element='1009' vr='LO' fullName='Varian Second user defined beam name'/>
+        <MaximumTreatmentTime                       group='3249' element='1000' vr='DS' fullName='Varian Maximum treament time in minutes.  Serves as secondary safety limit to 300A,0086'/>
+        <TreatmentMachineNote                       group='3251' element='1000' vr='LO' fullName='Varian Description of treatment machine details'/>
+        <TreatmentSessionBeamData                   group='3261' element='102A' vr='OB' fullName='Varian Extended interface in XML'/>
+        <RelatedReferenceBeamNumber                 group='3243' element='1028' vr='IS' fullName='Varian If TreatmentDeliveryType is OPEN_PORTFILM or TRMT_PORTFILM then use the Related Referenced Beam Number instead of 300C,0006'/>
+        <AdditionalDoseValueSequence                group='3259' element='1000' vr='SQ' fullName='Varian Addtional Session Dose, one or more items'/>
+        <ActualSessionDose                          group='3259' element='1002' vr='DS' fullName='Varian Session Dose Delivered of Actual Session.  Required if Actual Session Dose Seq is sent'/>
+        <DailyDose                                  group='3259' element='1004' vr='DS' fullName='Varian Daily Dose of current day.  Required if Actual Session Dose Seq is sent'/>
+        <LifeTimeTotalDose                          group='3259' element='1006' vr='DS' fullName='Varian Total Dose of Reference Point over all plans.  Required if Actual Session Dose Seq is sent'/>
+        <TotalNumberOfFractions                     group='3265' element='1000' vr='SL' fullName='Varian Total number of Fractions planned for the current plan and al its former plans'/>
+        <LastTreatedFraction                        group='3265' element='1001' vr='SL' fullName='Varian The index of the lst fraction treated across the current and all its former plans'/>
+        <VarianCreator3249                          group='3249' element='0010' vr='LO' fullName='Varian Creator 3249'/>
+        <VarianCreator3267                          group='3267' element='0010' vr='LO' fullName='Varian Creator 3267'/>
+        <ReferencedPatientVolumeID                  group='3267' element='1000' vr='SH' fullName='Referenced Patient Volume ID'/>
+        <VarianCreator3253                          group='3253' element='0010' vr='LO' fullName='Varian Creator 3253'/>
+        <ReferencedPrimaryDoseRefUID                group='3249' element='1010' vr='UI' fullName='Referenced Primary Dose Reference UID'/>
+        <VarianCreator3285                          group='3285' element='0010' vr='LO' fullName='Varian Creator 3285'/>
+        <PrimaryFluenceModeSequence                 group='3285' element='1000' vr='SQ' fullName='Primary Fluence Mode Sequence'/>
+        <FluenceMode                                group='3285' element='1001' vr='CS' fullName='Fluence Mode'/>
+        <FluenceModeID                              group='3285' element='1002' vr='SH' fullName='Fluence Mode ID'/>
+        <VarianCreator3287                          group='3287' element='0010' vr='LO' fullName='Varian Creator 3287'/>
+        <PlanIntegritySequence                      group='3287' element='1000' vr='SQ' fullName='Plan Integrity Sequence'/>
+        <PlanIntegrityHash                          group='3287' element='1001' vr='LO' fullName='Plan Integrity Hash'/>
+        <PlanIntegrityHashVersion                   group='3287' element='1002' vr='SH' fullName='Plan Integrity Hash Version'/>
+        <VarianCreator3273                          group='3273' element='0010' vr='LO' fullName='Varian Creator 3273'/>
+        <RTImageIsocenterPosition                   group='3273' element='1000' vr='DS' fullName='RTImage Isocenter Position'/>
+        <RTImagePatientPosition                     group='3273' element='1001' vr='CS' fullName='RTImage Patient Position'/>
+        <VarianCreator3263                          group='3263' element='0010' vr='LO' fullName='Varian Creator 3263'/>
+        <ReferencedStructureSetRelnSeq              group='3263' element='1001' vr='SQ' fullName='Referenced Structure Set Relationship Sequence'/>
+        <StructureSetRelationship                   group='3263' element='1002' vr='CS' fullName='Structure Set Relationship'/>
+        <VarianCreator3243                          group='3243' element='0010' vr='LO' fullName='Varian Creator 3243'/>
+        <VarianCreator3291                          group='3291' element='0010' vr='LO' fullName='Varian Creator 3291'/>
+        <SourceToGeneralAccessoryDist               group='3291' element='1000' vr='DS' fullName='Source To General Accessory Distance '/>
+
+        <CurveDimensions                            group='5000:50fe:2' element='0005' vr='US' fullName='Curve Dimensions'         />
+        <NumberOfPoints                             group='5000:50fe:2' element='0010' vr='US' fullName='Number Of Points'         />
+        <TypeOfData                                 group='5000:50fe:2' element='0020' vr='CS' fullName='Type Of Data'             />
+        <CurveDescription                           group='5000:50fe:2' element='0022' vr='LO' fullName='Curve Description'        />
+        <AxisUnits                                  group='5000:50fe:2' element='0030' vr='SH' fullName='Axis Units'               />
+        <AxisLabels                                 group='5000:50fe:2' element='0040' vr='SH' fullName='Axis Labels'              />
+        <DataValueRepresentation                    group='5000:50fe:2' element='0103' vr='US' fullName='Data Value Representation'/>
+        <CurveLabel                                 group='5000:50fe:2' element='2500' vr='LO' fullName='Curve Label'              />
+        <CurveData                                  group='5000:50fe:2' element='3000' vr='OX' fullName='Curve Data'               />
+
+    </PrivateTagList>
+</DicomClientConfig>

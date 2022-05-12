@@ -661,8 +661,8 @@ public class FileDrop
 
     /**
      * This is the event that is passed to the
-     * {@link FileDropListener#filesDropped filesDropped(...)} method in
-     * your {@link FileDropListener} when files are dropped onto
+     * [@link FileDropListener#filesDropped filesDropped(...)} method in
+     * your [@link FileDropListener} when files are dropped onto
      * a registered drop target.
      *
      * <p>I'm releasing this code into the Public Domain. Enjoy.</p>
@@ -853,7 +853,7 @@ public class FileDrop
          * the custom data flavor, if one was created in the constructors,
          * second the default {@link #DATA_FLAVOR} associated with
          * {@link TransferableObject}, and third the
-         * {@link java.awt.datatransfer.DataFlavor.stringFlavor}.
+         * [@link java.awt.datatransfer.DataFlavor.stringFlavor}.
          *
          * @return An array of supported data flavors
          * @since 1.1

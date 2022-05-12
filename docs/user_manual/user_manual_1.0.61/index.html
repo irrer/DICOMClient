@@ -1,0 +1,38 @@
+
+        <h2>Starting the Program</h2>
+        The program may be started by either:
+
+        <ul>
+          <li>on UMHS installations clicking Start --&gt; Accessories --&gt; DICOM+</li>
+          <li>dragging one or more DICOM files or directories onto the desktop icon</li>
+          <li>double clicking the icon</li>
+          <li>invoking the <code>DICOM+.bat</code> file from the command line (Windows)</li>
+          <li>invoking the <code>DICOM+MIL.bat</code> file from the command line (Windows for VA)</li>
+          <li>invoking the <code>DICOM+.sh</code> file from the command line (Linux)</li>
+        </ul>
+
+        <p>
+        Arguments, including files to be loaded, may be appended as command line arguments.
+        See <a href="commandLine.html">Running as a command line program</a> for
+        more details on command line invocation.
+        </p>
+
+        <p>
+        After the program has been started, more files may be loaded by dragging them onto the
+        main window.  If a directory is dragged, then all the immediate files under that directory
+        will be loaded.  Directories under a dragged directory will not be loaded.  This is by design, to
+        prevent inadvertent dragging of a top level directory that would cause the program to traverse
+        a large number of files, possibly an entire disk.
+        </p>
+
+        <p>
+        Loading files does not change them, and the default behavior is to never over-write an existing file.
+        </p>
+
+        <p>
+        Any file that is not a DICOM file (such as txt or zip files) will be ignored.  The
+        requirements for a file to be considered a DICOM file are very loose - it must have at least
+        one DICOM attribute.  This loose requirement was intentional so as to allow the user to examine
+        damaged or poorly constructed DICOM files.  If a DICOM file has errors that make it partially
+        unreadable, then DICOM+ will read as much as possible.
+        </p>

@@ -282,6 +282,25 @@
     -->
     <PrivateTagList>
 
+        <!--
+                <GroupLengthRetired0008                    group='0008' element='0000' vr='UL' fullName='GroupLengthRetired0008_0000'   />
+                <GroupLengthRetired0010                    group='0010' element='0000' vr='UL' fullName='GroupLengthRetired0010_0000'   />
+                <GroupLengthRetired0012                    group='0012' element='0000' vr='UL' fullName='GroupLengthRetired0012_0000'   />
+                <GroupLengthRetired0014                    group='0014' element='0000' vr='UL' fullName='GroupLengthRetired0014_0000'   />
+                <GroupLengthRetired0016                    group='0016' element='0000' vr='UL' fullName='GroupLengthRetired0016_0000'   />
+                <GroupLengthRetired0018                    group='0018' element='0000' vr='UL' fullName='GroupLengthRetired0018_0000'   />
+                <GroupLengthRetired001a                    group='001a' element='0000' vr='UL' fullName='GroupLengthRetired001a_0000'   />
+                <GroupLengthRetired001c                    group='001c' element='0000' vr='UL' fullName='GroupLengthRetired001c_0000'   />
+                <GroupLengthRetired001e                    group='001e' element='0000' vr='UL' fullName='GroupLengthRetired001e_0000'   />
+                <GroupLengthRetired0020                    group='0020' element='0000' vr='UL' fullName='GroupLengthRetired0020_0000'   />
+                <GroupLengthRetired0022                    group='0022' element='0000' vr='UL' fullName='GroupLengthRetired0022_0000'   />
+                <GroupLengthRetired3006                    group='3006' element='0000' vr='UL' fullName='GroupLengthRetired3006_0000'   />
+                <GroupLengthRetired300E                    group='300E' element='0000' vr='UL' fullName='GroupLengthRetired300E_0000'   />
+                -->
+
+
+
+
         <!-- Varian private tags -->
         <ExtendedInterfaceData                      group='3253' element='1000' vr='OB' fullName='Varian XML Stream'/>
         <ExtendedInterfaceLength                    group='3253' element='1001' vr='IS' fullName='Varian Data length of XML stream'/>
