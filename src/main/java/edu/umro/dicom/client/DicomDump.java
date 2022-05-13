@@ -5,10 +5,25 @@ import com.pixelmed.utils.*;
 
 import java.io.*;
 
+/**
+ * Dump DICOM files with the usual tag, VR, attribute name, attribute value data, but also
+ * include the corresponding hex bytes and their offset within the file.
+ * <p>
+ * If there is a problem reading the file (e.g. bad DICOM), then the progress captured up
+ * to that point is reported.
+ * <p>
+ * Note that Sequence attributes are not included because the implementation of
+ * {@link com.pixelmed.dicom.AttributeList.ReadTerminationStrategy} does not support them.
+ * Supporting them would either require changing the Pixelmed library or java byte code
+ * injection.
+ */
 public class DicomDump {
 
     CustomDictionary dict = CustomDictionary.getInstance();
 
+    /**
+     * Used to capture read progress.  Always returns false.
+     */
     public class ReadStrategy implements AttributeList.ReadTerminationStrategy {
 
         byte[] binary;
@@ -49,6 +64,7 @@ public class DicomDump {
         }
 
         private String tagToText(AttributeTag tag) {
+            @SuppressWarnings("UnnecessaryLocalVariable")
             String text = String.format("%04x", tag.getGroup()) + "," + String.format("%04x", tag.getElement());
             return text;
         }
@@ -84,9 +100,9 @@ public class DicomDump {
             try {
                 if (attribute.getVL() > 1) {
                     String[] list = attribute.getStringValues();
-                    StringBuffer txt = new StringBuffer();
+                    StringBuilder txt = new StringBuilder();
                     for (String s : list) {
-                        txt.append(s + "  ");
+                        txt.append(s).append("  ");
                     }
                     value = txt.toString().trim();
                 }
@@ -119,6 +135,7 @@ public class DicomDump {
             text.append(" : ");
             text.append(attributeValueToText(attribute));
             text.append(" -- ");
+            text.append(bytesToText(previousOffset - 4, byteOffset - 4));
             text.append("\n");
             previousTag = tag;
             previousOffset = byteOffset;
@@ -126,6 +143,16 @@ public class DicomDump {
 
         AttributeList al;
 
+        /**
+         * When done, the caller should call this to show the last attribute.
+         * <p>
+         * This could potentially be done with dispose() method, but it is not clear when it is called by the JVM.
+         *
+         * @param attributeList Attribute list constructed so far.
+         * @param tag           Last tag.
+         * @param byteOffset    Offset into file.
+         * @return Always false (never intentionally terminate)
+         */
         @Override
         public boolean terminate(AttributeList attributeList, AttributeTag tag, long byteOffset) {
             al = attributeList;
@@ -149,6 +176,13 @@ public class DicomDump {
         }
     }
 
+    /**
+     * Print contents of a single file to standard output.
+     *
+     * @param file DICOM file to dump.
+     * @return Text version of file with both formatted data and original data in hex.
+     * @throws IOException On IO error (e.g. no file permission or premature end of file)
+     */
     public String dump(File file) throws IOException {
         byte[] binary = FileUtilities.readAllBytes(new FileInputStream(file));
 
@@ -164,7 +198,7 @@ public class DicomDump {
             readStrategy.doLastAttribute();
         } catch
         (DicomException ex) {
-            text.append("\nDicomException: " + ex);
+            text.append("\nDicomException: ").append(ex);
         }
 
 
@@ -172,6 +206,13 @@ public class DicomDump {
 
     }
 
+    /**
+     * Dump DICOM files to standard output.
+     *
+     * @param args List of DICOM files.
+     * @throws Exception Usually because when encountering non-DICOM file, read
+     *                   permission error, or premature end of file.
+     */
     public static void main(String[] args) throws Exception {
         System.err.println("Starting ...");
         DicomDump dicomDump = new DicomDump();
