@@ -7,13 +7,27 @@ import com.pixelmed.utils.*;
 import java.io.*;
 
 /**
+ * Special note: This is a replacement for the standard com.pixelmed.dicom version that did not handle metadata that
+ * contained the lesser used metadata tags, such as:
+ * <p>
+ * (0002,0100) PrivateInformationCreatorUID
+ * (0002,0102) PrivateInformation
+ * <p>
+ * It also did not handle the case where
+ * <p>
+ * (0002,0016) SourceApplicationEntityTitle
+ * *
+ * was of length 0 (an empty string).
+ *
+ *
  * <p>A class to abstract the contents of a file meta information header as used for a
  * DICOM PS 3.10 file, with additional static methods to add to and extract from an
  * existing list of attributes.</p>
  *
  * @author dclunie
  * @author irrer
- * Updated to calculate FileMetaInformationGroupLength for all possible 0x0002 items.
+ * Updated to calculate FileMetaInformationGroupLength for all possible group 0x0002 items, and also to handle
+ * SourceApplicationEntityTitle of length 0.
  */
 public class FileMetaInformation {
 
@@ -60,7 +74,7 @@ public class FileMetaInformation {
             list.put(a);
         }
 
-        if (mediaStorageSOPClassUID == null || mediaStorageSOPClassUID.trim().length() == 0) {            // (001137)
+        if (mediaStorageSOPClassUID == null || mediaStorageSOPClassUID.trim().length() == 0) {
             throw new DicomException("Cannot add FileMetaInformation without MediaStorageSOPClassUID value");
         } else {
             Attribute a = new UniqueIdentifierAttribute(TagFromName.MediaStorageSOPClassUID);
@@ -68,7 +82,7 @@ public class FileMetaInformation {
             list.put(a);
         }
 
-        if (mediaStorageSOPInstanceUID == null || mediaStorageSOPInstanceUID.trim().length() == 0) {    // (001137)
+        if (mediaStorageSOPInstanceUID == null || mediaStorageSOPInstanceUID.trim().length() == 0) {
             throw new DicomException("Cannot add FileMetaInformation without MediaStorageSOPInstanceUID value");
         } else {
             Attribute a = new UniqueIdentifierAttribute(TagFromName.MediaStorageSOPInstanceUID);
@@ -76,7 +90,7 @@ public class FileMetaInformation {
             list.put(a);
         }
 
-        if (transferSyntaxUID == null || transferSyntaxUID.trim().length() == 0) {                        // (001137)
+        if (transferSyntaxUID == null || transferSyntaxUID.trim().length() == 0) {
             throw new DicomException("Cannot add FileMetaInformation without TransferSyntaxUID value");
         } else {
             Attribute a = new UniqueIdentifierAttribute(TagFromName.TransferSyntaxUID);
@@ -190,7 +204,7 @@ public class FileMetaInformation {
 
             {
                 UniqueIdentifierAttribute ui = new UniqueIdentifierAttribute(dictionary.getTagFromName("PrivateInformationCreatorUID"));
-                ui.addValue("1.2.3.5.7.11");
+                ui.addValue("1.2.3.5.7.11"); // randomly chosen UID for testing only.
                 list.put(ui);
 
             }
@@ -200,7 +214,10 @@ public class FileMetaInformation {
                 list.put(ob);
             }
 
-            com.pixelmed.dicom.FileMetaInformation.addFileMetaInformation(list, "1.2.3.44", "1.2", TransferSyntax.Default, "MYAE");
+            FileMetaInformation.addFileMetaInformation(list, "1.2.3.44", "1.2", TransferSyntax.Default, "MYAE");
+
+            // Un-comment the following line to show the problem that was fixed.
+            // com.pixelmed.dicom.FileMetaInformation.addFileMetaInformation(list, "1.2.3.44", "1.2", TransferSyntax.Default, "MYAE");
 
             System.err.println("As constructed:");    // no need to use SLF4J since command line utility/test
             System.err.print(list);

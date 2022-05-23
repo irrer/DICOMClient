@@ -624,42 +624,4 @@ public class Util {
         return SOPClass.isImageStorage(sopClassUID);
     }
 
-    public static void main(String[] args) throws DicomException, IOException, InterruptedException {
-        AttributeList al = new AttributeList();
-
-        File dir = new File("D:\\tmp\\maggie\\RS_phantom");
-        for (File f : dir.listFiles()) {
-
-            if (f.isFile()) {
-                File outFile = new File("D:\\tmp\\maggie\\NoGroupLength\\" + f.getName());
-                if (outFile.isFile()) System.out.println("Deleting file " + outFile.getName());
-                outFile.delete();
-            }
-        }
-
-        Thread.sleep(2 * 1000);
-
-        for (File f : dir.listFiles()) {
-            if (f.isFile() && f.getName().startsWith("D")) {
-                System.out.println("Processing file " + f.getName());
-                al.read(f);
-                removeGroupListAttributes(al);
-                File outFile = new File("D:\\tmp\\maggie\\NoGroupLength\\" + f.getName());
-                outFile.delete();
-
-                Attribute transferSyntaxAttribute = al.get(TagFromName.TransferSyntaxUID);
-                String transferSyntax = TransferSyntax.ImplicitVRLittleEndian;
-                if ((transferSyntaxAttribute != null) && (transferSyntaxAttribute.getSingleStringValueOrNull() != null)) {
-                    transferSyntax = transferSyntaxAttribute.getSingleStringValueOrNull();
-                }
-
-                FileMetaInformation.addFileMetaInformation(al, transferSyntax, "DICOM+");
-
-                al.write(outFile, transferSyntax, true, true);
-            }
-        }
-
-        // removeGroupListAttributes(al);
-    }
-
 }

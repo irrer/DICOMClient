@@ -524,9 +524,6 @@ public class EditGui implements ActionListener, WindowListener {
      * Check to see if no file exists in the user specified directory with the
      * given prefix and each of the given suffixes.
      * 
-     * @param dir
-     *            Directory to search.
-     * 
      * @param prefix
      *            Base name of file(s).
      * 
@@ -663,8 +660,9 @@ public class EditGui implements ActionListener, WindowListener {
         if (saveAsDicom.isSelected()) {
             try {
                 destFile.delete();
-                
-                FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());
+
+                // use local version of FileMetaInformation class
+                edu.umro.dicom.client.FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());
                 attributeList.write(destFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
             }
             catch (IOException e) {
