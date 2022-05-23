@@ -26,4 +26,4 @@ Requires Java 7 or later.  Unzip the pre-built package and run:
 Pro-tip: Make a shortcut to the bat on your desktop, then drag-and-drop DICOM files and folders to run it.
 
 
-## View <a href="http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.62/output/index.html">Instructions and how to's</a>
+## View <a href="http://htmlpreview.github.io/?https://github.com/irrer/DICOMClient/blob/master/docs/user_manual/user_manual_1.0.61/output/index.html">Instructions and how to's</a>
