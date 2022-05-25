@@ -116,11 +116,13 @@ public class TestCommandLine {
     }
 
     private boolean compareAllFilesWithSuffixes(File destDir, String fileName) {
+        System.err.println("Comparing files. destDir: "  + destDir.getAbsolutePath() + "    fileName: " + fileName);
         if (fileName.endsWith(Util.DICOM_SUFFIX)) fileName = fileName.substring(0, fileName.length() - Util.DICOM_SUFFIX.length());
         for (String suf : new String[] { ".DCM", ".XML", ".TXT", ".PNG" }) {
             File destFile = new File(destPath(destDir, fileName + suf));
             if (destFile.exists()) 
                 if (!compareFiles(destDir, fileName + suf)) {
+                    System.err.println("Compare of files failed. destDir: " + destDir.getAbsolutePath() + "    fileName: " + fileName);
                     return false;
                 }
         }

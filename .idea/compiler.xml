@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="dicomclient" target="7" />
+      <module name="dicomclient" target="1.7" />
     </bytecodeTargetLevel>
   </component>
 </project>

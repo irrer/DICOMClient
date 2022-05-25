@@ -121,6 +121,11 @@ public class FileMetaInformation {
                 onlyMetaList.put(list.get(t));
         }
 
+        // Ensure that there is a group length element.
+        Attribute groupLength = new UnsignedLongAttribute(TagFromName.FileMetaInformationGroupLength);
+        groupLength.addValue(0L); // The value does matter because it will be overwritten.
+        list.put(groupLength);
+
         // write the metadata to a byte array so its size can be determined.
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
         try {
@@ -130,16 +135,12 @@ public class FileMetaInformation {
             throw new DicomException("Unable to convert metadata to an output stream");
         }
 
-        long standardHeaderLength = 128 + 16;  // 128 byte DICOM header plus FileMetaInformationGroupLength
+        long standardHeaderLength = 128 + 12;  // 128 byte DICOM header plus FileMetaInformationGroupLength
         long measuredGl = bytesOut.size() - standardHeaderLength;
-        System.out.println("measuredGl : " + measuredGl);
 
-
-        {
-            Attribute a = new UnsignedLongAttribute(TagFromName.FileMetaInformationGroupLength);
-            a.addValue(measuredGl);
-            list.put(a);
-        }
+        // Set the group length to the proper value
+        groupLength.removeValues();
+        groupLength.addValue(measuredGl);
     }
 
 
