@@ -11,7 +11,7 @@ Note: This software is not vulnerable to the log4j exploit CVE-2021-44228 .
 Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>
 Developer: Jim Irrer  irrer@umich.edu
 
-## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.63_Install.zip?raw=true">package</a>
+## Download latest pre-built <a href="https://github.com/irrer/DICOMClient/blob/master/prebuilt_packages/dicomclient-1.0.64_Install.zip?raw=true">package</a>
 Latest release: 12-May-2022
 
 ## To Run

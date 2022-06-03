@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.umro.DICOM</groupId>
     <artifactId>dicomclient</artifactId>
-    <version>1.0.63</version>
+    <version>1.0.64</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <properties>
@@ -94,10 +94,13 @@
                                 <echo>Hello from generate.docs</echo>
                                 
                                 <property name="doc.version"     value="1.0.61" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <property name="doc.dir"         value="docs/user_manual/user_manual_${doc.version}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <property name="doc.dest.dir"    value="${doc.dir}/output" />
                                 <property name="code.version"    value="${version}" />
-                                
+
+                                <!--suppress UnresolvedMavenProperty -->
                                 <ant antfile="${doc.dir}/build.xml"/>
                             </tasks>
                         </configuration>
@@ -111,6 +114,7 @@
                         <phase>package</phase>
                         <configuration>
                             <tasks>
+                                <!--suppress UnresolvedMavenProperty -->
                                 <echo>Hello from generate-manifest-with-timestamp : ${TIMESTAMP}</echo>
                                 <delete file="target/MANIFEST.MF" />
                                 <copy file="MANIFEST.MF" tofile="target/MANIFEST.MF" />
@@ -119,8 +123,11 @@
                                         locale="en,US" />
                                 </tstamp>
                                 <replace file="target/MANIFEST.MF">
+                                    <!--suppress UnresolvedMavenProperty -->
                                     <replacefilter token="@@BUILD_DATE@@" value="${TIMESTAMP}" />
+                                    <!--suppress UnresolvedMavenProperty -->
                                     <replacefilter token="@@BUILDER@@" value="${user.name}" />
+                                    <!--suppress UnresolvedMavenProperty -->
                                     <replacefilter token="@@VERSION@@" value="${project.version}" />
                                 </replace>
                                 <jar update="true"
@@ -130,55 +137,80 @@
                                     destfile="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
                                     includes="target/MANIFEST.MF" />
                                 <delete file="target/MANIFEST.MF" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <echo>Bye from generate-manifest-with-timestamp: ${TIMESTAMP}</echo>
                                 <!-- </tasks> </configuration> <goals> <goal>run</goal> </goals> 
                                     </execution> <execution> <phase>package</phase> <configuration> <tasks> -->
                                 <echo>maven-antrun-plugin build install package</echo>
                                 <property name="project.dir"
                                     value="Z:\Projects\Dicom\dicomclient\BuildRepository\${project.artifactId}-${project.version}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <property name="dest.dir"
                                     value="${project.dir}\${project.artifactId}-${project.version}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <echo>dest.dir is: ${dest.dir}</echo>
                                 <echo>version is: ${project.version}</echo>
                                 <echo>artifactId is: ${project.artifactId}</echo>
 
+                                <!--suppress UnresolvedMavenProperty -->
                                 <delete dir="${project.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <mkdir dir="${project.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <mkdir dir="${dest.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy
                                     file="target/${project.artifactId}-${project.version}-jar-with-dependencies.jar"
                                     toDir="${dest.dir}" />
-                                    
+
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/DicomClientConfig.xml" toDir="${dest.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/DicomClientConfigMil.xml" toDir="${dest.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/DicomClientConfigMROQC.xml" toDir="${dest.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/PACSConfig.xml" toDir="${dest.dir}" />
-                                
+
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/logging.propertiesWindows"
                                     toDir="${dest.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/logging.propertiesLinux" toDir="${dest.dir}" />
-                                
+
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/DICOMClient.bat" toDir="${dest.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <replace file="${dest.dir}/DICOMClient.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
-                                
+
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/DICOM+.bat" toDir="${dest.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <replace file="${dest.dir}/DICOM+.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
-                                
+
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/DICOM+MIL.bat" toDir="${dest.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <replace file="${dest.dir}/DICOM+MIL.bat" token="@@with-dep-jar@@" value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
-                                
+
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${resource.dir}/DICOM+.sh" toDir="${dest.dir}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <replace file="${dest.dir}/DICOM+.sh" token="@@with-dep-jar@@"
                                 
                                     value="${project.artifactId}-${project.version}-jar-with-dependencies.jar" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <property name="standard.zip.dest"
                                     value="${project.dir}/${project.artifactId}-${project.version}_Install.zip" />
-                                    
+
                                 <!-- zip standard package -->
+                                <!--suppress UnresolvedMavenProperty -->
                                 <echo>Gonna zip ${dest.dir} ==>  prebuilt_packages/${project.artifactId}-${project.version}_Install.zip</echo>
                                 
                                 <property name="zip.file" value="prebuilt_packages/${project.artifactId}-${project.version}_Install.zip" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <zip basedir="${dest.dir}" destfile="${zip.file}" />
+                                <!--suppress UnresolvedMavenProperty -->
                                 <copy file="${zip.file}" toDir="${project.dir}" />
                             </tasks>
                         </configuration>

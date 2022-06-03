@@ -40,6 +40,10 @@ public class DicomDump {
 
         private AttributeTag previousTag = null;
 
+        private String offsetToText(long offset) {
+            return String.format("%08d", offset) + ": ";
+        }
+
         /**
          * Convert the given segment of bytes to user-friendly hex.
          *
@@ -55,8 +59,6 @@ public class DicomDump {
                 end = begin + max;
             }
 
-            buf.append(String.format("%08d", begin));
-            buf.append(":");
             for (long i = begin; i < end; i++) {
                 buf.append(String.format(" %02x", binary[(int) i]));
             }
@@ -64,8 +66,7 @@ public class DicomDump {
         }
 
         private String tagToText(AttributeTag tag) {
-            @SuppressWarnings("UnnecessaryLocalVariable")
-            String text = String.format("%04x", tag.getGroup()) + "," + String.format("%04x", tag.getElement());
+            @SuppressWarnings("UnnecessaryLocalVariable") String text = String.format("%04x", tag.getGroup()) + "," + String.format("%04x", tag.getElement());
             return text;
         }
 
@@ -127,6 +128,7 @@ public class DicomDump {
 
             AttributeTag tag = attribute.getTag();
 
+            text.append(offsetToText(previousOffset - 4));
             text.append(tagToText(tag));
             text.append(" ");
             text.append(vrToText(tag));
@@ -158,8 +160,9 @@ public class DicomDump {
             al = attributeList;
 
             if (previousTag == null) {
-                text.append("DICOM Header:\n");
-                text.append(bytesToText(0, byteOffset - 4));
+                text.append("DICOM Prelude:\n");
+                text.append(offsetToText(0));
+                text.append("--" + bytesToText(0, byteOffset - 4));
                 text.append("\n");
             } else {
                 appendAttribute(attributeList.get(previousTag), byteOffset);
@@ -176,6 +179,52 @@ public class DicomDump {
         }
     }
 
+
+    /**
+     * Print contents of a single file to standard output.
+     *
+     * @param byteArray DICOM content to dump.
+     * @return Text version of file with both formatted data and original data in hex.
+     * @throws IOException On IO error (e.g. no file permission or premature end of file)
+     */
+    public String dump(byte[] byteArray) throws IOException {
+
+        DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(byteArray));
+
+        AttributeList al = new AttributeList();
+
+        StringBuffer text = new StringBuffer();
+        ReadStrategy readStrategy = new ReadStrategy(byteArray, text);
+
+        try {
+            al.read(dis, readStrategy);
+            readStrategy.doLastAttribute();
+        } catch (DicomException ex) {
+            text.append("\nDicomException: ").append(ex);
+        }
+
+        return text.toString();
+    }
+
+    /**
+     * Make a hex dump of an attribute list.
+     *
+     * @param attributeList Dump this.
+     * @return Text version with byte offsets.
+     * @throws DicomException If problem writing DICOM to byte array.
+     * @throws IOException    If IO error.
+     */
+    public String dump(AttributeList attributeList) throws DicomException, IOException {
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        String transferSyntaxUID = attributeList.get(TagFromName.TransferSyntaxUID).getSingleStringValueOrNull();
+
+        attributeList.write(out, transferSyntaxUID, true, true, true, null);
+
+        return dump(out.toByteArray());
+    }
+
     /**
      * Print contents of a single file to standard output.
      *
@@ -185,25 +234,7 @@ public class DicomDump {
      */
     public String dump(File file) throws IOException {
         byte[] binary = FileUtilities.readAllBytes(new FileInputStream(file));
-
-        DicomInputStream dis = new DicomInputStream(new ByteArrayInputStream(binary));
-
-        AttributeList al = new AttributeList();
-
-        StringBuffer text = new StringBuffer();
-        ReadStrategy readStrategy = new ReadStrategy(binary, text);
-
-        try {
-            al.read(dis, readStrategy);
-            readStrategy.doLastAttribute();
-        } catch
-        (DicomException ex) {
-            text.append("\nDicomException: ").append(ex);
-        }
-
-
-        return text.toString();
-
+        return dump(binary);
     }
 
     /**
