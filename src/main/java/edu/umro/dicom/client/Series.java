@@ -45,7 +45,6 @@ import com.pixelmed.dicom.AttributeFactory;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
-import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SOPClassDescriptions;
 import com.pixelmed.dicom.SetOfDicomFiles;
 import com.pixelmed.dicom.TagFromName;
@@ -890,7 +889,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
 
                     // Indicate that the file was touched by this application. Also a subtle way to advertise. :)
                     // use local version of FileMetaInformation class
-                    edu.umro.dicom.client.FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());
+                    FileMetaInfo2.addFileMetaInfo2(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());
 
                     if (DicomClient.inCommandLineMode()) {
                         if (DicomClient.getInstance().getCommandParameterOutputFile() != null) {

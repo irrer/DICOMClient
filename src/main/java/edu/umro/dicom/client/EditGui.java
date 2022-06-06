@@ -45,7 +45,6 @@ import javax.swing.border.Border;
 import com.pixelmed.dicom.AttributeList;
 import com.pixelmed.dicom.AttributeTag;
 import com.pixelmed.dicom.DicomException;
-import com.pixelmed.dicom.FileMetaInformation;
 import com.pixelmed.dicom.SequenceAttribute;
 import com.pixelmed.dicom.TagFromName;
 import com.pixelmed.dicom.ValueRepresentation;
@@ -662,7 +661,7 @@ public class EditGui implements ActionListener, WindowListener {
                 destFile.delete();
 
                 // use local version of FileMetaInformation class
-                edu.umro.dicom.client.FileMetaInformation.addFileMetaInformation(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());
+                FileMetaInfo2.addFileMetaInfo2(attributeList, Util.DEFAULT_TRANSFER_SYNTAX, ClientConfig.getInstance().getApplicationName());
                 attributeList.write(destFile, Util.DEFAULT_TRANSFER_SYNTAX, true, true);
             }
             catch (IOException e) {

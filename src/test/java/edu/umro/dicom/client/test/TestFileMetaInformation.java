@@ -29,10 +29,15 @@ public class TestFileMetaInformation {
 
         File dicomFile = null;
 
+        String dashedLine = "----------------------------------------------------------------";
+        int testCount = 0;
+        int failCount = 0;
+
         for (int t = 0; t < transferSyntaxList.length; t++) {
             for (int s = 0; s < 5; s++) {
                 for (int c = 0; c < 5; c++) {
                     for (int i = 0; i < 5; i++) {
+                        testCount++;
                         String transferSyntaxUID = transferSyntaxList[t];
                         String sourceApplicationEntityTitle = "MyApp" + suffix.substring(0, s);
                         String mediaStorageSOPClassUID = "1.2.3.4.5.6" + suffix.substring(0, c);
@@ -84,7 +89,7 @@ public class TestFileMetaInformation {
                         groupLength = new UnsignedLongAttribute(TagFromName.FileMetaInformationGroupLength);
                         groupLength.addValue(0L); // The value does not matter because it will be overwritten.
                         list.put(groupLength);
-                        edu.umro.dicom.client.FileMetaInformation.addFileMetaInformation(
+                        FileMetaInfo2.addFileMetaInfo2(
                                 list,
                                 mediaStorageSOPClassUID,
                                 mediaStorageSOPInstanceUID,
@@ -103,14 +108,26 @@ public class TestFileMetaInformation {
                         String dumpIrrer = new DicomDump().dump(list);
                         long groupLengthIrrer = list.get(TagFromName.FileMetaInformationGroupLength).getLongValues()[0];
 
-                        System.out.println("\n----------------------------------------------------------------");
-                        System.out.println(summary + "  standard: " + groupLengthStandard + "    irrer: " + groupLengthIrrer + "    diff: " + (groupLengthStandard - groupLengthIrrer) + "   same length: " + (groupLengthStandard == groupLengthIrrer) + "    same content: " + dumpStandard.equals(dumpIrrer));
+                        boolean pass = dumpStandard.equals(dumpIrrer);
+                        System.out.println("\n" + dashedLine);
+                        System.out.println(summary + "  standard: " + groupLengthStandard +
+                                "    irrer: " + groupLengthIrrer +
+                                "    diff: " + (groupLengthStandard - groupLengthIrrer) +
+                                "    same length: " + (groupLengthStandard == groupLengthIrrer) +
+                                "    same content: " + pass);
                         System.out.println("---- Standard -----\n" + dumpStandard);
                         System.out.println("---- Irrer -----\n" + dumpIrrer);
-
+                        if (!pass) {
+                            failCount++;
+                            System.out.println("TEST FAILED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            System.exit(1);
+                        }
                     }
                 }
             }
         }
+        System.out.println(dashedLine);
+        System.out.println("Number of tests: " + testCount + "    Number of failures: " + failCount);
+        System.out.println(dashedLine);
     }
 }
