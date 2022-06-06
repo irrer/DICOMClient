@@ -33,10 +33,10 @@
 # Describes specific configuration info for Handlers.
 ############################################################
 
+handlers=java.util.logging.ConsoleHandler
+
 #handlers=java.util.logging.ConsoleHandler
 #handlers=java.util.logging.ConsoleHandler edu.umro.util.LogFileHandler
-handlers=edu.umro.util.LogFileHandler
-
 
 # default file output is in user's home directory.
 #java.util.logging.FileHandler.pattern=%h/java%u.log
@@ -45,11 +45,13 @@ handlers=edu.umro.util.LogFileHandler
 #java.util.logging.FileHandler.level=FINER
 #java.util.logging.FileHandler.append=true
 
-edu.umro.util.LogFileHandler.pattern=/tmp/dicomclient-%g-%u.log
-edu.umro.util.LogFileHandler.limit=100000000
-edu.umro.util.LogFileHandler.count=100
-edu.umro.util.LogFileHandler.level=ALL
-edu.umro.util.LogFileHandler.append=false
+# Un-comment these 6 lines to log to files and remove handlers=java.util.logging.ConsoleHandler line.
+#    handlers=edu.umro.util.LogFileHandler
+#    edu.umro.util.LogFileHandler.pattern=/tmp/dicomclient-%g-%u.log
+#    edu.umro.util.LogFileHandler.limit=100000000
+#    edu.umro.util.LogFileHandler.count=100
+#    edu.umro.util.LogFileHandler.level=ALL
+#    edu.umro.util.LogFileHandler.append=false
 
 # The formatter for edu.umro.util.LogFileHandler is overridden at run time, so
 # it does not matter what it is set it to here.

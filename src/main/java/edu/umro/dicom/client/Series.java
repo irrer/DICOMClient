@@ -445,7 +445,7 @@ public class Series extends JPanel implements ActionListener, Runnable {
         String date = firstNonNull(new String[] { seriesDate, contentDate, acquisitionDate, instanceCreationDate, rtPlanDate, structureSetDate });
         String time = firstNonNull(new String[] { seriesTime, contentTime, acquisitionTime, instanceCreationTime, rtPlanTime, structureSetTime });
 
-        String seriesSummary = "         ";
+        seriesSummary = "         ";
         seriesSummary += (seriesNumber == null) ? "" : " " + seriesNumber;
         seriesSummary += (modality == null) ? " No modality" : " " + modality;
         seriesSummary += (seriesDescription == null) ? "" : " " + seriesDescription;
@@ -606,10 +606,9 @@ public class Series extends JPanel implements ActionListener, Runnable {
         seriesInstanceUID = (seriesInstanceUID == null) ? "" : seriesInstanceUID;
 
         buildGui();
-        resetSummary();
         addFile(file, attributeList);
-        seriesSummary = getSeriesSummary();
-        Log.get().info("Added series " + seriesSummary);
+        resetSummary();
+        Log.get().info("Added series " + seriesSummary.trim());
     }
 
     /**
