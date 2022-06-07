@@ -12,13 +12,7 @@ import java.io.*;
  * <p>
  * (0002,0100) PrivateInformationCreatorUID
  * (0002,0102) PrivateInformation
- * <p>
- * It also did not handle the case where
- * <p>
- * (0002,0016) SourceApplicationEntityTitle
- * *
- * was of length 0 (an empty string).
- *
+ * </p>
  *
  * <p>A class to abstract the contents of a file meta information header as used for a
  * DICOM PS 3.10 file, with additional static methods to add to and extract from an
@@ -198,7 +192,7 @@ public class FileMetaInfo2 {
             list.put(a);
         }
 
-        if (sourceApplicationEntityTitle != null) {
+        if ((sourceApplicationEntityTitle != null) && (sourceApplicationEntityTitle.trim().length() != 0)) {
             Attribute a = new ApplicationEntityAttribute(TagFromName.SourceApplicationEntityTitle);
             a.addValue(sourceApplicationEntityTitle);
             list.put(a);
