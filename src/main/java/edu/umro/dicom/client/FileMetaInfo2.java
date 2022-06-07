@@ -5,7 +5,6 @@ import com.pixelmed.dicom.*;
 import com.pixelmed.utils.*;
 
 import java.io.*;
-import java.nio.charset.*;
 
 /**
  * Special note: This is a replacement for the standard com.pixelmed.dicom version that did not handle metadata that
@@ -158,9 +157,7 @@ public class FileMetaInfo2 {
 
         {
             Attribute a = new OtherByteAttribute(TagFromName.FileMetaInformationVersion);
-            byte[] b = new byte[2];
-            b[0] = 0x00;
-            b[1] = 0x01;
+            byte[] b = {0, 1};
             a.setValues(b);
             list.put(a);
         }
@@ -257,7 +254,7 @@ public class FileMetaInfo2 {
                                         String mediaStorageSOPInstanceUID,
                                         String transferSyntaxUID,
                                         String sourceApplicationEntityTitle
-                                        ) throws DicomException {
+    ) throws DicomException {
         addFileMetaInfo2(list,
                 mediaStorageSOPClassUID,
                 mediaStorageSOPInstanceUID,
