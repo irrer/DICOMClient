@@ -5,6 +5,7 @@ import com.pixelmed.dicom.*;
 import com.pixelmed.utils.*;
 
 import java.io.*;
+import java.nio.charset.*;
 
 /**
  * Special note: This is a replacement for the standard com.pixelmed.dicom version that did not handle metadata that
@@ -25,14 +26,15 @@ import java.io.*;
  * existing list of attributes.</p>
  *
  * @author dclunie
- * @author irrer Updated to calculate FileMetaInformationGroupLength for all possible group 0x0002 items, and also to
- * handle SourceApplicationEntityTitle of length 0.
+ * @author irrer Updated to calculate FileMetaInformationGroupLength for all possible group 0x0002 items.
  */
 public class FileMetaInfo2 {
 
     private static final String identString = "@(#) $Header: /userland/cvs/pixelmed/imgbook/com/pixelmed/dicom/FileMetaInformation.java,v 1.19 2020/01/01 15:48:09 dclunie Exp $";
 
     private AttributeList list;
+
+    private static final DicomDictionary dictionary = new DicomDictionary();
 
     /**
      * <p>Get the attribute list in this instance of the file meat information.</p>
@@ -108,7 +110,7 @@ public class FileMetaInfo2 {
      *
      * @param attrList Remove from here.
      */
-    private static void removeMedaData(AttributeList attrList) {
+    private static void removeMetaData(AttributeList attrList) {
 
         AttributeList metaOnly = new AttributeList();
 
@@ -127,24 +129,32 @@ public class FileMetaInfo2 {
     }
 
     /**
-     * <p>Add the file meta information attributes to an existing list, using
+     * <p>Remove the file meta information attributes and add new ones to an existing list, using
      * only the parameters supplied.</p>
      *
      * <p>Note that the appropriate (mandatory) file meta information group length tag is also computed and added.</p>
+     *
+     * <p>If either PrivateInformationCreatorUID or PrivateInformation are provided, then both must be provided.</p>
      *
      * @param list                         the list to be extended with file meta information attributes
      * @param mediaStorageSOPClassUID      the SOP Class UID of the dataset to which the file meta information will be prepended
      * @param mediaStorageSOPInstanceUID   the SOP Instance UID of the dataset to which the file meta information will be prepended
      * @param transferSyntaxUID            the transfer syntax UID that will be used to write the dataset
      * @param sourceApplicationEntityTitle the source AE title of the dataset (may be null)
+     * @param PrivateInformationCreatorUID Application defined private UID.  Ignored if null.
+     * @param PrivateInformation           Application defined private information.  Ignored if null.
      * @throws DicomException if error in DICOM encoding
      */
     public static void addFileMetaInfo2(AttributeList list,
                                         String mediaStorageSOPClassUID,
                                         String mediaStorageSOPInstanceUID,
                                         String transferSyntaxUID,
-                                        String sourceApplicationEntityTitle) throws DicomException {
+                                        String sourceApplicationEntityTitle,
+                                        String PrivateInformationCreatorUID,
+                                        byte[] PrivateInformation) throws DicomException {
 
+
+        removeMetaData(list);
 
         {
             Attribute a = new OtherByteAttribute(TagFromName.FileMetaInformationVersion);
@@ -197,9 +207,29 @@ public class FileMetaInfo2 {
             list.put(a);
         }
 
+        if (
+                ((PrivateInformation == null) && (PrivateInformationCreatorUID != null)) ||
+                        ((PrivateInformation != null) && (PrivateInformationCreatorUID == null))) {
+            throw new DicomException("If either PrivateInformationCreatorUID or PrivateInformation are specified, then the other must also be specified.");
+        }
+
+        if ((PrivateInformationCreatorUID != null) && (PrivateInformationCreatorUID.trim().length() == 0)) {
+            throw new DicomException("If either PrivateInformationCreatorUID can not be empty.");
+        }
+
+        if ((PrivateInformation != null) && (PrivateInformationCreatorUID != null)) {
+            UniqueIdentifierAttribute piUID = new UniqueIdentifierAttribute(dictionary.getTagFromName("PrivateInformationCreatorUID"));
+            piUID.addValue(PrivateInformationCreatorUID);
+            list.put(piUID);
+
+            OtherByteAttribute pi = new OtherByteAttribute(dictionary.getTagFromName("PrivateInformation"));
+            pi.setValues(PrivateInformation);
+            list.put(pi);
+        }
+
         // Ensure that there is a group length element.
         Attribute groupLength = new UnsignedLongAttribute(TagFromName.FileMetaInformationGroupLength);
-        groupLength.addValue(0L); // The value does not matter because it will be overwritten.
+        groupLength.addValue(0); // The value does not matter because it will be overwritten.
         list.put(groupLength);
 
         long measuredGl = measureMetaDataLength(list);
@@ -209,6 +239,33 @@ public class FileMetaInfo2 {
         groupLength.addValue(measuredGl);
     }
 
+    /**
+     * <p>Remove the file meta information attributes and add new ones to an existing list, using
+     * only the parameters supplied.</p>
+     *
+     * <p>Note that the appropriate (mandatory) file meta information group length tag is also computed and added.</p>
+     *
+     * @param list                         the list to be extended with file meta information attributes
+     * @param mediaStorageSOPClassUID      the SOP Class UID of the dataset to which the file meta information will be prepended
+     * @param mediaStorageSOPInstanceUID   the SOP Instance UID of the dataset to which the file meta information will be prepended
+     * @param transferSyntaxUID            the transfer syntax UID that will be used to write the dataset
+     * @param sourceApplicationEntityTitle the source AE title of the dataset (may be null)
+     * @throws DicomException if error in DICOM encoding
+     */
+    public static void addFileMetaInfo2(AttributeList list,
+                                        String mediaStorageSOPClassUID,
+                                        String mediaStorageSOPInstanceUID,
+                                        String transferSyntaxUID,
+                                        String sourceApplicationEntityTitle
+                                        ) throws DicomException {
+        addFileMetaInfo2(list,
+                mediaStorageSOPClassUID,
+                mediaStorageSOPInstanceUID,
+                transferSyntaxUID,
+                sourceApplicationEntityTitle,
+                null,
+                null);
+    }
 
     /**
      * <p>Add the file meta information attributes to an existing list, extracting
@@ -257,7 +314,6 @@ public class FileMetaInfo2 {
     public static void main(String[] arg) {
         try {
             AttributeList list = new AttributeList();
-            DicomDictionary dictionary = new DicomDictionary();
 
             // adding the PrivateInformationCreatorUID and PrivateInformation attributes tests support for other group 0x0002 attributes.
             {
@@ -272,7 +328,7 @@ public class FileMetaInfo2 {
                 list.put(ob);
             }
 
-            FileMetaInfo2.addFileMetaInfo2(list, "1.2.3.44", "1.2", TransferSyntax.Default, "MYAE");
+            FileMetaInfo2.addFileMetaInfo2(list, "1.2.3.44", "1.2", TransferSyntax.Default, "MYAE", "1.3.5.7", "PrivInfo".getBytes());
 
             System.err.println("As constructed:");    // no need to use SLF4J since command line utility/test
             System.err.print(list);
