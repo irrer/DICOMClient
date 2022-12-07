@@ -120,7 +120,7 @@ public class TestFileMetaInformation {
                         if (!pass) {
                             failCount++;
                             System.out.println("TEST FAILED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                            System.exit(1);
+                            // System.exit(1);
                         }
                     }
                 }

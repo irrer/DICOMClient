@@ -58,7 +58,19 @@ public class TestCommandLine {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private File baseDestDir() {
+    private File baseDestDir() throws IOException {
+        try {
+            // use this when running in test harness
+            temporaryFolder.getRoot();
+        }
+        catch (Exception e) {
+            // use this when running as main
+            File target = new File("target");
+            File testOutput = new File(target, "testOutput");
+            testOutput.mkdirs();
+            temporaryFolder = new TemporaryFolder(testOutput);
+            temporaryFolder.create();
+        }
         return temporaryFolder.getRoot();
     }
 
@@ -131,7 +143,7 @@ public class TestCommandLine {
 
     private static int dirIndex = 0;
 
-    private synchronized File getUniqueDestDir() {
+    private synchronized File getUniqueDestDir() throws IOException {
         return new File(baseDestDir(), "" + (dirIndex++));
     }
 
@@ -225,7 +237,7 @@ public class TestCommandLine {
     }
 
     @Test
-    public synchronized void commandLineRTPlanAnonymization() {
+    public synchronized void commandLineRTPlanAnonymization() throws IOException {
         File destDir = getUniqueDestDir();
         String inFile = srcPath("99999999_RTPLAN.DCM");
         String outFile = "1234_RTPLAN" + Util.DICOM_SUFFIX;
@@ -235,7 +247,7 @@ public class TestCommandLine {
     }
 
     @Test
-    public synchronized void commandLineMultipleFilesWithMinusO() {
+    public synchronized void commandLineMultipleFilesWithMinusO() throws IOException {
         File destDir = getUniqueDestDir();
         String inFile1 = srcPath("99999999_RTIMAGE_0001.DCM");
         String inFile2 = srcPath("99999999_RTIMAGE_0002.DCM");
@@ -245,7 +257,7 @@ public class TestCommandLine {
     }
 
     @Test
-    public synchronized void commandLineMultipleFilesWithMinusD() {
+    public synchronized void commandLineMultipleFilesWithMinusD() throws IOException {
         File destDir = getUniqueDestDir();
         String inFile1 = srcPath("99999999_RTIMAGE_0001.DCM");
         String inFile2 = srcPath("99999999_RTIMAGE_0002.DCM");
@@ -258,12 +270,14 @@ public class TestCommandLine {
     }
 
     @Test
-    public synchronized void commandLineSingleCT() {
+    public synchronized void commandLineSingleCT() throws IOException {
         File destDir = getUniqueDestDir();
         String inFile = srcPath("99999999_CT_2_0001.DCM");
         String outFile = "1234_CT_2_0001";
         int code = runMain("-P", "1234", "-o", destPath(destDir, outFile + Util.DICOM_SUFFIX), "-z", inFile);
         assertTrue("command line mode with -o single CT.  Code: " + code, code == 0);
+        System.out.println("destDir: " + destDir.getAbsolutePath());
+        System.out.println("outFile: " + outFile);
         assertTrue("Files are equal SingleCT", compareAllFilesWithSuffixes(destDir, outFile));
         try {
             Document doc = XML.parseToDocument(Utility.readFile(new File(destPath(destDir, outFile + Util.XML_SUFFIX))));
@@ -294,6 +308,9 @@ public class TestCommandLine {
      */
     public static void main(String[] args) {
         try {
+            File testOutput = new File("target/testOutput");
+            testOutput.mkdirs();
+            new TemporaryFolder(testOutput);
             TestCommandLine tcl = new TestCommandLine();
             tcl.commandLineSingleCT();
         }
