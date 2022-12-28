@@ -12,9 +12,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: pixelmed:pixelmed:20201205" level="project" />
-    <orderEntry type="library" name="Maven: edu.umro:util:1.3.19" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:2.0.5" level="project" />
+    <orderEntry type="library" name="Maven: pixelmed:pixelmed:20221004" level="project" />
+    <orderEntry type="library" name="Maven: edu.umro:util:1.3.20" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.13.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
   </component>
