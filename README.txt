@@ -29,8 +29,10 @@ From the command line to run automatic tests:
 
     mvn --settings "D:\pf\Maven\m2\settings.xml" test
 
+This will compile, build the jar with dependencies, and make the zip file:
+    mvn package
     
-This will generate all of the required resources including the jar file with
+This will generate all the required resources including the jar file with
 all dependencies and the RPM file for Linux installation.  The generated files
 are put in the target directory.
 
