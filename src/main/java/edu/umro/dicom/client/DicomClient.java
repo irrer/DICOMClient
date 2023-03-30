@@ -2154,6 +2154,16 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
     }
 
     /**
+     * Reference the WinSliderUI to force the class to be loaded.  This does not affect execution.
+     */
+    private static void referenceSlider() {
+        if (System.currentTimeMillis() < 100) { // this will always be false
+            WinSliderUI winSliderUI = new WinSliderUI();
+            System.out.println(winSliderUI);
+        }
+    }
+
+    /**
      * @param args parameters and list of files and directories
      */
     public static void main(String[] args) {
@@ -2163,6 +2173,7 @@ public class DicomClient implements ActionListener, FileDrop.Listener, ChangeLis
         // System.getProperties().list(System.out);
         try {
             logPrelude();
+            referenceSlider();
 
             args = parseArguments(args);
 

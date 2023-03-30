@@ -50,8 +50,10 @@ The server and client share the same version.  As a developer, if you make
 changes to the code that warrant a version change, then change this
 value before building a new package.
 
+To just rebuild the jar-with-dependencies.jar and sources.jar:
+   Run mavent --> compile
 
-To change the version of the documentation:
+To change the version of the documentation and make a new zip package with updated documentation:
    1. Copy all the files (except output dir) from an old
       version (e.g. docs/user_manual/user_manual_1.0.53) to
       your new version (e.g. docs/user_manual/user_manual_1.0.61)
@@ -62,7 +64,7 @@ To change the version of the documentation:
 
    4. Update the doc version in the README.md file.
 
-   5. Run maven --> package to rebuild everything.
+   5. Run maven --> package to rebuild everything.  Then run it again so that tests run against the current jar.
 
 The DicomDump program will print the contents of a DICOM file and the corresponding binary.  To run it:
    java -cp dicomclient-1.0.61-jar-with-dependencies.jar edu.umro.dicom.client.DicomDump MyFile.dcm

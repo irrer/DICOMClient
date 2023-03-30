@@ -542,10 +542,7 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         contrastSlider.setMinorTickSpacing(1);
         contrastSlider.setPaintTicks(true);
         contrastSlider.addChangeListener(this);
-//         if (UIManager.getLookAndFeel().getID().equalsIgnoreCase("Windows")) {
-//             SliderUI sliderUI = new WinSliderUI(contrastSlider);
-//             contrastSlider.setUI(sliderUI);
-//         }
+
         JPanel contrastPanel = new JPanel();
         contrastPanel.setLayout(new BorderLayout());
         contrastPanel.add(new JLabel("    Contrast"), BorderLayout.NORTH);
@@ -558,10 +555,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         brightnessSlider.setMinorTickSpacing(8);
         brightnessSlider.setPaintTicks(true);
         brightnessSlider.addChangeListener(this);
-//         if (UIManager.getLookAndFeel().getID().equalsIgnoreCase("Windows")) {
-//             SliderUI sliderUI = new WinSliderUI(brightnessSlider);
-//             brightnessSlider.setUI(sliderUI);
-//         }
         JPanel brightnessPanel = new JPanel();
         brightnessPanel.setLayout(new BorderLayout());
         brightnessPanel.add(new JLabel("    Brightness"), BorderLayout.NORTH);
@@ -574,10 +567,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         zoomSlider.setMinorTickSpacing(1);
         zoomSlider.setPaintTicks(true);
         zoomSlider.addChangeListener(this);
-//         if (UIManager.getLookAndFeel().getID().equalsIgnoreCase("Windows")) {
-//             SliderUI sliderUI = new WinSliderUI(zoomSlider);
-//             zoomSlider.setUI(sliderUI);
-//         }
         JPanel zoomPanel = new JPanel();
         zoomPanel.setLayout(new BorderLayout());
         zoomPanel.add(new JLabel("    Zoom"), BorderLayout.NORTH);
@@ -672,12 +661,6 @@ public class Preview implements ActionListener, ChangeListener, DocumentListener
         sliceSlider.setMinorTickSpacing(1);
         sliceSlider.setPaintTicks(true);
         sliceSlider.addChangeListener(this);
-        /*
-        if (UIManager.getLookAndFeel().getID().equalsIgnoreCase("Windows")) {
-            SliderUI sliderUI = new WinSliderUI(sliceSlider);
-            sliceSlider.setUI(sliderUI);
-        }
-        */
 
         panel.add(sliceSlider, BorderLayout.CENTER);
 
