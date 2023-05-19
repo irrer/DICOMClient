@@ -399,9 +399,10 @@ public class ClientConfig {
                         try {
                             AttributeTag tag = CustomDictionary.getInstance().getTagFromName(tagText);
                             if (tag != null) {
+                                byte[] vr = CustomDictionary.getInstance().getValueRepresentationFromTag(tag);
                                 String value = XML.getValue(node, "text()");
                                 value = (value == null) ? "" : value;
-                                Attribute attribute = AttributeFactory.newAttribute(tag);
+                                Attribute attribute = AttributeFactory.newAttribute(tag, vr);
                                 if (canControlAnonymizing(tag)) {
                                     attribute.addValue(value);
                                     anonymizingReplacementList.put(attribute);
@@ -409,13 +410,13 @@ public class ClientConfig {
                             }
                         }
                         catch (Exception e) {
-                            Log.get().warning("Unable to parse list of default attributes to anonymize.  User will have to supply them manually.");
+                            Log.get().warning("Unable to parse the list of default attributes to anonymize.  User will have to supply them manually.");
                         }
                     }
                 }
             }
             catch (UMROException e) {
-                Log.get().warning("Unable to parse list of default attributes to anonymize.  User will have to supply them manually.");
+                Log.get().warning("Unable to parse list of default attributes to anonymize.  The user will have to supply them manually.");
             }
         }
         return anonymizingReplacementList;
